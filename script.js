@@ -48,6 +48,9 @@ const IMAGE_CONFIG = {
     facility_bank:    'assets/facilities/facility_bank.png',
     facility_tower:   'assets/facilities/facility_tower.png',
   },
+  items: {
+    royalheart: 'assets/items/royalheart.png',
+  },
   effects: {
     // tapPower に応じて切り替え
     normal:   'assets/effects/tap_normal.png',   // デフォルト
@@ -136,6 +139,11 @@ const FACILITIES = [
   { id: 'facility_tower',   name: '光合成タワー',   icon: '🗼', desc: 'MPS +1500/秒',  baseCost: 3_000_000, costMult: 2.5, mpsBonus: 1500, maxCount: 5 },
 ];
 
+// ネタアイテム・装飾アイテム（一度きりの購入）
+const ITEMS = [
+  { id: 'royalheart', name: 'ロイヤルハート', icon: '👑', desc: 'キャラの左上に飾られる。それだけ。', cost: 5_000_000, overlayPos: 'top-left' },
+];
+
 // 購入ごとに tapBonus が加算される（baseCost * costMult^購入回数 で価格上昇）
 const UPGRADES = [
   { id: 'tap1', name: 'タップ強化 I',   icon: '💪', desc: 'タップ +1',   baseCost: 8,     costMult: 2.0, tapBonus: 1,   maxCount: 10 },
@@ -190,6 +198,7 @@ const DEFAULT_STATE = {
   critRate:        0.05,   // クリティカル確率（課金要素で上昇）
   critMult:        3,      // クリティカル倍率（課金要素で上昇）
   soundEnabled:    true,   // サウンドON/OFF
+  purchasedItems:  [],
   unlockedEvents:  ['bonus_tap', 'bonus_mps', 'bonus_moku', 'rough_current', 'tax_bill'],
   nextEventId:     null,   // 待機中に予告表示するイベントID
   eventCooldown:   60,
@@ -379,6 +388,7 @@ function updateDisplay() {
   renderEventUnlockList();
   renderEmployeeList();
   renderFacilityList();
+  renderItemList();
   updateSoundBtn();
 }
 
@@ -799,6 +809,76 @@ function renderFacilityList() {
   }
 }
 
+// ========== アイテム ==========
+
+function buyItem(itemId) {
+  const item = ITEMS.find(x => x.id === itemId);
+  if (!item) return;
+  if ((gameState.purchasedItems ?? []).includes(itemId)) return;
+  if (gameState.moku < item.cost) return;
+
+  gameState.moku -= item.cost;
+  gameState.purchasedItems = [...(gameState.purchasedItems ?? []), itemId];
+  playSound('buy');
+  updateItemOverlays();
+  updateDisplay();
+}
+
+function updateItemOverlays() {
+  const container = document.getElementById('item-overlays');
+  if (!container) return;
+  container.innerHTML = '';
+
+  for (const item of ITEMS) {
+    if (!(gameState.purchasedItems ?? []).includes(item.id)) continue;
+    const src = IMAGE_CONFIG.items[item.id];
+    if (!src) continue;
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = `item-overlay item-overlay-${item.overlayPos ?? 'top-left'}`;
+    img.alt = item.name;
+    container.appendChild(img);
+  }
+}
+
+function renderItemList() {
+  const container = document.getElementById('item-list');
+  if (!container) return;
+
+  if (!container.dataset.initialized) {
+    container.className = 'item-list';
+    for (const item of ITEMS) {
+      const btn = document.createElement('button');
+      btn.id = `item-btn-${item.id}`;
+      btn.addEventListener('click', () => buyItem(item.id));
+      container.appendChild(btn);
+    }
+    container.dataset.initialized = '1';
+  }
+
+  for (const item of ITEMS) {
+    const bought    = (gameState.purchasedItems ?? []).includes(item.id);
+    const canBuy    = !bought && gameState.moku >= item.cost;
+    const btn       = document.getElementById(`item-btn-${item.id}`);
+    const src       = IMAGE_CONFIG.items[item.id];
+    const iconStyle = src
+      ? `background-image:url('${src}');background-size:cover;background-position:center;background-repeat:no-repeat;font-size:0;`
+      : '';
+
+    btn.className = `item-btn${canBuy ? ' can-buy' : ''}${bought ? ' maxed' : ''}`;
+    btn.innerHTML = `
+      <div class="item-icon" style="${iconStyle}">${iconStyle ? '' : item.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-cost">${bought ? '✅ 購入済み' : fmt(item.cost) + ' 藻'}</div>
+      </div>
+    `;
+  }
+}
+
 // ========== イベント解放 ==========
 
 function buyEventUnlock(eventId) {
@@ -943,10 +1023,12 @@ function init() {
   }
 
   updateSuit(gameState.suit);
+  updateItemOverlays();
   renderUpgradeList();
   renderEventUnlockList();
   renderEmployeeList();
   renderFacilityList();
+  renderItemList();
   updateDisplay();
   updateEventDisplay();
 
