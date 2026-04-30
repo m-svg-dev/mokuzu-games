@@ -409,6 +409,67 @@ button,
 
 #offline-ok:active { opacity: 0.7; }
 
+/* ========== 転生進捗バー ========== */
+#prestige-bar {
+  margin: 14px 0 0;
+  background: #0c1e34;
+  border: 1px solid #2a2a4a;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#prestige-bar.prestige-ready {
+  border-color: #cc88ff;
+  box-shadow: 0 0 16px #cc88ff50;
+  animation: prestige-glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes prestige-glow {
+  from { box-shadow: 0 0 10px #cc88ff40; }
+  to   { box-shadow: 0 0 28px #cc88ffaa; }
+}
+
+#prestige-bar-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+#prestige-label {
+  font-size: 0.8rem;
+  color: #aa88cc;
+  font-weight: bold;
+}
+
+#prestige-pct {
+  font-size: 0.8rem;
+  color: #aa88cc;
+}
+
+#prestige-gauge-wrap {
+  height: 10px;
+  background: #1a1a2e;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid #2a2a4a;
+}
+
+#prestige-gauge-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #8844cc, #cc88ff);
+  border-radius: 5px;
+  transition: width 0.4s ease;
+}
+
+#prestige-remaining {
+  font-size: 0.72rem;
+  color: #667788;
+  margin-top: 5px;
+  text-align: right;
+}
+
 /* ========== パネル共通タイトル ========== */
 .panel-title {
   font-size: 0.95rem;

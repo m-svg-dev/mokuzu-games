@@ -383,6 +383,7 @@ function updateDisplay() {
   setVal('stat-employees', `${totalEmployees}<span class="stat-unit">体</span>`);
   setVal('stat-total-moku', fmt(gameState.totalMoku));
 
+  updatePrestigeBar();
   updateGoalPanel();
   renderUpgradeList();
   renderEventUnlockList();
@@ -390,6 +391,34 @@ function updateDisplay() {
   renderFacilityList();
   renderItemList();
   updateSoundBtn();
+}
+
+const PRESTIGE_THRESHOLD = 10_000_000;
+
+function updatePrestigeBar() {
+  const total   = gameState.totalMoku ?? 0;
+  const pct     = Math.min(100, Math.floor(total / PRESTIGE_THRESHOLD * 100));
+  const ready   = total >= PRESTIGE_THRESHOLD;
+
+  const bar     = document.getElementById('prestige-bar');
+  const gauge   = document.getElementById('prestige-gauge-bar');
+  const pctEl   = document.getElementById('prestige-pct');
+  const remEl   = document.getElementById('prestige-remaining');
+  const labelEl = document.getElementById('prestige-label');
+  if (!bar) return;
+
+  gauge.style.width = `${pct}%`;
+  pctEl.textContent = `${pct}%`;
+
+  if (ready) {
+    bar.classList.add('prestige-ready');
+    labelEl.textContent = '✨ 転生可能！';
+    remEl.textContent   = '転生ボタンは近日実装予定';
+  } else {
+    bar.classList.remove('prestige-ready');
+    labelEl.textContent = '✨ 転生まで';
+    remEl.textContent   = `あと ${fmt(PRESTIGE_THRESHOLD - total)} 藻`;
+  }
 }
 
 function updateGoalPanel() {
