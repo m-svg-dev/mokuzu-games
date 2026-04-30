@@ -141,7 +141,7 @@ const FACILITIES = [
 
 // ネタアイテム・装飾アイテム（一度きりの購入）
 const ITEMS = [
-  { id: 'royalheart', name: 'ロイヤルハート', icon: '👑', desc: 'キャラの左上に飾られる。それだけ。', cost: 5_000_000, overlayPos: 'top-left' },
+  { id: 'royalheart', name: 'ロイヤルハート', icon: '👑', desc: '藻屑界のエリートの証！', cost: 5_000_000, overlayPos: 'top-left' },
 ];
 
 // 購入ごとに tapBonus が加算される（baseCost * costMult^購入回数 で価格上昇）
