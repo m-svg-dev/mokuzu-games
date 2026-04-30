@@ -40,6 +40,14 @@ const IMAGE_CONFIG = {
     record_break:    'assets/events/record_break.png',
     deep_factory:    'assets/events/deep_factory.png',
   },
+  facilities: {
+    facility_plant:   'assets/facilities/facility_plant.png',
+    facility_factory: 'assets/facilities/facility_factory.png',
+    facility_lab:     'assets/facilities/facility_lab.png',
+    facility_hq:      'assets/facilities/facility_hq.png',
+    facility_bank:    'assets/facilities/facility_bank.png',
+    facility_tower:   'assets/facilities/facility_tower.png',
+  },
   effects: {
     // tapPower に応じて切り替え
     normal:   'assets/effects/tap_normal.png',   // デフォルト
@@ -122,6 +130,16 @@ function getSuitForLevel(level) {
   return 'black';
 }
 
+// 施設（各最大5回購入、costMult: 2.5）
+const FACILITIES = [
+  { id: 'facility_plant',   name: '海藻プラント',   icon: '🌱', desc: 'MPS +3/秒',     baseCost: 2_000,     costMult: 2.5, mpsBonus: 3,    maxCount: 5 },
+  { id: 'facility_factory', name: '深海工場',       icon: '🏭', desc: 'MPS +20/秒',    baseCost: 15_000,    costMult: 2.5, mpsBonus: 20,   maxCount: 5 },
+  { id: 'facility_lab',     name: 'サンゴ研究所',   icon: '🔬', desc: 'タップ +50',    baseCost: 50_000,    costMult: 2.5, tapBonus: 50,   maxCount: 5 },
+  { id: 'facility_hq',      name: '海底本社ビル',   icon: '🏢', desc: 'MPS +100/秒',   baseCost: 200_000,   costMult: 2.5, mpsBonus: 100,  maxCount: 5 },
+  { id: 'facility_bank',    name: '海流銀行',       icon: '🏦', desc: 'MPS +400/秒',   baseCost: 800_000,   costMult: 2.5, mpsBonus: 400,  maxCount: 5 },
+  { id: 'facility_tower',   name: '光合成タワー',   icon: '🗼', desc: 'MPS +1500/秒',  baseCost: 3_000_000, costMult: 2.5, mpsBonus: 1500, maxCount: 5 },
+];
+
 // 購入ごとに tapBonus が加算される（baseCost * costMult^購入回数 で価格上昇）
 const UPGRADES = [
   { id: 'tap1', name: 'タップ強化 I',   icon: '💪', desc: 'タップ +1',   baseCost: 8,     costMult: 2.0, tapBonus: 1,   maxCount: 10 },
@@ -175,6 +193,7 @@ const DEFAULT_STATE = {
   awakenTimer:    0,
   upgrades:       {},     // { upgradeId: 購入回数 }
   employees:      {},     // { employeeId: 所持数 }
+  facilities:     {},     // { facilityId: 購入回数 }
   eventCooldown:  60,
   activeEvent:    null,   // { id, timer }
   eventTapMult:   1,
@@ -211,10 +230,24 @@ function getEmployeeCost(emp) {
   return Math.floor(emp.baseCost * Math.pow(1.15, count));
 }
 
+function getFacilityCost(f) {
+  const count = gameState.facilities[f.id] ?? 0;
+  return Math.floor(f.baseCost * Math.pow(f.costMult, count));
+}
+
+function getFacilityIconStyle(facId) {
+  const src = IMAGE_CONFIG.facilities[facId];
+  if (!src) return '';
+  return `background-image:url('${src}');background-size:cover;background-position:center;background-repeat:no-repeat;font-size:0;`;
+}
+
 function recalcTapPower() {
   let power = 1;
   for (const u of UPGRADES) {
     power += u.tapBonus * (gameState.upgrades[u.id] ?? 0);
+  }
+  for (const f of FACILITIES) {
+    if (f.tapBonus) power += f.tapBonus * (gameState.facilities[f.id] ?? 0);
   }
   gameState.tapPower = power;
 }
@@ -223,6 +256,9 @@ function recalcMPS() {
   let mps = 0;
   for (const emp of EMPLOYEES) {
     mps += emp.mpsBonus * (gameState.employees[emp.id] ?? 0);
+  }
+  for (const f of FACILITIES) {
+    if (f.mpsBonus) mps += f.mpsBonus * (gameState.facilities[f.id] ?? 0);
   }
   gameState.mokuPerSecond = mps;
 }
@@ -295,6 +331,7 @@ function updateDisplay() {
 
   renderUpgradeList();
   renderEmployeeList();
+  renderFacilityList();
 }
 
 // ========== スーツ更新 ==========
@@ -470,6 +507,23 @@ function buyEmployee(empId) {
   updateDisplay();
 }
 
+// ========== 施設購入 ==========
+
+function buyFacility(facilityId) {
+  const f = FACILITIES.find(x => x.id === facilityId);
+  if (!f) return;
+  const count = gameState.facilities[f.id] ?? 0;
+  if (count >= f.maxCount) return;
+  const cost = getFacilityCost(f);
+  if (gameState.moku < cost) return;
+
+  gameState.moku -= cost;
+  gameState.facilities[f.id] = count + 1;
+  recalcTapPower();
+  recalcMPS();
+  updateDisplay();
+}
+
 // ========== イベント ==========
 
 function triggerRandomEvent() {
@@ -601,6 +655,49 @@ function renderEmployeeList() {
   }
 }
 
+function renderFacilityList() {
+  const container = document.getElementById('facility-list');
+  if (!container) return;
+
+  if (!container.dataset.initialized) {
+    container.className = 'item-list';
+    for (const f of FACILITIES) {
+      const btn = document.createElement('button');
+      btn.id = `facility-btn-${f.id}`;
+      btn.addEventListener('click', () => buyFacility(f.id));
+      container.appendChild(btn);
+    }
+    container.dataset.initialized = '1';
+  }
+
+  for (const f of FACILITIES) {
+    const count  = gameState.facilities[f.id] ?? 0;
+    const cost   = getFacilityCost(f);
+    const maxed  = count >= f.maxCount;
+    const canBuy = !maxed && gameState.moku >= cost;
+    const btn    = document.getElementById(`facility-btn-${f.id}`);
+
+    const iconStyle = getFacilityIconStyle(f.id);
+    const dots = Array.from({ length: f.maxCount }, (_, i) =>
+      `<div class="item-count-dot${i < count ? ' filled' : ''}"></div>`
+    ).join('');
+
+    btn.className = `item-btn${canBuy ? ' can-buy' : ''}${maxed ? ' maxed' : ''}`;
+    btn.innerHTML = `
+      <div class="item-icon" style="${iconStyle}">${iconStyle ? '' : f.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${f.name}</div>
+        <div class="item-desc">${f.desc}</div>
+        <div class="item-count-bar">${dots}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-cost">${maxed ? 'MAX' : fmt(cost) + ' 藻'}</div>
+        <div class="item-count-label">${count} / ${f.maxCount}</div>
+      </div>
+    `;
+  }
+}
+
 // ========== セーブ / ロード / リセット ==========
 
 function saveGame() {
@@ -658,6 +755,7 @@ function init() {
   updateSuit(gameState.suit);
   renderUpgradeList();
   renderEmployeeList();
+  renderFacilityList();
   updateDisplay();
   updateEventDisplay();
 

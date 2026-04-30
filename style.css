@@ -74,25 +74,24 @@ button,
   display: block;
 }
 
-/* ========== メイン画面：2カラムレイアウト ========== */
+/* ========== メイン画面：縦1カラム ========== */
 #main-top {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 12px;
-  align-items: flex-start;
   padding-top: 12px;
 }
 
-/* 左：キャラクター */
 #tap-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex-shrink: 0;
 }
 
 #character-img {
-  width: 148px;
-  height: 190px;
+  width: 260px;
+  height: 335px;
   border-radius: 14px;
   background: #122a1c;
   border: 5px solid #cccccc;
@@ -160,7 +159,7 @@ button,
   align-items: center;
   gap: 6px;
   margin-top: 5px;
-  width: 148px;
+  width: 260px;
 }
 
 #xp-bar-bg {
@@ -192,20 +191,22 @@ button,
   font-size: 0.78rem;
 }
 
-/* 右：ステータスパネル */
+/* ステータスパネル：2×2グリッド */
 #stats-panel {
-  flex: 1;
-  background: #0c1e34;
-  border: 1px solid #1a3a50;
-  border-radius: 12px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .stat-block {
-  padding: 7px 0;
+  background: #0c1e34;
+  border: 1px solid #1a3a50;
+  border-radius: 10px;
+  padding: 8px 12px;
 }
 
 .stat-label {
@@ -228,8 +229,7 @@ button,
 }
 
 .stat-divider {
-  height: 1px;
-  background: #1a3a50;
+  display: none;
 }
 
 /* ========== 覚醒バー ========== */
