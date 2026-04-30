@@ -180,6 +180,16 @@ const EVENTS = [
   { id: 'sea_god',         name: '海神様のお告げだ！',     icon: '🔱', desc: '全収益 ×4（10秒）',               type: 'all_mult',   value: 4,   duration: 10, unlockCost: 500_000 },
 ];
 
+// 転生スキルツリー
+const PRESTIGE_SKILLS = [
+  { id: 'pTap',    name: 'タップ強化',         desc: '恒久タップ ×1.5倍',        costs: [10, 25, 50, 100, 200], type: 'tapMult',    value: 1.5, maxLevel: 5 },
+  { id: 'pMps',    name: '自動収益強化',        desc: '恒久MPS ×1.5倍',            costs: [10, 25, 50, 100, 200], type: 'mpsMult',    value: 1.5, maxLevel: 5 },
+  { id: 'pCritR',  name: 'クリティカル率UP',   desc: '恒久クリティカル率 +5%',    costs: [30, 80, 200],          type: 'critRate',   value: 0.05, maxLevel: 3 },
+  { id: 'pCritM',  name: 'クリティカル倍率UP', desc: '恒久クリティカル倍率 +1倍', costs: [50, 150, 400],         type: 'critMult',   value: 1,    maxLevel: 3 },
+  { id: 'pAwaken', name: '覚醒強化',            desc: '覚醒効果 ×2（5倍→10倍）',   costs: [300],                  type: 'awakenMult', value: 2,    maxLevel: 1 },
+  { id: 'pStone',  name: '転生加速',            desc: '転生石獲得量 ×2',            costs: [500],                  type: 'stoneMult',  value: 2,    maxLevel: 1 },
+];
+
 // ========== 初期状態 ==========
 
 const DEFAULT_STATE = {
@@ -199,6 +209,9 @@ const DEFAULT_STATE = {
   critMult:        3,      // クリティカル倍率（課金要素で上昇）
   soundEnabled:    true,   // サウンドON/OFF
   purchasedItems:  [],
+  prestigeLevel:   0,
+  prestigeStones:  0,
+  prestigeSkills:  {},
   unlockedEvents:  ['bonus_tap', 'bonus_mps', 'bonus_moku', 'rough_current', 'tax_bill'],
   nextEventId:     null,   // 待機中に予告表示するイベントID
   eventCooldown:   60,
@@ -293,6 +306,18 @@ function getFacilityIconStyle(facId) {
   return `background-image:url('${src}');background-size:cover;background-position:center;background-repeat:no-repeat;font-size:0;`;
 }
 
+function getPrestigeBonus(type) {
+  const isMult = ['tapMult', 'mpsMult', 'awakenMult', 'stoneMult'].includes(type);
+  let bonus = isMult ? 1 : 0;
+  for (const s of PRESTIGE_SKILLS) {
+    if (s.type !== type) continue;
+    const lv = gameState.prestigeSkills?.[s.id] ?? 0;
+    if (isMult) bonus *= Math.pow(s.value, lv);
+    else        bonus += s.value * lv;
+  }
+  return bonus;
+}
+
 function recalcTapPower() {
   let power = 1;
   for (const u of UPGRADES) {
@@ -301,7 +326,7 @@ function recalcTapPower() {
   for (const f of FACILITIES) {
     if (f.tapBonus) power += f.tapBonus * (gameState.facilities[f.id] ?? 0);
   }
-  gameState.tapPower = power;
+  gameState.tapPower = power * getPrestigeBonus('tapMult');
 }
 
 function recalcMPS() {
@@ -312,7 +337,7 @@ function recalcMPS() {
   for (const f of FACILITIES) {
     if (f.mpsBonus) mps += f.mpsBonus * (gameState.facilities[f.id] ?? 0);
   }
-  gameState.mokuPerSecond = mps;
+  gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult');
 }
 
 // ========== 表示更新 ==========
@@ -384,6 +409,7 @@ function updateDisplay() {
   setVal('stat-total-moku', fmt(gameState.totalMoku));
 
   updatePrestigeBar();
+  updatePrestigeTab();
   updateGoalPanel();
   renderUpgradeList();
   renderEventUnlockList();
@@ -413,7 +439,14 @@ function updatePrestigeBar() {
   if (ready) {
     bar.classList.add('prestige-ready');
     labelEl.textContent = '✨ 転生可能！';
-    remEl.textContent   = '転生ボタンは近日実装予定';
+    remEl.textContent   = '';
+    if (!document.getElementById('prestige-do-btn')) {
+      const btn = document.createElement('button');
+      btn.id = 'prestige-do-btn';
+      btn.textContent = '🌀 転生する';
+      btn.addEventListener('click', doPrestige);
+      bar.appendChild(btn);
+    }
   } else {
     bar.classList.remove('prestige-ready');
     labelEl.textContent = '✨ 転生まで';
@@ -475,11 +508,12 @@ function onTap(e) {
   tapLocked = true;
   setTimeout(() => { tapLocked = false; }, 50);
 
-  const awakenMult  = gameState.isAwakened ? 5 : 1;
+  const awakenMult  = gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1;
   const eventMult   = gameState.eventTapMult ?? 1;
-  const isCritical  = Math.random() < (gameState.critRate ?? 0.05);
-  const critMult    = isCritical ? (gameState.critMult ?? 3) : 1;
-  const gained      = gameState.tapPower * awakenMult * eventMult * critMult;
+  const critRate    = 0.05 + getPrestigeBonus('critRate');
+  const critMult    = 3    + getPrestigeBonus('critMult');
+  const isCritical  = Math.random() < critRate;
+  const gained      = gameState.tapPower * awakenMult * eventMult * (isCritical ? critMult : 1);
 
   gameState.moku      += gained;
   gameState.totalMoku += gameState.tapPower; // ボーナス倍率は totalMoku に含めない
@@ -552,7 +586,7 @@ function spawnTapEffect(e, gained, isCritical = false) {
 // ========== 自動収益ループ（1秒ごと） ==========
 
 function gameLoop() {
-  const awakenMult = gameState.isAwakened ? 5 : 1;
+  const awakenMult = gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1;
   const eventMult  = gameState.eventMpsMult ?? 1;
   const gained     = gameState.mokuPerSecond * awakenMult * eventMult;
 
@@ -958,6 +992,97 @@ function renderEventUnlockList() {
   }
 }
 
+// ========== 転生（プレステージ） ==========
+
+function doPrestige() {
+  if ((gameState.totalMoku ?? 0) < PRESTIGE_THRESHOLD) return;
+  const stonesEarned = Math.floor(gameState.totalMoku / 1_000_000) * getPrestigeBonus('stoneMult');
+  if (!confirm(`転生しますか？\n\n獲得: 転生石 +${stonesEarned}個\n\n藻・強化・社員・施設・イベント解放がリセットされます。\nアイテムとスキルは引き継がれます。`)) return;
+
+  const keep = {
+    purchasedItems:  gameState.purchasedItems,
+    prestigeLevel:   (gameState.prestigeLevel ?? 0) + 1,
+    prestigeStones:  (gameState.prestigeStones ?? 0) + stonesEarned,
+    prestigeSkills:  gameState.prestigeSkills,
+  };
+
+  gameState = structuredClone(DEFAULT_STATE);
+  Object.assign(gameState, keep);
+  recalcTapPower();
+  recalcMPS();
+  saveGame();
+  updateItemOverlays();
+  updateDisplay();
+  updateEventDisplay();
+  updatePrestigeBar();
+}
+
+function buyPrestigeSkill(skillId) {
+  const s  = PRESTIGE_SKILLS.find(x => x.id === skillId);
+  if (!s) return;
+  const lv   = gameState.prestigeSkills?.[s.id] ?? 0;
+  if (lv >= s.maxLevel) return;
+  const cost = s.costs[lv];
+  if ((gameState.prestigeStones ?? 0) < cost) return;
+
+  gameState.prestigeStones -= cost;
+  gameState.prestigeSkills = { ...gameState.prestigeSkills, [s.id]: lv + 1 };
+  recalcTapPower();
+  recalcMPS();
+  playSound('buy');
+  updateDisplay();
+}
+
+function renderPrestigeSkillList() {
+  const container = document.getElementById('prestige-skill-list');
+  if (!container) return;
+
+  if (!container.dataset.initialized) {
+    container.className = 'item-list';
+    for (const s of PRESTIGE_SKILLS) {
+      const btn = document.createElement('button');
+      btn.id = `pskill-btn-${s.id}`;
+      btn.addEventListener('click', () => buyPrestigeSkill(s.id));
+      container.appendChild(btn);
+    }
+    container.dataset.initialized = '1';
+  }
+
+  for (const s of PRESTIGE_SKILLS) {
+    const lv     = gameState.prestigeSkills?.[s.id] ?? 0;
+    const maxed  = lv >= s.maxLevel;
+    const cost   = maxed ? 0 : s.costs[lv];
+    const canBuy = !maxed && (gameState.prestigeStones ?? 0) >= cost;
+    const btn    = document.getElementById(`pskill-btn-${s.id}`);
+
+    const dots = Array.from({ length: s.maxLevel }, (_, i) =>
+      `<div class="item-count-dot${i < lv ? ' filled' : ''}"></div>`
+    ).join('');
+
+    btn.className = `item-btn${canBuy ? ' can-buy' : ''}${maxed ? ' maxed' : ''}`;
+    btn.innerHTML = `
+      <div class="item-icon">✨</div>
+      <div class="item-info">
+        <div class="item-name">${s.name}</div>
+        <div class="item-desc">${s.desc}</div>
+        <div class="item-count-bar">${dots}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-cost" style="color:#cc88ff">${maxed ? 'MAX' : cost + ' 石'}</div>
+        <div class="item-count-label">${lv} / ${s.maxLevel}</div>
+      </div>
+    `;
+  }
+}
+
+function updatePrestigeTab() {
+  const lvEl     = document.getElementById('prestige-tab-level');
+  const stoneEl  = document.getElementById('prestige-tab-stones');
+  if (lvEl)    lvEl.textContent    = `転生 Lv.${gameState.prestigeLevel ?? 0}`;
+  if (stoneEl) stoneEl.textContent = `✨ 転生石: ${gameState.prestigeStones ?? 0}`;
+  renderPrestigeSkillList();
+}
+
 // ========== オフライン収益 ==========
 
 function checkOfflineEarnings() {
@@ -1053,6 +1178,7 @@ function init() {
 
   updateSuit(gameState.suit);
   updateItemOverlays();
+  renderPrestigeSkillList();
   renderUpgradeList();
   renderEventUnlockList();
   renderEmployeeList();
