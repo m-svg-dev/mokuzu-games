@@ -515,6 +515,12 @@ button,
   font-size: 0.9rem;
 }
 
+.event-next-preview {
+  margin-top: 8px;
+  color: #78bb99;
+  font-size: 0.85rem;
+}
+
 #event-name {
   font-size: 1.2rem;
   font-weight: bold;
@@ -548,7 +554,7 @@ button,
   margin-top: 8px;
 }
 
-#save-btn, #reset-btn {
+#save-btn, #reset-btn, #sound-btn {
   padding: 12px 28px;
   border-radius: 10px;
   border: none;
@@ -558,7 +564,7 @@ button,
   transition: opacity 0.15s;
 }
 
-#save-btn:active, #reset-btn:active { opacity: 0.7; }
+#save-btn:active, #reset-btn:active, #sound-btn:active { opacity: 0.7; }
 
 #save-btn {
   background: #0e3a24;
@@ -570,6 +576,12 @@ button,
   background: #3a1010;
   color: #ff6666;
   border: 1px solid #ff4444;
+}
+
+#sound-btn {
+  background: #0e2a3a;
+  color: #00ccff;
+  border: 1px solid #0099cc;
 }
 
 /* ========== タブナビゲーション ========== */

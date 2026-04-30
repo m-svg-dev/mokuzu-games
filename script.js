@@ -158,25 +158,22 @@ const EMPLOYEES = [
 ];
 
 const EVENTS = [
-  // ポジティブ（タップ強化）
-  { id: 'bonus_tap',       name: '藻の大発生！',           icon: '🌊', desc: 'タップ効率 ×3（20秒）',          type: 'tap_mult',   value: 3,   duration: 20 },
-  { id: 'moku_bubble',     name: '海流バブル発生！',       icon: '🫧', desc: 'タップ効率 ×5（15秒）',          type: 'tap_mult',   value: 5,   duration: 15 },
-  { id: 'jellyfish_swarm', name: 'クラゲの大群襲来！',     icon: '🪼', desc: 'タップ効率 ×2（40秒）',          type: 'tap_mult',   value: 2,   duration: 40 },
-  { id: 'record_break',    name: '記録更新！！',            icon: '📈', desc: 'タップ効率 ×10（10秒）',         type: 'tap_mult',   value: 10,  duration: 10 },
-  // ポジティブ（自動収益強化）
-  { id: 'bonus_mps',       name: '自動収穫強化！',         icon: '⚡', desc: '自動収益 ×2（30秒）',            type: 'mps_mult',   value: 2,   duration: 30 },
-  { id: 'shark_deal',      name: 'サメが営業に来た！',     icon: '🦈', desc: '自動収益 ×3（45秒）',            type: 'mps_mult',   value: 3,   duration: 45 },
-  { id: 'deep_factory',    name: '深海工場の稼働！',       icon: '🏭', desc: '自動収益 ×2（60秒）',            type: 'mps_mult',   value: 2,   duration: 60 },
-  { id: 'human_spotted',   name: '人間にバレそうだ！',     icon: '👁️', desc: '話題沸騰！自動収益 ×1.5（30秒）', type: 'mps_mult',   value: 1.5, duration: 30 },
-  // ポジティブ（全体強化）
-  { id: 'sea_god',         name: '海神様のお告げだ！',     icon: '🔱', desc: '全収益 ×4（10秒）',              type: 'all_mult',   value: 4,   duration: 10 },
-  // ポジティブ（即時獲得）
-  { id: 'bonus_moku',      name: 'ボーナス収穫！',         icon: '💎', desc: '現在の藻 +10%（即時）',          type: 'moku_bonus', value: 0.1, duration: 1  },
-  { id: 'deep_treasure',   name: '深海の宝を発見！',       icon: '🪙', desc: '現在の藻 +30%（即時）',          type: 'moku_bonus', value: 0.3, duration: 1  },
-  { id: 'settlement_bonus',name: '決算ボーナス！',         icon: '💰', desc: '現在の藻 +50%（即時）',          type: 'moku_bonus', value: 0.5, duration: 1  },
-  // ネガティブ（たまに来るハプニング）
-  { id: 'tax_bill',        name: '税金の請求書が届いた…', icon: '📄', desc: '自動収益 -50%（30秒）',          type: 'mps_mult',   value: 0.5, duration: 30 },
-  { id: 'rough_current',   name: '海流が荒れている…',     icon: '🌀', desc: '自動収益 -30%（20秒）',          type: 'mps_mult',   value: 0.7, duration: 20 },
+  // ── デフォルト解放済み（unlockCost: 0） ──
+  { id: 'bonus_tap',       name: '藻の大発生！',           icon: '🌊', desc: 'タップ効率 ×3（20秒）',           type: 'tap_mult',   value: 3,   duration: 20, unlockCost: 0       },
+  { id: 'bonus_mps',       name: '自動収穫強化！',         icon: '⚡', desc: '自動収益 ×2（30秒）',             type: 'mps_mult',   value: 2,   duration: 30, unlockCost: 0       },
+  { id: 'bonus_moku',      name: 'ボーナス収穫！',         icon: '💎', desc: '現在の藻 +10%（即時）',           type: 'moku_bonus', value: 0.1, duration: 3,  unlockCost: 0       },
+  { id: 'rough_current',   name: '海流が荒れている…',     icon: '🌀', desc: '自動収益 -30%（20秒）',           type: 'mps_mult',   value: 0.7, duration: 20, unlockCost: 0       },
+  // ── 藻で解放可能 ──
+  { id: 'jellyfish_swarm', name: 'クラゲの大群襲来！',     icon: '🪼', desc: 'タップ効率 ×2（40秒）',           type: 'tap_mult',   value: 2,   duration: 40, unlockCost: 500     },
+  { id: 'human_spotted',   name: '人間にバレそうだ！',     icon: '👁️', desc: '話題沸騰！自動収益 ×1.5（30秒）', type: 'mps_mult',   value: 1.5, duration: 30, unlockCost: 1_000   },
+  { id: 'moku_bubble',     name: '海流バブル発生！',       icon: '🫧', desc: 'タップ効率 ×5（15秒）',           type: 'tap_mult',   value: 5,   duration: 15, unlockCost: 3_000   },
+  { id: 'shark_deal',      name: 'サメが営業に来た！',     icon: '🦈', desc: '自動収益 ×3（45秒）',             type: 'mps_mult',   value: 3,   duration: 45, unlockCost: 8_000   },
+  { id: 'deep_factory',    name: '深海工場の稼働！',       icon: '🏭', desc: '自動収益 ×2（60秒）',             type: 'mps_mult',   value: 2,   duration: 60, unlockCost: 15_000  },
+  { id: 'deep_treasure',   name: '深海の宝を発見！',       icon: '🪙', desc: '現在の藻 +30%（即時）',           type: 'moku_bonus', value: 0.3, duration: 3,  unlockCost: 25_000  },
+  { id: 'record_break',    name: '記録更新！！',           icon: '📈', desc: 'タップ効率 ×10（10秒）',          type: 'tap_mult',   value: 10,  duration: 10, unlockCost: 50_000  },
+  { id: 'settlement_bonus',name: '決算ボーナス！',         icon: '💰', desc: '現在の藻 +50%（即時）',           type: 'moku_bonus', value: 0.5, duration: 3,  unlockCost: 100_000 },
+  { id: 'tax_bill',        name: '税金の請求書が届いた…', icon: '📄', desc: '自動収益 -50%（30秒）',           type: 'mps_mult',   value: 0.5, duration: 30, unlockCost: 150_000 },
+  { id: 'sea_god',         name: '海神様のお告げだ！',     icon: '🔱', desc: '全収益 ×4（10秒）',               type: 'all_mult',   value: 4,   duration: 10, unlockCost: 500_000 },
 ];
 
 // ========== 初期状態 ==========
@@ -194,13 +191,16 @@ const DEFAULT_STATE = {
   upgrades:       {},     // { upgradeId: 購入回数 }
   employees:      {},     // { employeeId: 所持数 }
   facilities:     {},     // { facilityId: 購入回数 }
-  critRate:       0.05,   // クリティカル確率（課金要素で上昇）
-  critMult:       3,      // クリティカル倍率（課金要素で上昇）
-  eventCooldown:  60,
-  activeEvent:    null,   // { id, timer }
-  eventTapMult:   1,
-  eventMpsMult:   1,
-  lastSaved:      0,
+  critRate:        0.05,   // クリティカル確率（課金要素で上昇）
+  critMult:        3,      // クリティカル倍率（課金要素で上昇）
+  soundEnabled:    true,   // サウンドON/OFF
+  unlockedEvents:  ['bonus_tap', 'bonus_mps', 'bonus_moku', 'rough_current'],
+  nextEventId:     null,   // 待機中に予告表示するイベントID
+  eventCooldown:   60,
+  activeEvent:     null,   // { id, timer }
+  eventTapMult:    1,
+  eventMpsMult:    1,
+  lastSaved:       0,
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -221,6 +221,51 @@ function calcLevel(totalMoku) {
   const suit = getSuitForLevel(lv);
   return { level: lv, suit };
 }
+
+// ========== サウンド（Web Audio API） ==========
+
+let _audioCtx = null;
+
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+
+function playSound(type) {
+  if (!gameState.soundEnabled) return;
+  const ctx = getAudioCtx();
+  const t = ctx.currentTime;
+
+  const beep = (freq, endFreq, duration, gain = 0.18, wave = 'square') => {
+    const osc = ctx.createOscillator();
+    const vol = ctx.createGain();
+    osc.connect(vol);
+    vol.connect(ctx.destination);
+    osc.type = wave;
+    osc.frequency.setValueAtTime(freq, t);
+    if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, t + duration);
+    vol.gain.setValueAtTime(gain, t);
+    vol.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.start(t);
+    osc.stop(t + duration);
+  };
+
+  switch (type) {
+    case 'tap':      beep(380, 200, 0.07, 0.12); break;
+    case 'tapLarge': beep(600, 280, 0.11, 0.18); break;
+    case 'critical':
+      [600, 900, 1300].forEach((f, i) => setTimeout(() => beep(f, f * 1.2, 0.1, 0.18, 'sawtooth'), i * 80));
+      break;
+    case 'buy':      beep(800, 1200, 0.14, 0.18, 'sine'); break;
+    case 'awaken':   beep(180, 1600, 0.5, 0.25, 'sawtooth'); break;
+    case 'levelup':
+      [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, f, 0.12, 0.16, 'triangle'), i * 90));
+      break;
+  }
+}
+
+let _prevLevel = -1;
 
 function getUpgradeCost(u) {
   const count = gameState.upgrades[u.id] ?? 0;
@@ -308,6 +353,8 @@ function updateDisplay() {
     red: '🟥 赤',  gold: '🌟 金', rainbow: '🌈 レインボー',
   };
   const lv   = calcLevelFromMoku(gameState.totalMoku);
+  if (_prevLevel > 0 && lv > _prevLevel) playSound('levelup');
+  _prevLevel = lv;
   const suit = getSuitForLevel(lv);
   if (suit !== gameState.suit) updateSuit(suit);
 
@@ -332,8 +379,17 @@ function updateDisplay() {
   setVal('stat-total-moku', fmt(gameState.totalMoku));
 
   renderUpgradeList();
+  renderEventUnlockList();
   renderEmployeeList();
   renderFacilityList();
+  updateSoundBtn();
+}
+
+function updateSoundBtn() {
+  const btn = document.getElementById('sound-btn');
+  if (!btn) return;
+  btn.textContent = gameState.soundEnabled ? '🔊 サウンド ON' : '🔇 サウンド OFF';
+  btn.style.opacity = gameState.soundEnabled ? '1' : '0.5';
 }
 
 // ========== スーツ更新 ==========
@@ -367,6 +423,7 @@ function onTap(e) {
 
   gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 2);
 
+  playSound(isCritical ? 'critical' : gained >= TAP_EFFECT_THRESHOLDS.large ? 'tapLarge' : 'tap');
   spawnFloatText(e, `+${fmt(gained)}`, isCritical);
   spawnTapEffect(e, gained, isCritical);
 
@@ -470,6 +527,7 @@ function activateAwaken() {
   gameState.awakenGauge = 0;
   const el = document.getElementById('character-img');
   el.classList.add('awakened');
+  playSound('awaken');
 }
 
 function deactivateAwaken() {
@@ -492,6 +550,7 @@ function buyUpgrade(upgradeId) {
   gameState.moku -= cost;
   gameState.upgrades[u.id] = count + 1;
   recalcTapPower();
+  playSound('buy');
   updateDisplay();
 }
 
@@ -506,6 +565,7 @@ function buyEmployee(empId) {
   gameState.moku -= cost;
   gameState.employees[emp.id] = (gameState.employees[emp.id] ?? 0) + 1;
   recalcMPS();
+  playSound('buy');
   updateDisplay();
 }
 
@@ -523,14 +583,23 @@ function buyFacility(facilityId) {
   gameState.facilities[f.id] = count + 1;
   recalcTapPower();
   recalcMPS();
+  playSound('buy');
   updateDisplay();
 }
 
 // ========== イベント ==========
 
+function pickRandomEvent() {
+  const pool = EVENTS.filter(e => (gameState.unlockedEvents ?? []).includes(e.id));
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function triggerRandomEvent() {
-  const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
-  gameState.activeEvent = { id: ev.id, timer: ev.duration };
+  const ev = gameState.nextEventId
+    ? (EVENTS.find(e => e.id === gameState.nextEventId) ?? pickRandomEvent())
+    : pickRandomEvent();
+  gameState.activeEvent  = { id: ev.id, timer: ev.duration };
+  gameState.nextEventId  = null;
 
   if (ev.type === 'tap_mult')   gameState.eventTapMult = ev.value;
   if (ev.type === 'mps_mult')   gameState.eventMpsMult = ev.value;
@@ -542,15 +611,17 @@ function endEvent() {
   gameState.activeEvent   = null;
   gameState.eventTapMult  = 1;
   gameState.eventMpsMult  = 1;
-  gameState.eventCooldown = 60 + Math.floor(Math.random() * 61); // 60〜120秒
+  gameState.eventCooldown = 60 + Math.floor(Math.random() * 61);
+  // 次のイベントを先行決定してプレビュー表示
+  const next = pickRandomEvent();
+  if (next) gameState.nextEventId = next.id;
 }
 
 function updateEventDisplay() {
   const area = document.getElementById('event-area');
-  const cdEl = document.getElementById('event-cooldown-display');
 
   if (gameState.activeEvent && gameState.activeEvent.timer > 0) {
-    const ev    = EVENTS.find(e => e.id === gameState.activeEvent.id);
+    const ev = EVENTS.find(e => e.id === gameState.activeEvent.id);
     if (!ev) return;
     const imgSrc = IMAGE_CONFIG.events[ev.id];
     const imgTag = imgSrc
@@ -563,14 +634,18 @@ function updateEventDisplay() {
       <div id="event-remaining">残り ${gameState.activeEvent.timer}秒</div>
     `;
   } else {
-    area.innerHTML = `<p class="event-standby">イベント待機中...</p>`;
-    if (cdEl) area.appendChild(cdEl);
-  }
-
-  if (cdEl) {
-    cdEl.textContent = gameState.eventCooldown > 0
+    const nextEv = gameState.nextEventId ? EVENTS.find(e => e.id === gameState.nextEventId) : null;
+    const previewHtml = nextEv
+      ? `<p class="event-next-preview">${nextEv.icon} 次は「${nextEv.name}」</p>`
+      : '';
+    const cdText = gameState.eventCooldown > 0
       ? `次のイベントまで約 ${gameState.eventCooldown}秒`
       : '';
+    area.innerHTML = `
+      <p class="event-standby">イベント待機中...</p>
+      ${previewHtml}
+      <p id="event-cooldown-display">${cdText}</p>
+    `;
   }
 }
 
@@ -700,6 +775,56 @@ function renderFacilityList() {
   }
 }
 
+// ========== イベント解放 ==========
+
+function buyEventUnlock(eventId) {
+  const ev = EVENTS.find(e => e.id === eventId);
+  if (!ev || !ev.unlockCost) return;
+  if ((gameState.unlockedEvents ?? []).includes(eventId)) return;
+  if (gameState.moku < ev.unlockCost) return;
+
+  gameState.moku -= ev.unlockCost;
+  gameState.unlockedEvents = [...(gameState.unlockedEvents ?? []), eventId];
+  playSound('buy');
+  updateDisplay();
+}
+
+function renderEventUnlockList() {
+  const container = document.getElementById('event-unlock-list');
+  if (!container) return;
+
+  const lockable = EVENTS.filter(e => e.unlockCost > 0);
+
+  if (!container.dataset.initialized) {
+    container.className = 'item-list';
+    for (const ev of lockable) {
+      const btn = document.createElement('button');
+      btn.id = `event-unlock-btn-${ev.id}`;
+      btn.addEventListener('click', () => buyEventUnlock(ev.id));
+      container.appendChild(btn);
+    }
+    container.dataset.initialized = '1';
+  }
+
+  for (const ev of lockable) {
+    const unlocked = (gameState.unlockedEvents ?? []).includes(ev.id);
+    const canBuy   = !unlocked && gameState.moku >= ev.unlockCost;
+    const btn      = document.getElementById(`event-unlock-btn-${ev.id}`);
+
+    btn.className = `item-btn${canBuy ? ' can-buy' : ''}${unlocked ? ' maxed' : ''}`;
+    btn.innerHTML = `
+      <div class="item-icon">${ev.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${ev.name}</div>
+        <div class="item-desc">${ev.desc}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-cost">${unlocked ? '✅ 解放済み' : fmt(ev.unlockCost) + ' 藻'}</div>
+      </div>
+    `;
+  }
+}
+
 // ========== セーブ / ロード / リセット ==========
 
 function saveGame() {
@@ -754,8 +879,16 @@ function initTabs() {
 
 function init() {
   loadGame();
+
+  // 初回起動 or 旧セーブ：待機中なら次のイベントを先行決定
+  if (!gameState.nextEventId && !gameState.activeEvent) {
+    const next = pickRandomEvent();
+    if (next) gameState.nextEventId = next.id;
+  }
+
   updateSuit(gameState.suit);
   renderUpgradeList();
+  renderEventUnlockList();
   renderEmployeeList();
   renderFacilityList();
   updateDisplay();
@@ -777,6 +910,12 @@ function init() {
     setTimeout(() => { btn.textContent = '💾 セーブ'; }, 1500);
   });
   document.getElementById('reset-btn').addEventListener('click', resetGame);
+
+  document.getElementById('sound-btn').addEventListener('click', () => {
+    gameState.soundEnabled = !gameState.soundEnabled;
+    updateSoundBtn();
+    if (gameState.soundEnabled) playSound('buy');
+  });
 
   initTabs();
 
