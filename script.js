@@ -64,7 +64,7 @@ function applyCharacterSprite(suit) {
   const src = IMAGE_CONFIG.character.suits[suit] ?? IMAGE_CONFIG.character.suits.black;
   const el  = document.getElementById('character-img');
   el.style.backgroundImage    = `url('${src}')`;
-  el.style.backgroundSize     = 'cover';
+  el.style.backgroundSize     = 'contain';
   el.style.backgroundPosition = 'center top';
   el.style.backgroundRepeat   = 'no-repeat';
   el.textContent = '';
