@@ -378,11 +378,39 @@ function updateDisplay() {
   setVal('stat-employees', `${totalEmployees}<span class="stat-unit">体</span>`);
   setVal('stat-total-moku', fmt(gameState.totalMoku));
 
+  updateGoalPanel();
   renderUpgradeList();
   renderEventUnlockList();
   renderEmployeeList();
   renderFacilityList();
   updateSoundBtn();
+}
+
+function updateGoalPanel() {
+  const labelEl = document.getElementById('goal-label');
+  const remEl   = document.getElementById('goal-remaining');
+  if (!labelEl || !remEl) return;
+
+  const lv = calcLevelFromMoku(gameState.totalMoku);
+
+  const SUIT_GOALS = [
+    { level: 10,  suit: '青',         emoji: '🟦' },
+    { level: 25,  suit: '緑',         emoji: '🟩' },
+    { level: 50,  suit: '赤',         emoji: '🟥' },
+    { level: 100, suit: '金',         emoji: '🌟' },
+    { level: 200, suit: 'レインボー', emoji: '🌈' },
+  ];
+
+  const next = SUIT_GOALS.find(g => lv < g.level);
+  if (!next) {
+    labelEl.textContent   = '🌈 全スーツ解放済み！';
+    remEl.textContent     = '';
+    return;
+  }
+
+  const needed = mokuForLevel(next.level) - gameState.totalMoku;
+  labelEl.textContent = `🎯 Lv${next.level}で${next.emoji}${next.suit}スーツ解放！`;
+  remEl.textContent   = `あと ${fmt(Math.max(0, needed))} 藻`;
 }
 
 function updateSoundBtn() {

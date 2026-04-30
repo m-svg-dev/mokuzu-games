@@ -185,6 +185,29 @@ button,
   white-space: nowrap;
 }
 
+#goal-panel {
+  margin-top: 6px;
+  width: 260px;
+  background: #0c1e34;
+  border: 1px solid #1a3a50;
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#goal-label {
+  font-size: 0.75rem;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+#goal-remaining {
+  font-size: 0.7rem;
+  color: #78bb99;
+}
+
 #tap-hint {
   margin-top: 6px;
   color: #78bb99;
