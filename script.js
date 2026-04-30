@@ -194,6 +194,8 @@ const DEFAULT_STATE = {
   upgrades:       {},     // { upgradeId: 購入回数 }
   employees:      {},     // { employeeId: 所持数 }
   facilities:     {},     // { facilityId: 購入回数 }
+  critRate:       0.05,   // クリティカル確率（課金要素で上昇）
+  critMult:       3,      // クリティカル倍率（課金要素で上昇）
   eventCooldown:  60,
   activeEvent:    null,   // { id, timer }
   eventTapMult:   1,
@@ -354,17 +356,19 @@ function onTap(e) {
   tapLocked = true;
   setTimeout(() => { tapLocked = false; }, 50);
 
-  const awakenMult = gameState.isAwakened ? 5 : 1;
-  const eventMult  = gameState.eventTapMult ?? 1;
-  const gained     = gameState.tapPower * awakenMult * eventMult;
+  const awakenMult  = gameState.isAwakened ? 5 : 1;
+  const eventMult   = gameState.eventTapMult ?? 1;
+  const isCritical  = Math.random() < (gameState.critRate ?? 0.05);
+  const critMult    = isCritical ? (gameState.critMult ?? 3) : 1;
+  const gained      = gameState.tapPower * awakenMult * eventMult * critMult;
 
   gameState.moku      += gained;
   gameState.totalMoku += gameState.tapPower; // ボーナス倍率は totalMoku に含めない
 
   gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 2);
 
-  spawnFloatText(e, `+${fmt(gained)}`);
-  spawnTapEffect(e, gained);
+  spawnFloatText(e, `+${fmt(gained)}`, isCritical);
+  spawnTapEffect(e, gained, isCritical);
 
   const el = document.getElementById('character-img');
   el.classList.add('tapped');
@@ -373,10 +377,10 @@ function onTap(e) {
   updateDisplay();
 }
 
-function spawnFloatText(e, text) {
+function spawnFloatText(e, text, isCritical = false) {
   const el = document.createElement('span');
-  el.className = 'float-text';
-  el.textContent = text;
+  el.className = isCritical ? 'float-text crit' : 'float-text';
+  el.textContent = isCritical ? `${text} CRIT!` : text;
   const x = e.touches ? e.touches[0].clientX : e.clientX;
   const y = e.touches ? e.touches[0].clientY : e.clientY;
   el.style.left = `${x - 16}px`;
@@ -385,23 +389,21 @@ function spawnFloatText(e, text) {
   setTimeout(() => el.remove(), 750);
 }
 
-// エフェクトのしきい値（1タップ獲得量）。数値は後でバランス調整可能
+// エフェクトのしきい値（1タップ獲得量）
 const TAP_EFFECT_THRESHOLDS = {
-  large: 10,   // gained >= 10 で large
-  // critical は将来のクリティカル確率システムで判定するため除外
+  large: 10,
 };
 
-function spawnTapEffect(e, gained) {
+function spawnTapEffect(e, gained, isCritical = false) {
   const fx = IMAGE_CONFIG.effects;
   const x  = e.touches ? e.touches[0].clientX : e.clientX;
   const y  = e.touches ? e.touches[0].clientY : e.clientY;
 
-  // 1タップ獲得量と覚醒状態でエフェクトを決定
-  // critical は isCritical フラグが立ったときのみ（将来実装）
   let effectSrc;
-  if (gameState.isAwakened)                          effectSrc = fx.awakened;
-  else if (gained >= TAP_EFFECT_THRESHOLDS.large)    effectSrc = fx.large;
-  else                                               effectSrc = fx.normal;
+  if (gameState.isAwakened)                       effectSrc = fx.awakened;
+  else if (isCritical)                            effectSrc = fx.critical;
+  else if (gained >= TAP_EFFECT_THRESHOLDS.large) effectSrc = fx.large;
+  else                                            effectSrc = fx.normal;
 
   // メインエフェクト
   const img = document.createElement('img');
@@ -414,7 +416,7 @@ function spawnTapEffect(e, gained) {
 
   // テキストオーバーレイ（バシュ！/ 増殖！）
   const textSrc = gameState.isAwakened                       ? fx.textMuzoku
-                : gained >= TAP_EFFECT_THRESHOLDS.large      ? fx.textBashu
+                : (isCritical || gained >= TAP_EFFECT_THRESHOLDS.large) ? fx.textBashu
                 : null;
   if (textSrc) {
     const txt = document.createElement('img');
