@@ -5,6 +5,11 @@
   padding: 0;
 }
 
+html, body {
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
 body {
   font-family: 'Helvetica Neue', Arial, sans-serif;
   background: #071420;
@@ -13,6 +18,20 @@ body {
   margin: 0 auto;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+button,
+#tap-area,
+#character-img,
+.item-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 /* ========== Header（常時固定） ========== */
