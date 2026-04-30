@@ -680,6 +680,30 @@ button,
   border: 1px solid #0099cc;
 }
 
+/* ========== PC表示（スマホUIを中央固定） ========== */
+@media (min-width: 768px) {
+  body {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    background:
+      radial-gradient(circle at center, rgba(0, 255, 150, 0.1), transparent 40%),
+      linear-gradient(180deg, #02101c 0%, #02070d 100%);
+    display: flex;
+    justify-content: center;
+  }
+
+  #app {
+    width: 480px;
+    min-height: 100vh;
+    background: #071420;
+    box-shadow: 0 0 40px rgba(0, 255, 150, 0.25);
+    border-left: 1px solid rgba(61, 255, 122, 0.2);
+    border-right: 1px solid rgba(61, 255, 122, 0.2);
+    position: relative;
+  }
+}
+
 /* ========== タブナビゲーション ========== */
 #tab-nav {
   position: fixed;
