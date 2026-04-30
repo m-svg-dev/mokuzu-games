@@ -294,6 +294,69 @@ button,
 
 .hidden { display: none !important; }
 
+/* ========== オフライン収益モーダル ========== */
+#offline-modal {
+  position: fixed;
+  inset: 0;
+  background: #000000bb;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#offline-modal-inner {
+  background: #0c1e34;
+  border: 2px solid #3dff7a;
+  border-radius: 16px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 320px;
+  width: 88%;
+  box-shadow: 0 0 48px #3dff7a40;
+}
+
+#offline-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #3dff7a;
+  margin-bottom: 10px;
+}
+
+#offline-time {
+  color: #78bb99;
+  font-size: 0.88rem;
+  margin-bottom: 6px;
+}
+
+#offline-earned {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 14px #ffd70066;
+  margin: 12px 0;
+}
+
+#offline-note {
+  font-size: 0.72rem;
+  color: #445566;
+  margin-bottom: 20px;
+}
+
+#offline-ok {
+  padding: 12px 40px;
+  background: #0e3a24;
+  color: #3dff7a;
+  border: 1px solid #3dff7a;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+#offline-ok:active { opacity: 0.7; }
+
 /* ========== パネル共通タイトル ========== */
 .panel-title {
   font-size: 0.95rem;

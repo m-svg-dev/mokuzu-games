@@ -825,6 +825,37 @@ function renderEventUnlockList() {
   }
 }
 
+// ========== オフライン収益 ==========
+
+function checkOfflineEarnings() {
+  if (!gameState.lastSaved || gameState.lastSaved === 0) return;
+  if (gameState.mokuPerSecond <= 0) return;
+
+  const now        = Date.now();
+  const elapsedSec = Math.floor((now - gameState.lastSaved) / 1000);
+  const MIN_SEC    = 60;
+  const MAX_SEC    = 28800; // 8時間
+
+  if (elapsedSec < MIN_SEC) return;
+
+  const cappedSec = Math.min(elapsedSec, MAX_SEC);
+  const earned    = Math.floor(gameState.mokuPerSecond * cappedSec * 0.5);
+  if (earned <= 0) return;
+
+  gameState.moku      += earned;
+  gameState.totalMoku += earned;
+
+  const hours   = Math.floor(elapsedSec / 3600);
+  const minutes = Math.floor((elapsedSec % 3600) / 60);
+  const timeStr = hours > 0 ? `${hours}時間${minutes}分` : `${minutes}分`;
+  const capped  = elapsedSec > MAX_SEC ? `（最大8時間で計算）` : '';
+
+  document.getElementById('offline-title').textContent  = 'おかえり！🌿';
+  document.getElementById('offline-time').textContent   = `${timeStr}ぶりのお帰り！${capped}`;
+  document.getElementById('offline-earned').textContent = `+${fmt(earned)} 藻`;
+  document.getElementById('offline-modal').classList.remove('hidden');
+}
+
 // ========== セーブ / ロード / リセット ==========
 
 function saveGame() {
@@ -879,6 +910,7 @@ function initTabs() {
 
 function init() {
   loadGame();
+  checkOfflineEarnings();
 
   // 初回起動 or 旧セーブ：待機中なら次のイベントを先行決定
   if (!gameState.nextEventId && !gameState.activeEvent) {
@@ -910,6 +942,10 @@ function init() {
     setTimeout(() => { btn.textContent = '💾 セーブ'; }, 1500);
   });
   document.getElementById('reset-btn').addEventListener('click', resetGame);
+
+  document.getElementById('offline-ok').addEventListener('click', () => {
+    document.getElementById('offline-modal').classList.add('hidden');
+  });
 
   document.getElementById('sound-btn').addEventListener('click', () => {
     gameState.soundEnabled = !gameState.soundEnabled;
