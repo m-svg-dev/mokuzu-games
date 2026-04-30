@@ -172,7 +172,7 @@ const EVENTS = [
   { id: 'deep_treasure',   name: '深海の宝を発見！',       icon: '🪙', desc: '現在の藻 +30%（即時）',           type: 'moku_bonus', value: 0.3, duration: 3,  unlockCost: 25_000  },
   { id: 'record_break',    name: '記録更新！！',           icon: '📈', desc: 'タップ効率 ×10（10秒）',          type: 'tap_mult',   value: 10,  duration: 10, unlockCost: 50_000  },
   { id: 'settlement_bonus',name: '決算ボーナス！',         icon: '💰', desc: '現在の藻 +50%（即時）',           type: 'moku_bonus', value: 0.5, duration: 3,  unlockCost: 100_000 },
-  { id: 'tax_bill',        name: '税金の請求書が届いた…', icon: '📄', desc: '自動収益 -50%（30秒）',           type: 'mps_mult',   value: 0.5, duration: 30, unlockCost: 150_000 },
+  { id: 'tax_bill',        name: '税金の請求書が届いた…', icon: '📄', desc: '自動収益 -50%（30秒）',           type: 'mps_mult',   value: 0.5, duration: 30, unlockCost: 0       },
   { id: 'sea_god',         name: '海神様のお告げだ！',     icon: '🔱', desc: '全収益 ×4（10秒）',               type: 'all_mult',   value: 4,   duration: 10, unlockCost: 500_000 },
 ];
 
@@ -194,7 +194,7 @@ const DEFAULT_STATE = {
   critRate:        0.05,   // クリティカル確率（課金要素で上昇）
   critMult:        3,      // クリティカル倍率（課金要素で上昇）
   soundEnabled:    true,   // サウンドON/OFF
-  unlockedEvents:  ['bonus_tap', 'bonus_mps', 'bonus_moku', 'rough_current'],
+  unlockedEvents:  ['bonus_tap', 'bonus_mps', 'bonus_moku', 'rough_current', 'tax_bill'],
   nextEventId:     null,   // 待機中に予告表示するイベントID
   eventCooldown:   60,
   activeEvent:     null,   // { id, timer }
