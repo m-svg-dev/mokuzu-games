@@ -1865,19 +1865,34 @@ function initFirebase() {
   document.getElementById('ranking-refresh-btn').addEventListener('click', loadRanking);
 }
 
+const DUMMY_RANKING = [
+  { name: '🦈 サメの部長',    totalMoku: 50_000,  prestigeLevel: 0 },
+  { name: '🪸 サンゴ係長',    totalMoku: 12_000,  prestigeLevel: 0 },
+  { name: '🦀 カニのしんぺい', totalMoku:  3_800,  prestigeLevel: 0 },
+  { name: '🪼 クラゲ新入り',  totalMoku:  1_200,  prestigeLevel: 0 },
+  { name: '🤖 藻屑テスト君',  totalMoku:    500,  prestigeLevel: 0 },
+];
+
 async function loadRanking() {
   const list = document.getElementById('ranking-list');
   if (!list) return;
   try {
-    const ranking = await fetchRanking();
-    if (ranking.length === 0) {
-      list.innerHTML = '<p class="section-note">まだ誰も登録していません！</p>';
-      return;
-    }
+    const real = await fetchRanking();
     const me = currentUser();
-    list.innerHTML = ranking.map(r => {
-      const medal   = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : `${r.rank}.`;
-      const isMe    = me && r.name === me.displayName;
+
+    // ダミーのうち実ユーザーのスコアより低いものだけ追加
+    const lowestReal = real.length > 0 ? real[real.length - 1].totalMoku : Infinity;
+    const dummies = DUMMY_RANKING
+      .filter(d => d.totalMoku < lowestReal)
+      .slice(0, Math.max(0, 5 - real.length));
+
+    const combined = [...real, ...dummies]
+      .sort((a, b) => b.totalMoku - a.totalMoku)
+      .map((r, i) => ({ rank: i + 1, ...r }));
+
+    list.innerHTML = combined.map(r => {
+      const medal     = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : `${r.rank}.`;
+      const isMe      = me && r.name === me.displayName;
       const highlight = isMe ? ' ranking-me' : '';
       return `
         <div class="ranking-row${highlight}">
