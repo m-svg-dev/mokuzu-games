@@ -1040,37 +1040,31 @@ function buyConsumable(itemId) {
   updateDisplay();
 }
 
-function localDateStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+const DAILY_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12時間
 
-function timeUntilMidnight() {
-  const now = new Date();
-  const midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
-  const diffMs  = midnight - now;
+function timeUntilNextClaim() {
+  const last = gameState.lastDailyLogin ?? 0;
+  const next = last + DAILY_INTERVAL_MS;
+  const diffMs  = Math.max(0, next - Date.now());
   const hours   = Math.floor(diffMs / (1000 * 60 * 60));
   const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
   return hours > 0 ? `${hours}時間${minutes}分後` : `${minutes}分後`;
 }
 
 function claimDailyCoins() {
-  const today = localDateStr();
-  if (gameState.lastDailyLogin === today) return;
-  gameState.lastDailyLogin = today;
+  const last = gameState.lastDailyLogin ?? 0;
+  if (Date.now() - last < DAILY_INTERVAL_MS) return;
+  gameState.lastDailyLogin = Date.now();
   gameState.mokuCoins = (gameState.mokuCoins ?? 0) + DAILY_COINS;
   playSound('buy');
   updateDisplay();
 }
 
 function exchangeStonesForCoins() {
-  const stones = gameState.prestigeStones ?? 0;
-  if (stones < COINS_PER_STONE) return;
-  const coinsGain   = Math.floor(stones / COINS_PER_STONE);
-  const stonesSpend = coinsGain * COINS_PER_STONE;
-  gameState.prestigeStones -= stonesSpend;
-  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coinsGain;
+  // 10石=1コインを1回分だけ交換
+  if ((gameState.prestigeStones ?? 0) < COINS_PER_STONE) return;
+  gameState.prestigeStones -= COINS_PER_STONE;
+  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 1;
   playSound('buy');
   updateDisplay();
 }
@@ -1082,26 +1076,26 @@ function updateCoinDisplay() {
   const balEl = document.getElementById('coin-balance-val');
   if (balEl) balEl.textContent = `🪙 ${gameState.mokuCoins ?? 0} コイン`;
 
-  const today    = localDateStr();
-  const claimed  = gameState.lastDailyLogin === today;
+  const last     = gameState.lastDailyLogin ?? 0;
+  const claimed  = Date.now() - last < DAILY_INTERVAL_MS;
   const dailyBtn = document.getElementById('daily-claim-btn');
   if (dailyBtn) {
     dailyBtn.disabled      = claimed;
     dailyBtn.textContent   = claimed
-      ? `📅 受取済み (次回: ${timeUntilMidnight()})`
+      ? `📅 受取済み (次回: ${timeUntilNextClaim()})`
       : `📅 デイリー +${DAILY_COINS}`;
     dailyBtn.style.opacity = claimed ? '0.5' : '1';
   }
 
-  const stones    = gameState.prestigeStones ?? 0;
-  const coinsGain = Math.floor(stones / COINS_PER_STONE);
-  const exBtn     = document.getElementById('stone-exchange-btn');
+  const stones = gameState.prestigeStones ?? 0;
+  const canEx  = stones >= COINS_PER_STONE;
+  const exBtn  = document.getElementById('stone-exchange-btn');
   if (exBtn) {
-    exBtn.disabled      = coinsGain <= 0;
-    exBtn.textContent   = coinsGain > 0
-      ? `🔄 ${stones}転生石→${coinsGain}コイン`
+    exBtn.disabled      = !canEx;
+    exBtn.textContent   = canEx
+      ? `🔄 10転生石 → 1コイン (残${stones}石)`
       : `🔄 転生石→コイン (10石=1)`;
-    exBtn.style.opacity = coinsGain > 0 ? '1' : '0.4';
+    exBtn.style.opacity = canEx ? '1' : '0.4';
   }
 }
 
