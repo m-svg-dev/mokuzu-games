@@ -66,6 +66,15 @@ export function currentUser() {
   return auth.currentUser;
 }
 
+// ========== プレイヤー名変更 ==========
+
+export async function changeDisplayName(newName) {
+  const user = auth.currentUser;
+  if (!user) return;
+  await updateProfile(user, { displayName: newName });
+  await setDoc(doc(db, 'users', user.uid), { name: newName }, { merge: true });
+}
+
 // ========== スコア保存 ==========
 
 export async function saveScore(totalMoku, prestigeLevel) {

@@ -1738,7 +1738,7 @@ document.addEventListener('DOMContentLoaded', init);
 import {
   registerUser, loginUser, logoutUser,
   onAuthChanged, currentUser,
-  saveScore, fetchRanking,
+  saveScore, fetchRanking, changeDisplayName,
 } from './firebase.js';
 
 let _authMode = 'login'; // 'login' | 'register'
@@ -1804,6 +1804,31 @@ function initFirebase() {
   // ログアウト
   document.getElementById('logout-btn').addEventListener('click', async () => {
     await logoutUser();
+  });
+
+  // プレイヤー名変更
+  document.getElementById('name-change-btn').addEventListener('click', async () => {
+    const input  = document.getElementById('name-change-input');
+    const msgEl  = document.getElementById('name-change-msg');
+    const newName = input.value.trim();
+    if (!newName) { msgEl.textContent = '名前を入力してください'; msgEl.style.color = '#ff5566'; return; }
+    const btn = document.getElementById('name-change-btn');
+    btn.disabled = true;
+    btn.textContent = '変更中...';
+    try {
+      await changeDisplayName(newName);
+      document.getElementById('user-name-display').textContent = newName;
+      input.value = '';
+      msgEl.textContent = '✅ 名前を変更しました！';
+      msgEl.style.color = '#3dff7a';
+      await loadRanking();
+    } catch {
+      msgEl.textContent = '❌ 変更に失敗しました';
+      msgEl.style.color = '#ff5566';
+    }
+    btn.disabled = false;
+    btn.textContent = '変更';
+    setTimeout(() => { msgEl.textContent = ''; }, 3000);
   });
 
   // スコア登録
