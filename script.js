@@ -15,6 +15,8 @@ const IMAGE_CONFIG = {
       gold:     'assets/characters/suit_gold.png',
       rainbow:  'assets/characters/suit_rainbow.png',
       awakened: 'assets/characters/suit_awakened.png',
+      silver:   'assets/suits/suit_silver.png',
+      white:    'assets/suits/suit_white.png',
     },
   },
   employees: {
@@ -192,7 +194,9 @@ const GACHA_SKINS = [
   { id: 'skin_green',   name: '緑スーツ',         rarity: 'R',   suit: 'green',   prob: 0.125 },
   { id: 'skin_red',     name: '赤スーツ',         rarity: 'SR',  suit: 'red',     prob: 0.06  },
   { id: 'skin_gold',    name: '金スーツ',         rarity: 'SR',  suit: 'gold',    prob: 0.06  },
-  { id: 'skin_rainbow', name: 'レインボースーツ', rarity: 'SSR', suit: 'rainbow', prob: 0.03  },
+  { id: 'skin_rainbow', name: 'レインボースーツ', rarity: 'SSR', suit: 'rainbow', prob: 0.01  },
+  { id: 'skin_silver',  name: 'シルバースーツ',   rarity: 'SSR', suit: 'silver',  prob: 0.01  },
+  { id: 'skin_white',   name: 'ホワイトスーツ',   rarity: 'SSR', suit: 'white',   prob: 0.01  },
 ];
 
 const RARITY_COLOR  = { N: '#888888', R: '#4499ff', SR: '#ffd700', SSR: '#ff44ff' };
