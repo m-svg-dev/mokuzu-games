@@ -167,10 +167,10 @@ const UPGRADES = [
 // 所持数に応じて MPS が増加（baseCost * 1.15^所持数 で価格上昇）
 const EMPLOYEES = [
   { id: 'algae',    name: '小型海藻バイト', icon: '🌿', baseCost: 8,      mpsBonus: 0.1  },
-  { id: 'jellyfish',name: 'クラゲ室長',     icon: '🪼', baseCost: 80,     mpsBonus: 0.6  },
-  { id: 'crab',     name: 'カニ経営者',     icon: '🦀', baseCost: 800,    mpsBonus: 3.0  },
-  { id: 'coral',    name: 'サンゴ工場長',   icon: '🪸', baseCost: 5_000,  mpsBonus: 10.0 },
-  { id: 'shark',    name: 'サメ取締役',     icon: '🦈', baseCost: 30_000, mpsBonus: 40.0 },
+  { id: 'jellyfish',name: 'クラゲ社員',     icon: '🪼', baseCost: 80,     mpsBonus: 0.6  },
+  { id: 'crab',     name: 'カニ主任',       icon: '🦀', baseCost: 800,    mpsBonus: 3.0  },
+  { id: 'coral',    name: 'サンゴ管理職',   icon: '🪸', baseCost: 5_000,  mpsBonus: 10.0 },
+  { id: 'shark',    name: 'サメ幹部',       icon: '🦈', baseCost: 30_000, mpsBonus: 40.0 },
 ];
 
 const EVENTS = [
@@ -1712,6 +1712,18 @@ function init() {
 
   document.getElementById('daily-claim-btn').addEventListener('click', claimDailyCoins);
   document.getElementById('stone-exchange-btn').addEventListener('click', exchangeStonesForCoins);
+
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    document.getElementById('settings-modal').classList.remove('hidden');
+  });
+  document.getElementById('settings-close-btn').addEventListener('click', () => {
+    document.getElementById('settings-modal').classList.add('hidden');
+  });
+  document.getElementById('settings-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('settings-modal')) {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+  });
 
   document.getElementById('sound-btn').addEventListener('click', () => {
     gameState.soundEnabled = !gameState.soundEnabled;
