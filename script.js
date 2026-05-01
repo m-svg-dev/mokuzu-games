@@ -978,6 +978,13 @@ function fmtTime(sec) {
 
 let _autoClickerTimer = null;
 
+function getCharacterCenter() {
+  const el   = document.getElementById('character-img');
+  const rect = el ? el.getBoundingClientRect() : { left: 150, top: 300, width: 180, height: 260 };
+  const jitter = () => (Math.random() - 0.5) * 60;
+  return { clientX: rect.left + rect.width / 2 + jitter(), clientY: rect.top + rect.height / 2 + jitter() };
+}
+
 function startAutoClicker() {
   if (_autoClickerTimer) return;
   _autoClickerTimer = setInterval(() => {
@@ -992,6 +999,10 @@ function startAutoClicker() {
     gameState.moku      += gained;
     gameState.totalMoku += gameState.tapPower;
     gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 1);
+
+    const fakeE = getCharacterCenter();
+    spawnFloatText(fakeE, `+${fmt(gained)}`);
+    spawnTapEffect(fakeE, gained, false);
   }, 500); // 500ms = 2回/秒
 }
 
