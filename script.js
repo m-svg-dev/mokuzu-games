@@ -1721,6 +1721,8 @@ function init() {
 
   initTabs();
 
+  initFirebase();
+
   setInterval(gameLoop, 1000);          // ゲームループ
   setInterval(saveGame, 30_000);        // オートセーブ（30秒ごと）
 
@@ -1730,3 +1732,126 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ========== Firebase 連携 ==========
+
+import {
+  registerUser, loginUser, logoutUser,
+  onAuthChanged, currentUser,
+  saveScore, fetchRanking,
+} from './firebase.js';
+
+let _authMode = 'login'; // 'login' | 'register'
+
+function initFirebase() {
+  // 認証状態の監視
+  onAuthChanged(user => {
+    const authSec    = document.getElementById('auth-section');
+    const loggedSec  = document.getElementById('loggedin-section');
+    const nameEl     = document.getElementById('user-name-display');
+    if (user) {
+      authSec.classList.add('hidden');
+      loggedSec.classList.remove('hidden');
+      if (nameEl) nameEl.textContent = user.displayName ?? '名無し';
+    } else {
+      authSec.classList.remove('hidden');
+      loggedSec.classList.add('hidden');
+    }
+    loadRanking();
+  });
+
+  // ログイン/登録タブ切り替え
+  document.getElementById('auth-tab-login').addEventListener('click', () => {
+    _authMode = 'login';
+    document.getElementById('auth-tab-login').classList.add('active');
+    document.getElementById('auth-tab-register').classList.remove('active');
+    document.getElementById('register-name-wrap').classList.add('hidden');
+    document.getElementById('auth-submit-btn').textContent = 'ログイン';
+    document.getElementById('auth-error').textContent = '';
+  });
+
+  document.getElementById('auth-tab-register').addEventListener('click', () => {
+    _authMode = 'register';
+    document.getElementById('auth-tab-register').classList.add('active');
+    document.getElementById('auth-tab-login').classList.remove('active');
+    document.getElementById('register-name-wrap').classList.remove('hidden');
+    document.getElementById('auth-submit-btn').textContent = '登録する';
+    document.getElementById('auth-error').textContent = '';
+  });
+
+  // 送信
+  document.getElementById('auth-submit-btn').addEventListener('click', async () => {
+    const email    = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errorEl  = document.getElementById('auth-error');
+    errorEl.textContent = '';
+
+    try {
+      if (_authMode === 'register') {
+        const name = document.getElementById('auth-name').value.trim();
+        if (!name) { errorEl.textContent = 'プレイヤー名を入力してください'; return; }
+        await registerUser(name, email, password);
+      } else {
+        await loginUser(email, password);
+      }
+    } catch (e) {
+      errorEl.textContent = _authMode === 'register'
+        ? '登録に失敗しました。メール・パスワードを確認してください'
+        : 'ログインに失敗しました。メール・パスワードを確認してください';
+    }
+  });
+
+  // ログアウト
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await logoutUser();
+  });
+
+  // スコア登録
+  document.getElementById('score-upload-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('score-upload-btn');
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+    try {
+      await saveScore(gameState.totalMoku ?? 0, gameState.prestigeLevel ?? 0);
+      btn.textContent = '✅ 登録しました！';
+      await loadRanking();
+    } catch {
+      btn.textContent = '❌ 失敗しました';
+    }
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '📤 スコアを登録する';
+    }, 2000);
+  });
+
+  // ランキング更新
+  document.getElementById('ranking-refresh-btn').addEventListener('click', loadRanking);
+}
+
+async function loadRanking() {
+  const list = document.getElementById('ranking-list');
+  if (!list) return;
+  try {
+    const ranking = await fetchRanking();
+    if (ranking.length === 0) {
+      list.innerHTML = '<p class="section-note">まだ誰も登録していません！</p>';
+      return;
+    }
+    const me = currentUser();
+    list.innerHTML = ranking.map(r => {
+      const medal   = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : `${r.rank}.`;
+      const isMe    = me && r.name === me.displayName;
+      const highlight = isMe ? ' ranking-me' : '';
+      return `
+        <div class="ranking-row${highlight}">
+          <span class="ranking-rank">${medal}</span>
+          <span class="ranking-name">${r.name}</span>
+          <span class="ranking-score">${fmt(r.totalMoku)} 藻</span>
+          <span class="ranking-prestige">転生${r.prestigeLevel ?? 0}回</span>
+        </div>
+      `;
+    }).join('');
+  } catch {
+    list.innerHTML = '<p class="section-note">読み込みに失敗しました</p>';
+  }
+}

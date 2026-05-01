@@ -871,6 +871,167 @@ button,
 }
 
 /* ========== 転生歴代記録 ========== */
+/* ========== ランキング・認証 ========== */
+#auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.auth-tab-btn {
+  flex: 1;
+  background: #0c1e34;
+  border: 1px solid #2a4a3e;
+  border-radius: 8px;
+  color: #78bb99;
+  padding: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.auth-tab-btn.active {
+  background: #1a3a2e;
+  border-color: #3dff7a;
+  color: #3dff7a;
+}
+
+#auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#auth-form input {
+  background: #0c1e34;
+  border: 1px solid #2a4a3e;
+  border-radius: 8px;
+  color: #d8eedd;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+}
+
+#auth-form input:focus {
+  border-color: #3dff7a;
+}
+
+.auth-error {
+  color: #ff5566;
+  font-size: 0.78rem;
+  min-height: 1em;
+}
+
+#auth-submit-btn {
+  background: #1a4a2e;
+  border: 1px solid #3dff7a;
+  border-radius: 10px;
+  color: #3dff7a;
+  font-size: 0.95rem;
+  font-weight: bold;
+  padding: 10px;
+  cursor: pointer;
+}
+
+#user-info-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0c1e34;
+  border: 1px solid #2a4a3e;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+#user-name-display {
+  font-weight: bold;
+  color: #3dff7a;
+}
+
+#logout-btn {
+  background: #1a1a2a;
+  border: 1px solid #445566;
+  border-radius: 8px;
+  color: #aabbcc;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+#score-upload-btn {
+  width: 100%;
+  background: #1a3a2e;
+  border: 1px solid #3dff7a60;
+  border-radius: 10px;
+  color: #3dff7a;
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding: 10px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+#ranking-refresh-btn {
+  background: #0c1e34;
+  border: 1px solid #2a4a3e;
+  border-radius: 8px;
+  color: #78bb99;
+  font-size: 0.8rem;
+  padding: 5px 12px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+#ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0c1e34;
+  border: 1px solid #1a3a2e;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+}
+
+.ranking-row.ranking-me {
+  border-color: #3dff7a;
+  background: #0a2a1e;
+}
+
+.ranking-rank {
+  width: 28px;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.ranking-name {
+  flex: 1;
+  font-weight: bold;
+  color: #e8f8ee;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-score {
+  color: #3dff7a;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.ranking-prestige {
+  color: #cc88ff;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
 .history-empty {
   color: #445566;
   font-size: 0.85rem;
