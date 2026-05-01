@@ -227,6 +227,7 @@ const DEFAULT_STATE = {
   critMult:        3,      // クリティカル倍率（課金要素で上昇）
   soundEnabled:    true,   // サウンドON/OFF
   purchasedItems:  [],
+  equippedItems:   [],
   prestigeLevel:   0,
   prestigeStones:  0,
   prestigeSkills:  {},
@@ -919,12 +920,22 @@ function renderFacilityList() {
 function buyItem(itemId) {
   const item = ITEMS.find(x => x.id === itemId);
   if (!item) return;
-  if ((gameState.purchasedItems ?? []).includes(itemId)) return;
-  if (gameState.moku < item.cost) return;
 
-  gameState.moku -= item.cost;
-  gameState.purchasedItems = [...(gameState.purchasedItems ?? []), itemId];
-  playSound('buy');
+  const purchased = (gameState.purchasedItems ?? []).includes(itemId);
+
+  if (!purchased) {
+    if (gameState.moku < item.cost) return;
+    gameState.moku -= item.cost;
+    gameState.purchasedItems = [...(gameState.purchasedItems ?? []), itemId];
+    gameState.equippedItems  = [...(gameState.equippedItems  ?? []), itemId];
+    playSound('buy');
+  } else {
+    const equipped = (gameState.equippedItems ?? []).includes(itemId);
+    gameState.equippedItems = equipped
+      ? (gameState.equippedItems ?? []).filter(id => id !== itemId)
+      : [...(gameState.equippedItems ?? []), itemId];
+  }
+
   updateItemOverlays();
   updateDisplay();
 }
@@ -935,7 +946,7 @@ function updateItemOverlays() {
   container.innerHTML = '';
 
   for (const item of ITEMS) {
-    if (!(gameState.purchasedItems ?? []).includes(item.id)) continue;
+    if (!(gameState.equippedItems ?? []).includes(item.id)) continue;
     const src = IMAGE_CONFIG.items[item.id];
     if (!src) continue;
     const img = document.createElement('img');
@@ -963,14 +974,27 @@ function renderItemList() {
 
   for (const item of ITEMS) {
     const bought    = (gameState.purchasedItems ?? []).includes(item.id);
+    const equipped  = (gameState.equippedItems  ?? []).includes(item.id);
     const canBuy    = !bought && gameState.moku >= item.cost;
     const btn       = document.getElementById(`item-btn-${item.id}`);
     const src       = IMAGE_CONFIG.items[item.id];
     const iconStyle = src
-      ? `background-image:url('${src}');background-size:cover;background-position:center;background-repeat:no-repeat;font-size:0;`
+      ? `background-image:url('${src}');background-size:contain;background-position:center;background-repeat:no-repeat;font-size:0;`
       : '';
 
-    btn.className = `item-btn${canBuy ? ' can-buy' : ''}${bought ? ' maxed' : ''}`;
+    let statusText, extraClass;
+    if (!bought) {
+      statusText = fmt(item.cost) + ' 藻';
+      extraClass = canBuy ? ' can-buy' : '';
+    } else if (equipped) {
+      statusText = '✅ 装着中';
+      extraClass = ' item-equipped';
+    } else {
+      statusText = '装着する';
+      extraClass = ' item-unequipped';
+    }
+
+    btn.className = `item-btn${extraClass}`;
     btn.innerHTML = `
       <div class="item-icon" style="${iconStyle}">${iconStyle ? '' : item.icon}</div>
       <div class="item-info">
@@ -978,7 +1002,7 @@ function renderItemList() {
         <div class="item-desc">${item.desc}</div>
       </div>
       <div class="item-right">
-        <div class="item-cost">${bought ? '✅ 購入済み' : fmt(item.cost) + ' 藻'}</div>
+        <div class="item-cost">${statusText}</div>
       </div>
     `;
   }
@@ -1149,6 +1173,7 @@ function doPrestige() {
 
   const keep = {
     purchasedItems:  gameState.purchasedItems,
+    equippedItems:   gameState.equippedItems,
     prestigeLevel:   (gameState.prestigeLevel ?? 0) + 1,
     prestigeStones:  (gameState.prestigeStones ?? 0) + stonesEarned,
     prestigeSkills:  gameState.prestigeSkills,
