@@ -64,7 +64,12 @@ const IMAGE_CONFIG = {
 };
 
 function applyCharacterSprite(suit) {
-  const src    = IMAGE_CONFIG.character.suits[suit] ?? IMAGE_CONFIG.character.suits.black;
+  let effectiveSuit = suit;
+  if (gameState.equippedSkin) {
+    const skin = GACHA_SKINS.find(s => s.id === gameState.equippedSkin);
+    if (skin) effectiveSuit = skin.suit;
+  }
+  const src = IMAGE_CONFIG.character.suits[effectiveSuit] ?? IMAGE_CONFIG.character.suits.black;
   const sprite = document.getElementById('character-sprite');
   if (sprite) sprite.src = src;
 }
@@ -131,12 +136,12 @@ function getSuitForLevel(level) {
 
 // 施設（各最大5回購入、costMult: 2.5）
 const FACILITIES = [
-  { id: 'facility_plant',   name: '海藻プラント',   icon: '🌱', desc: 'MPS +3/秒',     baseCost: 2_000,     costMult: 2.5, mpsBonus: 3,    maxCount: 5 },
-  { id: 'facility_factory', name: '深海工場',       icon: '🏭', desc: 'MPS +20/秒',    baseCost: 15_000,    costMult: 2.5, mpsBonus: 20,   maxCount: 5 },
-  { id: 'facility_lab',     name: 'サンゴ研究所',   icon: '🔬', desc: 'タップ +50',    baseCost: 50_000,    costMult: 2.5, tapBonus: 50,   maxCount: 5 },
-  { id: 'facility_hq',      name: '海底本社ビル',   icon: '🏢', desc: 'MPS +100/秒',   baseCost: 200_000,   costMult: 2.5, mpsBonus: 100,  maxCount: 5 },
-  { id: 'facility_bank',    name: '海流銀行',       icon: '🏦', desc: 'MPS +400/秒',   baseCost: 800_000,   costMult: 2.5, mpsBonus: 400,  maxCount: 5 },
-  { id: 'facility_tower',   name: '光合成タワー',   icon: '🗼', desc: 'MPS +1500/秒',  baseCost: 3_000_000, costMult: 2.5, mpsBonus: 1500, maxCount: 5 },
+  { id: 'facility_plant',   name: '海藻プラント',   icon: '🌱', desc: '+3 / 秒',      baseCost: 2_000,     costMult: 2.5, mpsBonus: 3,    maxCount: 5 },
+  { id: 'facility_factory', name: '深海工場',       icon: '🏭', desc: '+20 / 秒',     baseCost: 15_000,    costMult: 2.5, mpsBonus: 20,   maxCount: 5 },
+  { id: 'facility_lab',     name: 'サンゴ研究所',   icon: '🔬', desc: 'タップ +50',   baseCost: 50_000,    costMult: 2.5, tapBonus: 50,   maxCount: 5 },
+  { id: 'facility_hq',      name: '海底本社ビル',   icon: '🏢', desc: '+100 / 秒',    baseCost: 200_000,   costMult: 2.5, mpsBonus: 100,  maxCount: 5 },
+  { id: 'facility_bank',    name: '海流銀行',       icon: '🏦', desc: '+400 / 秒',    baseCost: 800_000,   costMult: 2.5, mpsBonus: 400,  maxCount: 5 },
+  { id: 'facility_tower',   name: '光合成タワー',   icon: '🗼', desc: '+1500 / 秒',   baseCost: 3_000_000, costMult: 2.5, mpsBonus: 1500, maxCount: 5 },
 ];
 
 // ネタアイテム・装飾アイテム（一度きりの購入）
@@ -180,6 +185,19 @@ const EVENTS = [
   { id: 'sea_god',         name: '海神様のお告げだ！',     icon: '🔱', desc: '全収益 ×4（10秒）',               type: 'all_mult',   value: 4,   duration: 10, unlockCost: 500_000 },
 ];
 
+// ガチャスキン一覧（既存スーツを流用）
+const GACHA_SKINS = [
+  { id: 'skin_black',   name: '黒スーツ',         rarity: 'N',   suit: 'black',   prob: 0.60  },
+  { id: 'skin_blue',    name: '青スーツ',         rarity: 'R',   suit: 'blue',    prob: 0.125 },
+  { id: 'skin_green',   name: '緑スーツ',         rarity: 'R',   suit: 'green',   prob: 0.125 },
+  { id: 'skin_red',     name: '赤スーツ',         rarity: 'SR',  suit: 'red',     prob: 0.06  },
+  { id: 'skin_gold',    name: '金スーツ',         rarity: 'SR',  suit: 'gold',    prob: 0.06  },
+  { id: 'skin_rainbow', name: 'レインボースーツ', rarity: 'SSR', suit: 'rainbow', prob: 0.03  },
+];
+
+const RARITY_COLOR  = { N: '#888888', R: '#4499ff', SR: '#ffd700', SSR: '#ff44ff' };
+const RARITY_DUPE_STONES = { N: 1, R: 5, SR: 15, SSR: 50 };
+
 // 転生スキルツリー
 const PRESTIGE_SKILLS = [
   { id: 'pTap',    name: 'タップ強化',         desc: '恒久タップ ×1.5倍',        costs: [10, 25, 50, 100, 200], type: 'tapMult',    value: 1.5, maxLevel: 5 },
@@ -212,6 +230,10 @@ const DEFAULT_STATE = {
   prestigeLevel:   0,
   prestigeStones:  0,
   prestigeSkills:  {},
+  prestigeHistory: [],
+  ownedSkins:      [],
+  equippedSkin:    null,
+  gachaPity:       0,
   unlockedEvents:  ['bonus_tap', 'bonus_mps', 'bonus_moku', 'rough_current', 'tax_bill'],
   nextEventId:     null,   // 待機中に予告表示するイベントID
   eventCooldown:   60,
@@ -715,6 +737,26 @@ function endEvent() {
 }
 
 function updateEventDisplay() {
+  // メイン画面バナー更新
+  const banner    = document.getElementById('event-banner');
+  const bannerIcon = document.getElementById('event-banner-icon');
+  const bannerName = document.getElementById('event-banner-name');
+  const bannerTimer = document.getElementById('event-banner-timer');
+  if (banner) {
+    if (gameState.activeEvent && gameState.activeEvent.timer > 0) {
+      const ev = EVENTS.find(e => e.id === gameState.activeEvent.id);
+      if (ev) {
+        const isNeg = ev.value < 1 && ev.type !== 'moku_bonus';
+        banner.className = isNeg ? 'event-banner-negative' : 'event-banner-positive';
+        bannerIcon.textContent  = ev.icon;
+        bannerName.textContent  = `イベント発生中！！ ${ev.name}`;
+        bannerTimer.textContent = `残り${gameState.activeEvent.timer}秒`;
+      }
+    } else {
+      banner.className = 'hidden';
+    }
+  }
+
   const area = document.getElementById('event-area');
 
   if (gameState.activeEvent && gameState.activeEvent.timer > 0) {
@@ -992,6 +1034,102 @@ function renderEventUnlockList() {
   }
 }
 
+// ========== ガチャ ==========
+
+function pullOnce(pitied = false) {
+  const pool  = pitied ? GACHA_SKINS.filter(s => s.rarity !== 'N') : GACHA_SKINS;
+  const total = pool.reduce((s, x) => s + x.prob, 0);
+  let r = Math.random() * total;
+  for (const skin of pool) { r -= skin.prob; if (r <= 0) return skin; }
+  return pool[pool.length - 1];
+}
+
+function doGachaPull(count = 1) {
+  const cost = count === 1 ? 50 : 450;
+  if ((gameState.prestigeStones ?? 0) < cost) return;
+  gameState.prestigeStones -= cost;
+
+  const results = [];
+  for (let i = 0; i < count; i++) {
+    gameState.gachaPity = (gameState.gachaPity ?? 0) + 1;
+    const pitied = gameState.gachaPity >= 10;
+    const skin   = pullOnce(pitied);
+    if (pitied || skin.rarity !== 'N') gameState.gachaPity = 0;
+    const isNew  = !(gameState.ownedSkins ?? []).includes(skin.id);
+    let dupeStones = 0;
+    if (isNew) {
+      gameState.ownedSkins = [...(gameState.ownedSkins ?? []), skin.id];
+    } else {
+      dupeStones = RARITY_DUPE_STONES[skin.rarity] ?? 1;
+      gameState.prestigeStones = (gameState.prestigeStones ?? 0) + dupeStones;
+    }
+    results.push({ skin, isNew, dupeStones });
+  }
+
+  showGachaResult(results);
+  saveGame();
+  updateDisplay();
+}
+
+function showGachaResult(results) {
+  const modal   = document.getElementById('gacha-result-modal');
+  const content = document.getElementById('gacha-result-content');
+  if (!modal || !content) return;
+
+  content.innerHTML = results.map(({ skin, isNew, dupeStones }) => {
+    const src   = IMAGE_CONFIG.character.suits[skin.suit];
+    const color = RARITY_COLOR[skin.rarity];
+    return `
+      <div class="gacha-card${isNew ? '' : ' gacha-dupe'}" style="border-color:${color};box-shadow:0 0 12px ${color}66">
+        <div class="gacha-card-rarity" style="background:${color}">${skin.rarity}</div>
+        <img class="gacha-card-img" src="${src}" alt="${skin.name}">
+        <div class="gacha-card-name">${skin.name}</div>
+        ${isNew
+          ? '<div class="gacha-card-new">NEW!</div>'
+          : `<div class="gacha-card-dupe">✨ +${dupeStones}石</div>`}
+      </div>`;
+  }).join('');
+
+  modal.classList.remove('hidden');
+}
+
+function equipSkin(skinId) {
+  if (!(gameState.ownedSkins ?? []).includes(skinId)) return;
+  gameState.equippedSkin = gameState.equippedSkin === skinId ? null : skinId;
+  applyCharacterSprite(gameState.suit);
+  updateDisplay();
+}
+
+function renderSkinCollection() {
+  const container = document.getElementById('skin-collection');
+  if (!container) return;
+  const stones = gameState.prestigeStones ?? 0;
+
+  container.innerHTML = GACHA_SKINS.map(skin => {
+    const owned    = (gameState.ownedSkins ?? []).includes(skin.id);
+    const equipped = gameState.equippedSkin === skin.id;
+    const src      = IMAGE_CONFIG.character.suits[skin.suit];
+    const color    = RARITY_COLOR[skin.rarity];
+    return `
+      <div class="skin-card${owned ? '' : ' skin-locked'}" style="${owned ? `border-color:${color}` : ''}">
+        <div class="skin-card-rarity" style="background:${owned ? color : '#333'}">${skin.rarity}</div>
+        <img class="skin-card-img" src="${src}" alt="${skin.name}">
+        <div class="skin-card-name">${skin.name}</div>
+        ${owned
+          ? `<button class="skin-equip-btn${equipped ? ' equipped' : ''}" onclick="equipSkin('${skin.id}')">${equipped ? '装着中' : '装着'}</button>`
+          : '<div class="skin-card-locked">未入手</div>'}
+      </div>`;
+  }).join('');
+
+  // ガチャUI更新
+  const pityEl = document.getElementById('gacha-pity-count');
+  if (pityEl) pityEl.textContent = 10 - (gameState.gachaPity ?? 0);
+  const btn1  = document.getElementById('gacha-btn-1');
+  const btn10 = document.getElementById('gacha-btn-10');
+  if (btn1)  btn1.disabled  = stones < 50;
+  if (btn10) btn10.disabled = stones < 450;
+}
+
 // ========== 転生（プレステージ） ==========
 
 function doPrestige() {
@@ -999,11 +1137,25 @@ function doPrestige() {
   const stonesEarned = Math.floor(gameState.totalMoku / 1_000_000) * getPrestigeBonus('stoneMult');
   if (!confirm(`転生しますか？\n\n獲得: 転生石 +${stonesEarned}個\n\n藻・強化・社員・施設・イベント解放がリセットされます。\nアイテムとスキルは引き継がれます。`)) return;
 
+  const now   = new Date();
+  const entry = {
+    no:           (gameState.prestigeLevel ?? 0) + 1,
+    date:         `${now.getMonth() + 1}/${now.getDate()}`,
+    totalMoku:    gameState.totalMoku ?? 0,
+    maxLevel:     calcLevelFromMoku(gameState.totalMoku ?? 0),
+    employees:    Object.values(gameState.employees ?? {}).reduce((s, n) => s + n, 0),
+    stonesEarned,
+  };
+
   const keep = {
     purchasedItems:  gameState.purchasedItems,
     prestigeLevel:   (gameState.prestigeLevel ?? 0) + 1,
     prestigeStones:  (gameState.prestigeStones ?? 0) + stonesEarned,
     prestigeSkills:  gameState.prestigeSkills,
+    prestigeHistory: [...(gameState.prestigeHistory ?? []), entry],
+    ownedSkins:      gameState.ownedSkins,
+    equippedSkin:    gameState.equippedSkin,
+    gachaPity:       gameState.gachaPity,
   };
 
   gameState = structuredClone(DEFAULT_STATE);
@@ -1080,7 +1232,46 @@ function updatePrestigeTab() {
   const stoneEl  = document.getElementById('prestige-tab-stones');
   if (lvEl)    lvEl.textContent    = `転生 Lv.${gameState.prestigeLevel ?? 0}`;
   if (stoneEl) stoneEl.textContent = `✨ 転生石: ${gameState.prestigeStones ?? 0}`;
+
+  const exampleEl = document.getElementById('stone-guide-example');
+  if (exampleEl) {
+    const total      = gameState.totalMoku ?? 0;
+    const stones     = Math.floor(total / 1_000_000) * getPrestigeBonus('stoneMult');
+    const multiplier = getPrestigeBonus('stoneMult');
+    const multStr    = multiplier > 1 ? `（転生加速×${multiplier}）` : '';
+    exampleEl.textContent = total > 0
+      ? `例: 現在 ${fmt(total)}藻 → 転生すると ${stones}石 獲得${multStr}`
+      : '藻を貯めて転生してみよう！';
+  }
+  renderSkinCollection();
   renderPrestigeSkillList();
+  renderPrestigeHistory();
+}
+
+function renderPrestigeHistory() {
+  const container = document.getElementById('prestige-history');
+  if (!container) return;
+  const history = gameState.prestigeHistory ?? [];
+
+  if (history.length === 0) {
+    container.innerHTML = '<p class="history-empty">まだ転生していません。<br>初転生を目指そう！</p>';
+    return;
+  }
+
+  container.innerHTML = [...history].reverse().map(e => `
+    <div class="history-card">
+      <div class="history-header">
+        <span class="history-no">第${e.no}回転生</span>
+        <span class="history-date">${e.date}</span>
+      </div>
+      <div class="history-stats">
+        <span>🌿 ${fmt(e.totalMoku)}藻</span>
+        <span>Lv.${e.maxLevel}</span>
+        <span>👔 ${e.employees}体</span>
+        <span>✨ +${e.stonesEarned}石</span>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ========== オフライン収益 ==========
@@ -1206,6 +1397,12 @@ function init() {
 
   document.getElementById('offline-ok').addEventListener('click', () => {
     document.getElementById('offline-modal').classList.add('hidden');
+  });
+
+  document.getElementById('gacha-btn-1') .addEventListener('click', () => doGachaPull(1));
+  document.getElementById('gacha-btn-10').addEventListener('click', () => doGachaPull(10));
+  document.getElementById('gacha-result-close').addEventListener('click', () => {
+    document.getElementById('gacha-result-modal').classList.add('hidden');
   });
 
   document.getElementById('sound-btn').addEventListener('click', () => {

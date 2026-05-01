@@ -409,6 +409,47 @@ button,
 
 #offline-ok:active { opacity: 0.7; }
 
+/* ========== イベントバナー（メイン画面） ========== */
+.event-banner-positive,
+.event-banner-negative {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: bold;
+  animation: banner-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.event-banner-positive {
+  background: #0a2a1a;
+  border: 1px solid #3dff7a;
+  color: #3dff7a;
+}
+
+.event-banner-negative {
+  background: #2a0a0a;
+  border: 1px solid #ff4444;
+  color: #ff6666;
+}
+
+#event-banner-icon { font-size: 1rem; }
+
+#event-banner-name { flex: 1; }
+
+#event-banner-timer {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+@keyframes banner-pulse {
+  from { opacity: 0.85; }
+  to   { opacity: 1; }
+}
+
 /* ========== 転生進捗バー ========== */
 #prestige-bar {
   margin: 14px 0 0;
@@ -485,6 +526,276 @@ button,
   animation: prestige-glow 0.9s ease-in-out infinite alternate;
 }
 
+/* ========== 転生石ガイド ========== */
+#stone-guide {
+  background: #0c1e34;
+  border: 1px solid #2a2a4a;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stone-guide-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.stone-guide-label { color: #78bb99; }
+
+.stone-guide-val {
+  font-weight: bold;
+  color: #cc88ff;
+}
+
+.stone-guide-example {
+  font-size: 0.75rem;
+  color: #cc88ff;
+  margin-top: 4px;
+  text-align: center;
+  padding: 4px 0;
+  opacity: 0.85;
+}
+
+/* ========== ガチャ ========== */
+#gacha-area {
+  background: #0c1e34;
+  border: 1px solid #2a2a4a;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+#gacha-pity-info {
+  font-size: 0.78rem;
+  color: #aa88cc;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#gacha-btns {
+  display: flex;
+  gap: 10px;
+}
+
+.gacha-btn {
+  flex: 1;
+  padding: 12px 8px;
+  background: linear-gradient(135deg, #3a0066, #220044);
+  color: #cc88ff;
+  border: 1px solid #cc88ff;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: opacity 0.15s;
+}
+
+.gacha-btn span { font-size: 0.75rem; color: #aa66dd; }
+.gacha-btn:active { opacity: 0.7; }
+.gacha-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* スキンコレクション */
+#skin-collection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.skin-card {
+  background: #0c1e34;
+  border: 2px solid #333;
+  border-radius: 10px;
+  padding: 8px 4px;
+  text-align: center;
+  position: relative;
+}
+
+.skin-locked { opacity: 0.4; }
+
+.skin-card-rarity {
+  font-size: 0.62rem;
+  font-weight: bold;
+  color: #000;
+  border-radius: 4px;
+  padding: 1px 5px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.skin-card-img {
+  width: 100%;
+  height: 80px;
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+}
+
+.skin-card-name {
+  font-size: 0.68rem;
+  color: #d8eedd;
+  margin: 4px 0 6px;
+}
+
+.skin-equip-btn {
+  width: 100%;
+  padding: 4px 0;
+  background: #0e3a24;
+  color: #3dff7a;
+  border: 1px solid #3dff7a;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.skin-equip-btn.equipped {
+  background: #3dff7a;
+  color: #071420;
+}
+
+.skin-card-locked {
+  font-size: 0.68rem;
+  color: #445566;
+}
+
+/* ガチャ結果モーダル */
+#gacha-result-modal {
+  position: fixed;
+  inset: 0;
+  background: #000000cc;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#gacha-result-inner {
+  background: #0c1e34;
+  border: 2px solid #cc88ff;
+  border-radius: 16px;
+  padding: 20px 16px;
+  width: 90%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 40px #cc88ff50;
+}
+
+#gacha-result-content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.gacha-card {
+  border: 2px solid #888;
+  border-radius: 10px;
+  padding: 6px 4px;
+  text-align: center;
+  background: #071420;
+  position: relative;
+}
+
+.gacha-card-rarity {
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: #000;
+  border-radius: 4px;
+  padding: 1px 4px;
+  display: inline-block;
+  margin-bottom: 3px;
+}
+
+.gacha-card-img {
+  width: 100%;
+  height: 70px;
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+}
+
+.gacha-card-name {
+  font-size: 0.62rem;
+  color: #d8eedd;
+  margin-top: 3px;
+}
+
+.gacha-card-new {
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: #ffd700;
+  margin-top: 2px;
+}
+
+.gacha-dupe { opacity: 0.7; }
+
+.gacha-card-dupe {
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: #cc88ff;
+  margin-top: 2px;
+}
+
+#gacha-result-close {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: #1a1a2e;
+  color: #cc88ff;
+  border: 1px solid #cc88ff;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ========== 転生歴代記録 ========== */
+.history-empty {
+  color: #445566;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 16px 0;
+  line-height: 1.8;
+}
+
+.history-card {
+  background: #0c1e34;
+  border: 1px solid #2a2a4a;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.history-no {
+  font-weight: bold;
+  color: #cc88ff;
+  font-size: 0.88rem;
+}
+
+.history-date {
+  font-size: 0.75rem;
+  color: #445566;
+}
+
+.history-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: #78bb99;
+}
+
 /* ========== 転生タブ ========== */
 #prestige-tab-header {
   display: flex;
@@ -516,6 +827,12 @@ button,
   margin-bottom: 10px;
   padding-bottom: 6px;
   border-bottom: 1px solid #1a4a30;
+}
+
+.section-note {
+  font-size: 0.72rem;
+  color: #445566;
+  margin: -6px 0 8px;
 }
 
 /* ========== アイテムリスト（強化・社員共通） ========== */

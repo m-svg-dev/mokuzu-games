@@ -76,6 +76,13 @@
       ⚡ 覚醒中！残り <span id="awaken-time-val">30</span>秒
     </div>
 
+    <!-- イベントバナー -->
+    <div id="event-banner" class="hidden">
+      <span id="event-banner-icon"></span>
+      <span id="event-banner-name"></span>
+      <span id="event-banner-timer"></span>
+    </div>
+
     <!-- 転生進捗 -->
     <div id="prestige-bar">
       <div id="prestige-bar-header">
@@ -101,8 +108,10 @@
   <!-- ③ 社員/施設画面 -->
   <div id="tab-employee" class="tab-panel">
     <h2 class="panel-title">👔 社員</h2>
+    <p class="section-note">雇うと毎秒自動で藻を生産してくれます</p>
     <div id="employee-list"></div>
     <h2 class="panel-title" style="margin-top:20px">🏗️ 施設</h2>
+    <p class="section-note">建てると毎秒自動で藻を生産 or タップ強化されます</p>
     <div id="facility-list"></div>
     <h2 class="panel-title" style="margin-top:20px">🎁 アイテム</h2>
     <div id="item-list"></div>
@@ -132,8 +141,57 @@
       <div id="prestige-tab-level">転生 Lv.0</div>
       <div id="prestige-tab-stones">✨ 転生石: 0</div>
     </div>
+
+    <h2 class="panel-title" style="margin-top:16px">✨ 転生石の入手方法</h2>
+    <div id="stone-guide">
+      <div class="stone-guide-row">
+        <span class="stone-guide-label">🌀 転生時</span>
+        <span class="stone-guide-val">累計藻 ÷ 100万 個</span>
+      </div>
+      <div class="stone-guide-example" id="stone-guide-example">―</div>
+      <div class="stone-guide-row">
+        <span class="stone-guide-label">🎰 ガチャ被り N</span>
+        <span class="stone-guide-val">+1石</span>
+      </div>
+      <div class="stone-guide-row">
+        <span class="stone-guide-label">🎰 ガチャ被り R</span>
+        <span class="stone-guide-val" style="color:#4499ff">+5石</span>
+      </div>
+      <div class="stone-guide-row">
+        <span class="stone-guide-label">🎰 ガチャ被り SR</span>
+        <span class="stone-guide-val" style="color:#ffd700">+15石</span>
+      </div>
+      <div class="stone-guide-row">
+        <span class="stone-guide-label">🎰 ガチャ被り SSR</span>
+        <span class="stone-guide-val" style="color:#ff44ff">+50石</span>
+      </div>
+    </div>
+
+    <h2 class="panel-title" style="margin-top:16px">🎰 ガチャ</h2>
+    <div id="gacha-area">
+      <p id="gacha-pity-info">次のR以上まで：<span id="gacha-pity-count">10</span>回</p>
+      <div id="gacha-btns">
+        <button id="gacha-btn-1" class="gacha-btn">1回引く<br><span>50石</span></button>
+        <button id="gacha-btn-10" class="gacha-btn">10連<br><span>450石</span></button>
+      </div>
+    </div>
+
+    <h2 class="panel-title" style="margin-top:16px">👗 スキンコレクション</h2>
+    <div id="skin-collection"></div>
+
     <h2 class="panel-title" style="margin-top:16px">🌀 スキルツリー</h2>
     <div id="prestige-skill-list"></div>
+
+    <h2 class="panel-title" style="margin-top:16px">📖 転生歴代記録</h2>
+    <div id="prestige-history"></div>
+  </div>
+
+  <!-- ガチャ結果モーダル -->
+  <div id="gacha-result-modal" class="hidden">
+    <div id="gacha-result-inner">
+      <div id="gacha-result-content"></div>
+      <button id="gacha-result-close">閉じる</button>
+    </div>
   </div>
 
   <!-- タブナビゲーション（画面下部固定） -->
