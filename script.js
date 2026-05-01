@@ -217,7 +217,7 @@ const CONSUMABLE_ITEMS = [
   { id: 'mps_boost',    name: 'MPS加速',          icon: '🌊', desc: '5分間MPS×5倍',              cost: 3,  duration: 300, type: 'timed',   effect: 'mps_boost'  },
   { id: 'auto_clicker', name: 'オートクリッカー', icon: '👆', desc: '5分間自動タップ（2回/秒）', cost: 5,  duration: 300, type: 'timed',   effect: 'auto_click' },
   { id: 'moku_storm',   name: '藻の嵐',           icon: '💎', desc: '現在のMPS×300秒分を即獲得', cost: 8,  duration: 0,   type: 'instant', effect: 'moku_storm' },
-  { id: 'gacha_coin',   name: 'ガチャコイン',     icon: '🎰', desc: 'ガチャ1回無料',             cost: 50, duration: 0,   type: 'instant', effect: 'gacha'      },
+  { id: 'gacha_coin',   name: 'スキンガチャコイン', icon: '🎰', desc: 'スキンガチャ1回無料',       cost: 50, duration: 0,   type: 'instant', effect: 'gacha'      },
 ];
 
 // 転生スキルツリー
