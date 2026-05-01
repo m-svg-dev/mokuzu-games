@@ -41,7 +41,6 @@ export async function registerUser(name, email, password) {
   await updateProfile(cred.user, { displayName: name });
   await setDoc(doc(db, 'users', cred.user.uid), {
     name,
-    email,
     totalMoku: 0,
     prestigeLevel: 0,
     updatedAt: Date.now(),
