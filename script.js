@@ -65,6 +65,8 @@ const IMAGE_CONFIG = {
   },
 };
 
+const SUIT_COVER_FIT = new Set(['silver', 'white']); // 正方形画像はcoverで表示
+
 function applyCharacterSprite(suit) {
   let effectiveSuit = suit;
   if (gameState.equippedSkin) {
@@ -73,7 +75,10 @@ function applyCharacterSprite(suit) {
   }
   const src = IMAGE_CONFIG.character.suits[effectiveSuit] ?? IMAGE_CONFIG.character.suits.black;
   const sprite = document.getElementById('character-sprite');
-  if (sprite) sprite.src = src;
+  if (sprite) {
+    sprite.src = src;
+    sprite.style.objectFit = SUIT_COVER_FIT.has(effectiveSuit) ? 'cover' : 'contain';
+  }
 }
 
 function getEmployeeIconStyle(empId) {
