@@ -113,7 +113,7 @@ button,
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center top;
   filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));
   user-select: none;
@@ -558,6 +558,122 @@ button,
   text-align: center;
   padding: 4px 0;
   opacity: 0.85;
+}
+
+/* ========== 藻コイン表示 ========== */
+#coin-display {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #ffd700;
+  background: #1a2a0a;
+  border: 1px solid #ffd70050;
+  border-radius: 8px;
+  padding: 3px 8px;
+}
+
+/* ========== アクティブ効果バー ========== */
+#active-effects-bar {
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 14px;
+}
+
+.effect-badge {
+  background: #0c2a44;
+  border: 1px solid #4499ff80;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  color: #88ccff;
+  white-space: nowrap;
+  animation: pulse-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  from { box-shadow: 0 0 4px #4499ff40; }
+  to   { box-shadow: 0 0 10px #4499ff90; }
+}
+
+/* ========== 藻コインセクション ========== */
+#coin-section {
+  background: #0c1e10;
+  border: 1px solid #ffd70040;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+#coin-balance-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#coin-balance-val {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ffd700;
+  flex: 1;
+}
+
+#daily-claim-btn, #stone-exchange-btn {
+  background: #1a3a1a;
+  border: 1px solid #3dff7a60;
+  border-radius: 8px;
+  color: #3dff7a;
+  font-size: 0.72rem;
+  padding: 5px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#daily-claim-btn:disabled, #stone-exchange-btn:disabled {
+  cursor: default;
+}
+
+/* ========== 消費アイテム ========== */
+.consumable-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  align-items: stretch;
+}
+
+.consumable-row .item-btn {
+  flex: 1;
+}
+
+.consumable-count {
+  font-size: 0.85rem;
+  color: #cc88ff;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.consumable-use-btn {
+  background: #1a1a3a;
+  border: 1px solid #cc88ff60;
+  border-radius: 10px;
+  color: #cc88ff;
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 0 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.consumable-use-btn:not(:disabled):hover {
+  background: #2a1a4a;
+}
+
+.effect-active-label {
+  font-size: 0.68rem;
+  color: #88ccff;
+  margin-top: 3px;
 }
 
 /* ========== ガチャ ========== */

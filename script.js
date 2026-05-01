@@ -170,21 +170,21 @@ const EMPLOYEES = [
 
 const EVENTS = [
   // ── デフォルト解放済み（unlockCost: 0） ──
-  { id: 'bonus_tap',       name: '藻の大発生！',           icon: '🌊', desc: 'タップ効率 ×3（20秒）',           type: 'tap_mult',   value: 3,   duration: 20, unlockCost: 0       },
-  { id: 'bonus_mps',       name: '自動収穫強化！',         icon: '⚡', desc: '自動収益 ×2（30秒）',             type: 'mps_mult',   value: 2,   duration: 30, unlockCost: 0       },
-  { id: 'bonus_moku',      name: 'ボーナス収穫！',         icon: '💎', desc: '現在の藻 +10%（即時）',           type: 'moku_bonus', value: 0.1, duration: 3,  unlockCost: 0       },
-  { id: 'rough_current',   name: '海流が荒れている…',     icon: '🌀', desc: '自動収益 -30%（20秒）',           type: 'mps_mult',   value: 0.7, duration: 20, unlockCost: 0       },
+  { id: 'bonus_tap',       name: '藻の大発生！',           icon: '🌊', desc: 'タップ効率 ×3（100秒）',          type: 'tap_mult',   value: 3,   duration: 100, unlockCost: 0       },
+  { id: 'bonus_mps',       name: '自動収穫強化！',         icon: '⚡', desc: '自動収益 ×2（150秒）',            type: 'mps_mult',   value: 2,   duration: 150, unlockCost: 0       },
+  { id: 'bonus_moku',      name: 'ボーナス収穫！',         icon: '💎', desc: '現在の藻 +10%（即時）',           type: 'moku_bonus', value: 0.1, duration: 15,  unlockCost: 0       },
+  { id: 'rough_current',   name: '海流が荒れている…',     icon: '🌀', desc: '自動収益 -30%（100秒）',          type: 'mps_mult',   value: 0.7, duration: 100, unlockCost: 0       },
   // ── 藻で解放可能 ──
-  { id: 'jellyfish_swarm', name: 'クラゲの大群襲来！',     icon: '🪼', desc: 'タップ効率 ×2（40秒）',           type: 'tap_mult',   value: 2,   duration: 40, unlockCost: 500     },
-  { id: 'human_spotted',   name: '人間にバレそうだ！',     icon: '👁️', desc: '話題沸騰！自動収益 ×1.5（30秒）', type: 'mps_mult',   value: 1.5, duration: 30, unlockCost: 1_000   },
-  { id: 'moku_bubble',     name: '海流バブル発生！',       icon: '🫧', desc: 'タップ効率 ×5（15秒）',           type: 'tap_mult',   value: 5,   duration: 15, unlockCost: 3_000   },
-  { id: 'shark_deal',      name: 'サメが営業に来た！',     icon: '🦈', desc: '自動収益 ×3（45秒）',             type: 'mps_mult',   value: 3,   duration: 45, unlockCost: 8_000   },
-  { id: 'deep_factory',    name: '深海工場の稼働！',       icon: '🏭', desc: '自動収益 ×2（60秒）',             type: 'mps_mult',   value: 2,   duration: 60, unlockCost: 15_000  },
-  { id: 'deep_treasure',   name: '深海の宝を発見！',       icon: '🪙', desc: '現在の藻 +30%（即時）',           type: 'moku_bonus', value: 0.3, duration: 3,  unlockCost: 25_000  },
-  { id: 'record_break',    name: '記録更新！！',           icon: '📈', desc: 'タップ効率 ×10（10秒）',          type: 'tap_mult',   value: 10,  duration: 10, unlockCost: 50_000  },
-  { id: 'settlement_bonus',name: '決算ボーナス！',         icon: '💰', desc: '現在の藻 +50%（即時）',           type: 'moku_bonus', value: 0.5, duration: 3,  unlockCost: 100_000 },
-  { id: 'tax_bill',        name: '税金の請求書が届いた…', icon: '📄', desc: '自動収益 -50%（30秒）',           type: 'mps_mult',   value: 0.5, duration: 30, unlockCost: 0       },
-  { id: 'sea_god',         name: '海神様のお告げだ！',     icon: '🔱', desc: '全収益 ×4（10秒）',               type: 'all_mult',   value: 4,   duration: 10, unlockCost: 500_000 },
+  { id: 'jellyfish_swarm', name: 'クラゲの大群襲来！',     icon: '🪼', desc: 'タップ効率 ×2（200秒）',          type: 'tap_mult',   value: 2,   duration: 200, unlockCost: 500     },
+  { id: 'human_spotted',   name: '人間にバレそうだ！',     icon: '👁️', desc: '話題沸騰！自動収益 ×1.5（150秒）',type: 'mps_mult',   value: 1.5, duration: 150, unlockCost: 1_000   },
+  { id: 'moku_bubble',     name: '海流バブル発生！',       icon: '🫧', desc: 'タップ効率 ×5（75秒）',           type: 'tap_mult',   value: 5,   duration: 75,  unlockCost: 3_000   },
+  { id: 'shark_deal',      name: 'サメが営業に来た！',     icon: '🦈', desc: '自動収益 ×3（225秒）',            type: 'mps_mult',   value: 3,   duration: 225, unlockCost: 8_000   },
+  { id: 'deep_factory',    name: '深海工場の稼働！',       icon: '🏭', desc: '自動収益 ×2（300秒）',            type: 'mps_mult',   value: 2,   duration: 300, unlockCost: 15_000  },
+  { id: 'deep_treasure',   name: '深海の宝を発見！',       icon: '🪙', desc: '現在の藻 +30%（即時）',           type: 'moku_bonus', value: 0.3, duration: 15,  unlockCost: 25_000  },
+  { id: 'record_break',    name: '記録更新！！',           icon: '📈', desc: 'タップ効率 ×10（50秒）',          type: 'tap_mult',   value: 10,  duration: 50,  unlockCost: 50_000  },
+  { id: 'settlement_bonus',name: '決算ボーナス！',         icon: '💰', desc: '現在の藻 +50%（即時）',           type: 'moku_bonus', value: 0.5, duration: 15,  unlockCost: 100_000 },
+  { id: 'tax_bill',        name: '税金の請求書が届いた…', icon: '📄', desc: '自動収益 -50%（150秒）',          type: 'mps_mult',   value: 0.5, duration: 150, unlockCost: 0       },
+  { id: 'sea_god',         name: '海神様のお告げだ！',     icon: '🔱', desc: '全収益 ×4（50秒）',               type: 'all_mult',   value: 4,   duration: 50,  unlockCost: 500_000 },
 ];
 
 // ガチャスキン一覧（既存スーツを流用）
@@ -201,6 +201,19 @@ const GACHA_SKINS = [
 
 const RARITY_COLOR  = { N: '#888888', R: '#4499ff', SR: '#ffd700', SSR: '#ff44ff' };
 const RARITY_DUPE_STONES = { N: 1, R: 5, SR: 15, SSR: 50 };
+
+// ========== 消費アイテム ==========
+
+const COINS_PER_STONE = 10;
+const DAILY_COINS     = 3;
+
+const CONSUMABLE_ITEMS = [
+  { id: 'tap_boost',    name: 'タップブースト',  icon: '⚡', desc: '5分間タップ×10倍',          cost: 3,  duration: 300, type: 'timed',   effect: 'tap_boost'  },
+  { id: 'mps_boost',    name: 'MPS加速',          icon: '🌊', desc: '5分間MPS×5倍',              cost: 3,  duration: 300, type: 'timed',   effect: 'mps_boost'  },
+  { id: 'auto_clicker', name: 'オートクリッカー', icon: '👆', desc: '5分間自動タップ（2回/秒）', cost: 5,  duration: 300, type: 'timed',   effect: 'auto_click' },
+  { id: 'moku_storm',   name: '藻の嵐',           icon: '💎', desc: '現在のMPS×300秒分を即獲得', cost: 8,  duration: 0,   type: 'instant', effect: 'moku_storm' },
+  { id: 'gacha_coin',   name: 'ガチャコイン',     icon: '🎰', desc: 'ガチャ1回無料',             cost: 50, duration: 0,   type: 'instant', effect: 'gacha'      },
+];
 
 // 転生スキルツリー
 const PRESTIGE_SKILLS = [
@@ -246,6 +259,10 @@ const DEFAULT_STATE = {
   eventTapMult:    1,
   eventMpsMult:    1,
   lastSaved:       0,
+  mokuCoins:       0,
+  lastDailyLogin:  null,
+  consumables:     {},     // { itemId: 所持数 }
+  activeEffects:   {},     // { effectId: 終了timestamp(ms) }
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -443,6 +460,9 @@ function updateDisplay() {
   renderEmployeeList();
   renderFacilityList();
   renderItemList();
+  renderConsumableList();
+  updateCoinDisplay();
+  updateActiveEffectsBar();
   updateSoundBtn();
 }
 
@@ -535,12 +555,13 @@ function onTap(e) {
   tapLocked = true;
   setTimeout(() => { tapLocked = false; }, 50);
 
-  const awakenMult  = gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1;
-  const eventMult   = gameState.eventTapMult ?? 1;
-  const critRate    = 0.05 + getPrestigeBonus('critRate');
-  const critMult    = 3    + getPrestigeBonus('critMult');
-  const isCritical  = Math.random() < critRate;
-  const gained      = gameState.tapPower * awakenMult * eventMult * (isCritical ? critMult : 1);
+  const awakenMult   = gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1;
+  const eventMult    = gameState.eventTapMult ?? 1;
+  const tapBoostMult = isEffectActive('tap_boost') ? 10 : 1;
+  const critRate     = 0.05 + getPrestigeBonus('critRate');
+  const critMult     = 3    + getPrestigeBonus('critMult');
+  const isCritical   = Math.random() < critRate;
+  const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult * (isCritical ? critMult : 1);
 
   gameState.moku      += gained;
   gameState.totalMoku += gameState.tapPower; // ボーナス倍率は totalMoku に含めない
@@ -613,9 +634,21 @@ function spawnTapEffect(e, gained, isCritical = false) {
 // ========== 自動収益ループ（1秒ごと） ==========
 
 function gameLoop() {
-  const awakenMult = gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1;
-  const eventMult  = gameState.eventMpsMult ?? 1;
-  const gained     = gameState.mokuPerSecond * awakenMult * eventMult;
+  // アクティブ効果の期限切れチェック
+  const nowMs = Date.now();
+  if (gameState.activeEffects) {
+    for (const [key, end] of Object.entries(gameState.activeEffects)) {
+      if (nowMs >= end) {
+        delete gameState.activeEffects[key];
+        if (key === 'auto_click') stopAutoClicker();
+      }
+    }
+  }
+
+  const awakenMult   = gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1;
+  const eventMult    = gameState.eventMpsMult ?? 1;
+  const mpsBoostMult = isEffectActive('mps_boost') ? 5 : 1;
+  const gained       = gameState.mokuPerSecond * awakenMult * eventMult * mpsBoostMult;
 
   gameState.moku      += gained;
   gameState.totalMoku += gameState.mokuPerSecond; // ボーナス倍率は含めない
@@ -919,6 +952,230 @@ function renderFacilityList() {
   }
 }
 
+// ========== 消費アイテム処理 ==========
+
+function isEffectActive(effectId) {
+  const end = gameState.activeEffects?.[effectId];
+  return end != null && Date.now() < end;
+}
+
+function getEffectRemaining(effectId) {
+  const end = gameState.activeEffects?.[effectId];
+  if (!end) return 0;
+  return Math.max(0, Math.ceil((end - Date.now()) / 1000));
+}
+
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return m > 0 ? `${m}:${String(s).padStart(2, '0')}` : `${s}秒`;
+}
+
+let _autoClickerTimer = null;
+
+function startAutoClicker() {
+  if (_autoClickerTimer) return;
+  _autoClickerTimer = setInterval(() => {
+    if (!isEffectActive('auto_click')) {
+      stopAutoClicker();
+      return;
+    }
+    const awakenMult   = gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1;
+    const eventMult    = gameState.eventTapMult ?? 1;
+    const tapBoostMult = isEffectActive('tap_boost') ? 10 : 1;
+    const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult;
+    gameState.moku      += gained;
+    gameState.totalMoku += gameState.tapPower;
+    gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 1);
+  }, 500); // 500ms = 2回/秒
+}
+
+function stopAutoClicker() {
+  if (_autoClickerTimer) {
+    clearInterval(_autoClickerTimer);
+    _autoClickerTimer = null;
+  }
+}
+
+function useConsumable(itemId) {
+  const item  = CONSUMABLE_ITEMS.find(x => x.id === itemId);
+  if (!item) return;
+  const count = gameState.consumables?.[itemId] ?? 0;
+  if (count <= 0) return;
+
+  gameState.consumables[itemId] = count - 1;
+
+  if (item.type === 'timed') {
+    const now      = Date.now();
+    const existing = gameState.activeEffects?.[item.effect] ?? 0;
+    const base     = existing > now ? existing : now;
+    gameState.activeEffects = {
+      ...(gameState.activeEffects ?? {}),
+      [item.effect]: base + item.duration * 1000,
+    };
+    if (item.effect === 'auto_click') startAutoClicker();
+  } else if (item.effect === 'moku_storm') {
+    const gained = Math.floor(gameState.mokuPerSecond * 300);
+    gameState.moku      += gained;
+    gameState.totalMoku += gained;
+  } else if (item.effect === 'gacha') {
+    doGachaPull(1);
+  }
+
+  playSound('buy');
+  updateDisplay();
+}
+
+function buyConsumable(itemId) {
+  const item = CONSUMABLE_ITEMS.find(x => x.id === itemId);
+  if (!item) return;
+  if ((gameState.mokuCoins ?? 0) < item.cost) return;
+
+  gameState.mokuCoins  = (gameState.mokuCoins  ?? 0) - item.cost;
+  gameState.consumables = {
+    ...(gameState.consumables ?? {}),
+    [itemId]: (gameState.consumables?.[itemId] ?? 0) + 1,
+  };
+  playSound('buy');
+  updateDisplay();
+}
+
+function localDateStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function timeUntilMidnight() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  const diffMs  = midnight - now;
+  const hours   = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  return hours > 0 ? `${hours}時間${minutes}分後` : `${minutes}分後`;
+}
+
+function claimDailyCoins() {
+  const today = localDateStr();
+  if (gameState.lastDailyLogin === today) return;
+  gameState.lastDailyLogin = today;
+  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + DAILY_COINS;
+  playSound('buy');
+  updateDisplay();
+}
+
+function exchangeStonesForCoins() {
+  const stones = gameState.prestigeStones ?? 0;
+  if (stones < COINS_PER_STONE) return;
+  const coinsGain   = Math.floor(stones / COINS_PER_STONE);
+  const stonesSpend = coinsGain * COINS_PER_STONE;
+  gameState.prestigeStones -= stonesSpend;
+  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coinsGain;
+  playSound('buy');
+  updateDisplay();
+}
+
+function updateCoinDisplay() {
+  const el = document.getElementById('coin-display');
+  if (el) el.textContent = `🪙 ${gameState.mokuCoins ?? 0}`;
+
+  const balEl = document.getElementById('coin-balance-val');
+  if (balEl) balEl.textContent = `🪙 ${gameState.mokuCoins ?? 0} コイン`;
+
+  const today    = localDateStr();
+  const claimed  = gameState.lastDailyLogin === today;
+  const dailyBtn = document.getElementById('daily-claim-btn');
+  if (dailyBtn) {
+    dailyBtn.disabled      = claimed;
+    dailyBtn.textContent   = claimed
+      ? `📅 受取済み (次回: ${timeUntilMidnight()})`
+      : `📅 デイリー +${DAILY_COINS}`;
+    dailyBtn.style.opacity = claimed ? '0.5' : '1';
+  }
+
+  const stones    = gameState.prestigeStones ?? 0;
+  const coinsGain = Math.floor(stones / COINS_PER_STONE);
+  const exBtn     = document.getElementById('stone-exchange-btn');
+  if (exBtn) {
+    exBtn.disabled      = coinsGain <= 0;
+    exBtn.textContent   = coinsGain > 0
+      ? `🔄 ${stones}転生石→${coinsGain}コイン`
+      : `🔄 転生石→コイン (10石=1)`;
+    exBtn.style.opacity = coinsGain > 0 ? '1' : '0.4';
+  }
+}
+
+function updateActiveEffectsBar() {
+  const bar = document.getElementById('active-effects-bar');
+  if (!bar) return;
+
+  const badges = CONSUMABLE_ITEMS
+    .filter(item => item.type === 'timed' && isEffectActive(item.effect))
+    .map(item => {
+      const rem = getEffectRemaining(item.effect);
+      return `<div class="effect-badge">${item.icon} ${item.name} ${fmtTime(rem)}</div>`;
+    });
+
+  bar.innerHTML = badges.join('');
+  bar.style.display = badges.length > 0 ? 'flex' : 'none';
+}
+
+function renderConsumableList() {
+  const container = document.getElementById('consumable-list');
+  if (!container) return;
+
+  if (!container.dataset.initialized) {
+    container.className = 'item-list';
+    for (const item of CONSUMABLE_ITEMS) {
+      const row = document.createElement('div');
+      row.className = 'consumable-row';
+      row.id = `consumable-row-${item.id}`;
+
+      const buyBtn = document.createElement('button');
+      buyBtn.id = `consumable-buy-${item.id}`;
+      buyBtn.addEventListener('click', () => buyConsumable(item.id));
+
+      const useBtn = document.createElement('button');
+      useBtn.id = `consumable-use-${item.id}`;
+      useBtn.className = 'consumable-use-btn';
+      useBtn.addEventListener('click', () => useConsumable(item.id));
+
+      row.appendChild(buyBtn);
+      row.appendChild(useBtn);
+      container.appendChild(row);
+    }
+    container.dataset.initialized = '1';
+  }
+
+  for (const item of CONSUMABLE_ITEMS) {
+    const count   = gameState.consumables?.[item.id] ?? 0;
+    const canBuy  = (gameState.mokuCoins ?? 0) >= item.cost;
+    const active  = item.type === 'timed' && isEffectActive(item.effect);
+    const rem     = active ? fmtTime(getEffectRemaining(item.effect)) : '';
+
+    const buyBtn = document.getElementById(`consumable-buy-${item.id}`);
+    const useBtn = document.getElementById(`consumable-use-${item.id}`);
+
+    buyBtn.className = `item-btn${canBuy ? ' can-buy' : ''}`;
+    buyBtn.innerHTML = `
+      <div class="item-icon" style="font-size:1.6rem">${item.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        ${active ? `<div class="effect-active-label">発動中 残り${rem}</div>` : ''}
+      </div>
+      <div class="item-right">
+        <div class="item-cost">🪙 ${item.cost}</div>
+        <div class="consumable-count">× ${count}</div>
+      </div>
+    `;
+
+    useBtn.disabled    = count <= 0;
+    useBtn.textContent = count > 0 ? '使用' : '---';
+    useBtn.style.opacity = count > 0 ? '1' : '0.35';
+  }
+}
+
 // ========== アイテム ==========
 
 function buyItem(itemId) {
@@ -1185,6 +1442,10 @@ function doPrestige() {
     ownedSkins:      gameState.ownedSkins,
     equippedSkin:    gameState.equippedSkin,
     gachaPity:       gameState.gachaPity,
+    mokuCoins:       gameState.mokuCoins,
+    lastDailyLogin:  gameState.lastDailyLogin,
+    consumables:     gameState.consumables,
+    activeEffects:   gameState.activeEffects,
   };
 
   gameState = structuredClone(DEFAULT_STATE);
@@ -1398,12 +1659,17 @@ function init() {
 
   updateSuit(gameState.suit);
   updateItemOverlays();
+
+  // オートクリッカーがセーブ時に発動中だった場合は復元
+  if (isEffectActive('auto_click')) startAutoClicker();
+
   renderPrestigeSkillList();
   renderUpgradeList();
   renderEventUnlockList();
   renderEmployeeList();
   renderFacilityList();
   renderItemList();
+  renderConsumableList();
   updateDisplay();
   updateEventDisplay();
 
@@ -1433,6 +1699,9 @@ function init() {
   document.getElementById('gacha-result-close').addEventListener('click', () => {
     document.getElementById('gacha-result-modal').classList.add('hidden');
   });
+
+  document.getElementById('daily-claim-btn').addEventListener('click', claimDailyCoins);
+  document.getElementById('stone-exchange-btn').addEventListener('click', exchangeStonesForCoins);
 
   document.getElementById('sound-btn').addEventListener('click', () => {
     gameState.soundEnabled = !gameState.soundEnabled;
