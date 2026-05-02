@@ -41,10 +41,11 @@ button,
 #header {
   position: fixed;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   width: 100%;
   max-width: 480px;
+  margin: 0 auto;
   background: #0c1e34;
   border-bottom: 2px solid #1a4a30;
   padding: 6px 14px;
@@ -1744,10 +1745,11 @@ button,
 #tab-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   width: 100%;
   max-width: 480px;
+  margin: 0 auto;
   overflow: hidden;
   background: #0c1e34;
   border-top: 2px solid #1a4a30;
