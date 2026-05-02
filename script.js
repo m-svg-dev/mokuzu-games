@@ -308,6 +308,7 @@ function calcLevel(totalMoku) {
 // ========== サウンド（Web Audio API） ==========
 
 let _audioCtx = null;
+let _lastCloudSave = null;
 
 function getAudioCtx() {
   if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1670,7 +1671,14 @@ function saveGame() {
   const json = JSON.stringify(gameState);
   localStorage.setItem(SAVE_KEY, json);
   localStorage.setItem(CHECKSUM_KEY, computeChecksum(json));
-  if (currentUser()) saveGameData(json).catch(() => {});
+}
+
+function saveGameCloud() {
+  const json = localStorage.getItem(SAVE_KEY);
+  if (!json || !currentUser()) return;
+  if (json === _lastCloudSave) return;
+  _lastCloudSave = json;
+  saveGameData(json).catch(() => {});
 }
 
 function loadGame() {
@@ -1721,6 +1729,7 @@ function initTabs() {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(`tab-${tabId}`).classList.add('active');
       btn.classList.add('active');
+      if (tabId === 'ranking') loadRanking();
     });
   });
 }
@@ -1828,10 +1837,11 @@ function init() {
   initFirebase();
 
   setInterval(gameLoop, 1000);          // ゲームループ
-  setInterval(saveGame, 30_000);        // オートセーブ（30秒ごと）
+  setInterval(saveGame, 30_000);        // ローカルオートセーブ（30秒ごと）
+  setInterval(saveGameCloud, 300_000);  // クラウドオートセーブ（5分ごと・変化時のみ）
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') saveGame();
+    if (document.visibilityState === 'hidden') { saveGame(); saveGameCloud(); }
   });
 }
 
