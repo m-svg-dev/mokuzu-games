@@ -1683,19 +1683,31 @@ button,
 
 .tab-btn {
   flex: 1;
-  padding: 10px 4px 14px;
+  padding: 6px 2px 8px;
   background: none;
   border: none;
-  color: #445566;
-  font-size: 0.78rem;
+  border-top: 2px solid transparent;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: filter 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 
+.tab-btn img {
+  width: 100%;
+  max-width: 52px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  filter: brightness(0.4) saturate(0);
+  transition: filter 0.15s;
+}
+
 .tab-btn.active {
-  color: #3dff7a;
   border-top: 2px solid #3dff7a;
+}
+
+.tab-btn.active img {
+  filter: brightness(1) saturate(1) drop-shadow(0 0 6px #3dff7a88);
 }
 
 /* ========== 設定ボタン & モーダル ========== */
@@ -1813,7 +1825,9 @@ button,
   white-space: nowrap;
 }
 .pet-egg-btn.disabled { opacity: 0.4; cursor: not-allowed; }
-.pet-egg-btn:not(.disabled):active { background: #2a7a44; }
+.pet-egg-btn.active   { background: #0a3a1a; border-color: #3dff7a; color: #3dff7a; cursor: default; }
+.pet-egg-btn:not(.disabled):not(.active):active { background: #2a7a44; }
+.pet-egg-card.is-active { border-color: #3dff7a88; }
 
 /* ペット管理カード */
 .pet-card {
@@ -1879,3 +1893,139 @@ button,
   0%, 100% { box-shadow: 0 0 0 0 #3dff7a44; }
   50%       { box-shadow: 0 0 0 6px #3dff7a00; }
 }
+
+/* ========== ペット進化モーダル ========== */
+#pet-evolve-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+#pet-evolve-modal.hidden { display: none; }
+
+#pet-evolve-modal-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 30px;
+  overflow: hidden;
+}
+
+#pet-evolve-flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  animation: evolve-flash 0.6s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes evolve-flash {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+#pet-evolve-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.evolve-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: particle-fly 1.2s ease-out forwards;
+}
+@keyframes particle-fly {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+#pet-evolve-sprite-wrap {
+  animation: evolve-popup 0.5s cubic-bezier(0.175,0.885,0.32,1.275) 0.3s both;
+}
+@keyframes evolve-popup {
+  0%   { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+#pet-evolve-sprite {
+  width: 180px;
+  height: 180px;
+  border-radius: 16px;
+  box-shadow: 0 0 40px #ffd70088, 0 0 80px #ffd70044;
+  animation: evolve-glow 1.5s ease-in-out 0.8s infinite alternate;
+}
+@keyframes evolve-glow {
+  0%   { box-shadow: 0 0 30px #ffd70066, 0 0 60px #ffd70033; }
+  100% { box-shadow: 0 0 60px #ffd700cc, 0 0 120px #ffd70066; }
+}
+
+#pet-evolve-label {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700aa;
+  animation: evolve-popup 0.4s cubic-bezier(0.175,0.885,0.32,1.275) 0.6s both;
+}
+#pet-evolve-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #d8eedd;
+  animation: evolve-popup 0.4s cubic-bezier(0.175,0.885,0.32,1.275) 0.75s both;
+}
+#pet-evolve-stage {
+  font-size: 0.9rem;
+  color: #3dff7a;
+  animation: evolve-popup 0.4s cubic-bezier(0.175,0.885,0.32,1.275) 0.85s both;
+}
+#pet-evolve-ok {
+  background: #1a5a30;
+  border: 2px solid #3dff7a;
+  border-radius: 10px;
+  color: #3dff7a;
+  font-size: 1rem;
+  padding: 12px 40px;
+  cursor: pointer;
+  margin-top: 8px;
+  animation: evolve-popup 0.4s cubic-bezier(0.175,0.885,0.32,1.275) 1s both;
+}
+#pet-evolve-ok:active { background: #2a7a44; }
+
+/* ========== ペット図鑑 ========== */
+#pet-zukan { display: flex; flex-direction: column; gap: 16px; }
+
+.zukan-row { background: #0d2a1a; border: 1px solid #1e4a30; border-radius: 10px; padding: 12px; }
+.zukan-type-name { font-size: 0.85rem; color: #3dff7a; margin-bottom: 8px; font-weight: bold; }
+
+.zukan-cells { display: flex; gap: 6px; }
+
+.zukan-cell {
+  position: relative;
+  flex: 1;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #0a1f14;
+}
+.zukan-cell.unlocked { border: 1px solid #2a6a44; }
+.zukan-cell.locked   { border: 1px dashed #1a3a24; display: flex; align-items: center; justify-content: center; }
+
+.zukan-lock { font-size: 1.2rem; color: #2a5a34; }
+
+.zukan-cell-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.6);
+  font-size: 0.55rem;
+  color: #aaa;
+  text-align: center;
+  padding: 2px 0;
+}
+.zukan-cell.unlocked .zukan-cell-label { color: #d8eedd; }

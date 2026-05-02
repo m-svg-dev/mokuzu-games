@@ -148,9 +148,6 @@
     <h2 class="panel-title" style="margin-top:20px">✨ 消費アイテム</h2>
     <p class="section-note">コインで購入して使用できます（複数ストック可）</p>
     <div id="consumable-list"></div>
-    <h2 class="panel-title" style="margin-top:20px">🥚 ペット卵</h2>
-    <p class="section-note">ペットを入手できます。1体のみ育成可能です</p>
-    <div id="pet-egg-shop"></div>
   </div>
 
   <!-- ④ イベント画面 -->
@@ -208,9 +205,6 @@
       </div>
     </div>
 
-    <h2 class="panel-title" style="margin-top:16px">🐾 ペット</h2>
-    <div id="pet-section"></div>
-
     <h2 class="panel-title" style="margin-top:16px">👗 スキンコレクション</h2>
     <div id="skin-collection"></div>
 
@@ -219,6 +213,33 @@
 
     <h2 class="panel-title" style="margin-top:16px">📖 転生歴代記録</h2>
     <div id="prestige-history"></div>
+  </div>
+
+  <!-- ⑥ ペット画面 -->
+  <div id="tab-pet" class="tab-panel">
+    <h2 class="panel-title">🐾 育成中のペット</h2>
+    <div id="pet-section"></div>
+    <h2 class="panel-title" style="margin-top:20px">🥚 ペット卵</h2>
+    <p class="section-note">種類ごとに1回購入できます。複数所持して切り替え可能</p>
+    <div id="pet-egg-shop"></div>
+    <h2 class="panel-title" style="margin-top:20px">📖 ペット図鑑</h2>
+    <p class="section-note">進化するたびに図鑑に登録されます</p>
+    <div id="pet-zukan"></div>
+  </div>
+
+  <!-- ペット進化モーダル -->
+  <div id="pet-evolve-modal" class="hidden">
+    <div id="pet-evolve-modal-inner">
+      <div id="pet-evolve-flash"></div>
+      <div id="pet-evolve-particles"></div>
+      <div id="pet-evolve-sprite-wrap">
+        <div id="pet-evolve-sprite"></div>
+      </div>
+      <div id="pet-evolve-label">✨ 進化！</div>
+      <div id="pet-evolve-name"></div>
+      <div id="pet-evolve-stage"></div>
+      <button id="pet-evolve-ok">やった！</button>
+    </div>
   </div>
 
   <!-- ガチャ結果モーダル -->
@@ -291,12 +312,13 @@
 
   <!-- タブナビゲーション（画面下部固定） -->
   <nav id="tab-nav">
-    <button class="tab-btn active" data-tab="main">メイン</button>
-    <button class="tab-btn" data-tab="upgrade">強化</button>
-    <button class="tab-btn" data-tab="employee">アイテム</button>
-    <button class="tab-btn" data-tab="event">イベント</button>
-    <button class="tab-btn" data-tab="prestige">転生</button>
-    <button class="tab-btn" data-tab="ranking">🏆</button>
+    <button class="tab-btn active" data-tab="main"><img src="assets/tabs/tab_main.png" alt="メイン"></button>
+    <button class="tab-btn" data-tab="upgrade"><img src="assets/tabs/tab_upgrade.png" alt="強化"></button>
+    <button class="tab-btn" data-tab="employee"><img src="assets/tabs/tab_item.png" alt="アイテム"></button>
+    <button class="tab-btn" data-tab="event"><img src="assets/tabs/tab_event.png" alt="イベント"></button>
+    <button class="tab-btn" data-tab="prestige"><img src="assets/tabs/tab_prestige.png" alt="転生"></button>
+    <button class="tab-btn" data-tab="pet"><img src="assets/tabs/tab_pet.png" alt="ペット"></button>
+    <button class="tab-btn" data-tab="ranking"><img src="assets/tabs/tab_ranking.png" alt="ランキング"></button>
   </nav>
 
   <!-- 登録ボーナスモーダル -->

@@ -169,7 +169,7 @@ const FACILITIES = [
 const PET_TYPES = [
   { id: 'green',  name: '緑の精霊',  icon: '🌿', row: 0, buyCost: { type: 'coins',  amount: 30 }, effectType: 'tap',  effectDesc: 'タップ倍率アップ' },
   { id: 'pink',   name: '桜の精霊',  icon: '🌸', row: 1, buyCost: { type: 'stones', amount: 20 }, effectType: 'mps',  effectDesc: 'MPS倍率アップ'   },
-  { id: 'purple', name: '月の精霊',  icon: '🌙', row: 2, buyCost: { type: 'stones', amount: 50 }, effectType: 'coin', effectDesc: 'コイン獲得アップ' },
+  { id: 'purple', name: '月の精霊',  icon: '🌙', row: 2, buyCost: { type: 'stones', amount: 50 }, effectType: 'coin', effectDesc: 'デイリー藻コイン獲得アップ' },
 ];
 
 const PET_STAGES = [
@@ -181,18 +181,19 @@ const PET_STAGES = [
 ];
 
 function getPetSpriteStyle(typeId, stageIndex) {
-  const type = PET_TYPES.find(t => t.id === typeId);
-  if (!type) return '';
-  const xPct = stageIndex * 25;
-  const yPct = type.row * 50;
-  return `background-image:url('assets/pet/pet_image.png');background-size:500% 300%;background-position:${xPct}% ${yPct}%;`;
+  const stage = PET_STAGES[stageIndex];
+  if (!stage) return '';
+  const path = `assets/pet/${typeId}_${stage.id}.png`;
+  return `background-image:url('${path}');background-size:cover;background-position:center;background-repeat:no-repeat;`;
 }
 
 function getPetMultiplier() {
-  const pet = gameState.activePet;
+  const typeId = gameState.activePetType;
+  if (!typeId) return { tap: 1, mps: 1, coin: 1 };
+  const pet  = (gameState.ownedPets ?? {})[typeId];
   if (!pet) return { tap: 1, mps: 1, coin: 1 };
   const mult = PET_STAGES[pet.stageIndex ?? 0]?.mult ?? 1;
-  const type = PET_TYPES.find(t => t.id === pet.typeId);
+  const type = PET_TYPES.find(t => t.id === typeId);
   return {
     tap:  type?.effectType === 'tap'  ? mult : 1,
     mps:  type?.effectType === 'mps'  ? mult : 1,
@@ -320,7 +321,8 @@ const DEFAULT_STATE = {
   activeEffects:        {},     // { effectId: 終了timestamp(ms) }
   hasRegistered:        false,  // 一度でもログインしたか
   registrationBonusClaimed: false, // 登録ボーナス受取済みか
-  activePet:            null,   // { typeId, stageIndex, conditionMetAt }
+  ownedPets:            {},     // { typeId: { stageIndex, conditionMetAt } }
+  activePetType:        null,   // 現在アクティブなペットのtypeId
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -1309,9 +1311,9 @@ function updateItemOverlays() {
 // ========== ペット購入・進化・表示 ==========
 
 function buyEgg(typeId) {
-  if (gameState.activePet) { alert('すでにペットを育てています！'); return; }
   const type = PET_TYPES.find(t => t.id === typeId);
   if (!type) return;
+  if ((gameState.ownedPets ?? {})[typeId]) { alert('すでに持っています！'); return; }
   if (type.buyCost.type === 'coins') {
     if ((gameState.mokuCoins ?? 0) < type.buyCost.amount) return;
     gameState.mokuCoins -= type.buyCost.amount;
@@ -1319,7 +1321,9 @@ function buyEgg(typeId) {
     if ((gameState.prestigeStones ?? 0) < type.buyCost.amount) return;
     gameState.prestigeStones -= type.buyCost.amount;
   }
-  gameState.activePet = { typeId, stageIndex: 0, conditionMetAt: null };
+  if (!gameState.ownedPets) gameState.ownedPets = {};
+  gameState.ownedPets[typeId] = { stageIndex: 0, conditionMetAt: null };
+  if (!gameState.activePetType) gameState.activePetType = typeId;
   playSound('buy');
   saveGame();
   renderPetEggShop();
@@ -1327,8 +1331,19 @@ function buyEgg(typeId) {
   updateDisplay();
 }
 
+function switchPet(typeId) {
+  if (!(gameState.ownedPets ?? {})[typeId]) return;
+  gameState.activePetType = typeId;
+  saveGame();
+  renderPetEggShop();
+  renderPetSection();
+  updateDisplay();
+}
+
 function tryEvolvePet() {
-  const pet = gameState.activePet;
+  const typeId = gameState.activePetType;
+  if (!typeId) return;
+  const pet = (gameState.ownedPets ?? {})[typeId];
   if (!pet || pet.stageIndex >= PET_STAGES.length - 1) return;
   const nextStage = PET_STAGES[pet.stageIndex + 1];
   const cond = nextStage.condition;
@@ -1357,39 +1372,141 @@ function tryEvolvePet() {
   playSound('levelup');
   saveGame();
   renderPetSection();
+  renderPetEggShop();
+  renderPetZukan();
   updateDisplay();
+  showEvolveModal(typeId, pet.stageIndex);
+}
+
+function showEvolveModal(typeId, stageIndex) {
+  const type  = PET_TYPES.find(t => t.id === typeId);
+  const stage = PET_STAGES[stageIndex];
+  const modal = document.getElementById('pet-evolve-modal');
+
+  document.getElementById('pet-evolve-sprite').style.cssText = getPetSpriteStyle(typeId, stageIndex);
+  document.getElementById('pet-evolve-name').textContent  = `${type.icon} ${type.name}`;
+  document.getElementById('pet-evolve-stage').textContent = `🌟 ${stage.name} に進化！`;
+
+  // パーティクル生成
+  const colors = ['#ffd700','#3dff7a','#ff88ff','#88ddff','#ffffff'];
+  const container = document.getElementById('pet-evolve-particles');
+  container.innerHTML = '';
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('div');
+    p.className = 'evolve-particle';
+    p.style.cssText = [
+      `left:50%`, `top:50%`,
+      `background:${colors[i % colors.length]}`,
+      `--tx:${(Math.random()-0.5)*300}px`,
+      `--ty:${(Math.random()-0.5)*300}px`,
+      `animation-delay:${Math.random()*0.3}s`,
+      `animation-duration:${0.8+Math.random()*0.6}s`,
+    ].join(';');
+    container.appendChild(p);
+  }
+
+  // フラッシュリセット（再アニメーション用）
+  const flash = document.getElementById('pet-evolve-flash');
+  flash.style.animation = 'none';
+  flash.offsetHeight; // reflow
+  flash.style.animation = '';
+
+  modal.classList.remove('hidden');
+  document.getElementById('pet-evolve-ok').onclick = () => modal.classList.add('hidden');
+}
+
+function renderPetZukan() {
+  const container = document.getElementById('pet-zukan');
+  if (!container) return;
+  const owned = gameState.ownedPets ?? {};
+  container.innerHTML = '';
+
+  for (const type of PET_TYPES) {
+    const pet       = owned[type.id];
+    const maxStage  = pet ? (pet.stageIndex ?? 0) : -1;
+
+    const row = document.createElement('div');
+    row.className = 'zukan-row';
+    row.innerHTML = `<div class="zukan-type-name">${type.icon} ${type.name}</div>`;
+
+    const cells = document.createElement('div');
+    cells.className = 'zukan-cells';
+
+    for (let i = 0; i < PET_STAGES.length; i++) {
+      const stage     = PET_STAGES[i];
+      const unlocked  = maxStage >= i;
+      const cell      = document.createElement('div');
+      cell.className  = `zukan-cell${unlocked ? ' unlocked' : ' locked'}`;
+
+      if (unlocked) {
+        cell.style.cssText = getPetSpriteStyle(type.id, i);
+        cell.title = `${type.name} - ${stage.name}`;
+      } else {
+        cell.innerHTML = '<span class="zukan-lock">？</span>';
+      }
+
+      const label = document.createElement('div');
+      label.className = 'zukan-cell-label';
+      label.textContent = unlocked ? stage.name : '？？？';
+      cell.appendChild(label);
+      cells.appendChild(cell);
+    }
+
+    row.appendChild(cells);
+    container.appendChild(row);
+  }
 }
 
 function renderPetEggShop() {
   const container = document.getElementById('pet-egg-shop');
   if (!container) return;
-  const hasPet = !!gameState.activePet;
+  const owned  = gameState.ownedPets ?? {};
+  const active = gameState.activePetType;
   container.innerHTML = '';
 
   for (const type of PET_TYPES) {
+    const isOwned  = !!owned[type.id];
+    const isActive = active === type.id;
     const canAfford = type.buyCost.type === 'coins'
       ? (gameState.mokuCoins ?? 0) >= type.buyCost.amount
       : (gameState.prestigeStones ?? 0) >= type.buyCost.amount;
     const costLabel = type.buyCost.type === 'coins'
       ? `🪙 ${type.buyCost.amount} コイン`
       : `✨ ${type.buyCost.amount} 石`;
-    const disabled = hasPet || !canAfford;
+
+    let btnLabel, btnClass, btnDisabled;
+    if (!isOwned) {
+      btnLabel   = '購入';
+      btnClass   = canAfford ? '' : ' disabled';
+      btnDisabled = !canAfford;
+    } else if (isActive) {
+      btnLabel   = '✅ 育成中';
+      btnClass   = ' active';
+      btnDisabled = true;
+    } else {
+      btnLabel   = '切り替え';
+      btnClass   = '';
+      btnDisabled = false;
+    }
+
+    const stageIndex = isOwned ? (owned[type.id].stageIndex ?? 0) : 0;
+    const stageName  = isOwned ? PET_STAGES[stageIndex].name : '未入手';
 
     const card = document.createElement('div');
-    card.className = 'pet-egg-card';
+    card.className = `pet-egg-card${isActive ? ' is-active' : ''}`;
     card.innerHTML = `
-      <div class="pet-egg-sprite" style="${getPetSpriteStyle(type.id, 0)}"></div>
+      <div class="pet-egg-sprite" style="${getPetSpriteStyle(type.id, stageIndex)}"></div>
       <div class="pet-egg-info">
-        <div class="pet-egg-name">${type.icon} ${type.name}の卵</div>
+        <div class="pet-egg-name">${type.icon} ${type.name}</div>
         <div class="pet-egg-effect">${type.effectDesc}</div>
-        <div class="pet-egg-cost">${costLabel}</div>
+        <div class="pet-egg-cost">${isOwned ? `現在: ${stageName}` : costLabel}</div>
       </div>
-      <button class="pet-egg-btn${disabled ? ' disabled' : ''}" ${disabled ? 'disabled' : ''}>
-        ${hasPet ? '育成中' : '購入'}
-      </button>
+      <button class="pet-egg-btn${btnClass}" ${btnDisabled ? 'disabled' : ''}>${btnLabel}</button>
     `;
-    if (!disabled) {
-      card.querySelector('.pet-egg-btn').addEventListener('click', () => buyEgg(type.id));
+    if (!btnDisabled) {
+      card.querySelector('.pet-egg-btn').addEventListener('click', () =>
+        isOwned ? switchPet(type.id) : buyEgg(type.id)
+      );
     }
     container.appendChild(card);
   }
@@ -1398,19 +1515,20 @@ function renderPetEggShop() {
 function renderPetSection() {
   const container = document.getElementById('pet-section');
   if (!container) return;
-  const pet = gameState.activePet;
+  const typeId = gameState.activePetType;
+  const pet    = typeId ? (gameState.ownedPets ?? {})[typeId] : null;
 
   if (!pet) {
     container.innerHTML = '<p class="section-note">アイテムタブから卵を購入してペットを育てよう！</p>';
     return;
   }
 
-  const type      = PET_TYPES.find(t => t.id === pet.typeId);
+  const type      = PET_TYPES.find(t => t.id === typeId);
   const stage     = PET_STAGES[pet.stageIndex];
   const nextStage = PET_STAGES[pet.stageIndex + 1];
   const mult      = stage.mult;
   const effectLabel = type.effectType === 'tap' ? 'タップ倍率'
-    : type.effectType === 'mps' ? 'MPS倍率' : 'コイン獲得倍率';
+    : type.effectType === 'mps' ? 'MPS倍率' : 'デイリー藻コイン倍率';
 
   let evolveHtml = '';
   if (nextStage) {
@@ -1445,7 +1563,7 @@ function renderPetSection() {
 
   container.innerHTML = `
     <div class="pet-card">
-      <div class="pet-sprite" style="${getPetSpriteStyle(pet.typeId, pet.stageIndex)}"></div>
+      <div class="pet-sprite" style="${getPetSpriteStyle(typeId, pet.stageIndex)}"></div>
       <div class="pet-info">
         <div class="pet-name">${type.icon} ${type.name}</div>
         <div class="pet-stage-badge">${stage.name}</div>
@@ -1957,6 +2075,7 @@ function init() {
   renderUnlockedEventList();
   renderPetEggShop();
   renderPetSection();
+  renderPetZukan();
   updateDisplay();
   updateEventDisplay();
 
@@ -2042,6 +2161,10 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// デバッグ用（コンソールからアクセス可能にする）
+window._gs = () => gameState;
+window._save = saveGame;
 
 // ========== Firebase 連携 ==========
 
