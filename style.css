@@ -1059,6 +1059,28 @@ button,
   min-height: 1em;
 }
 
+#register-benefits {
+  background: #0a2a1a;
+  border: 1px solid #2a6a44;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 8px 0;
+}
+
+.register-benefits-title {
+  font-size: 0.82rem;
+  font-weight: bold;
+  color: #3dff7a;
+  margin-bottom: 6px;
+}
+
+.register-benefits-item {
+  font-size: 0.78rem;
+  color: #d8eedd;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
 .register-hint {
   font-size: 0.72rem;
   color: #556677;
