@@ -1961,6 +1961,7 @@ function doPrestige() {
 
   gameState = structuredClone(DEFAULT_STATE);
   Object.assign(gameState, keep);
+  updateSuit('black');
   recalcTapPower();
   recalcMPS();
   saveGame();
