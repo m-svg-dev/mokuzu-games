@@ -625,6 +625,18 @@ button,
   text-align: right;
 }
 
+#prestige-stone-preview {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: #aa88cc;
+}
+#prestige-stone-preview strong {
+  color: #cc88ff;
+}
+
 #prestige-do-btn {
   display: block;
   width: 100%;
