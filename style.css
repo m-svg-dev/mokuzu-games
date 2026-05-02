@@ -139,6 +139,11 @@ button,
   left: 10px;
 }
 
+.item-overlay-top-right {
+  top: 10px;
+  right: 10px;
+}
+
 /* スーツカラー */
 .suit-black  { border-color: #cccccc; box-shadow: 0 0 20px #aaaaaa40; }
 .suit-blue   { border-color: #4499ff; box-shadow: 0 0 28px #4499ff70; }

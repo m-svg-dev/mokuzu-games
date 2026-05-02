@@ -51,7 +51,8 @@ const IMAGE_CONFIG = {
     facility_tower:   'assets/facilities/facility_tower.png',
   },
   items: {
-    royalheart: 'assets/items/royalheart.png',
+    royalheart:    'assets/items/royalheart.png',
+    mo_royalheart: 'assets/items/mo_royalheart.png',
   },
   effects: {
     // tapPower に応じて切り替え
@@ -153,7 +154,8 @@ const FACILITIES = [
 
 // ネタアイテム・装飾アイテム（一度きりの購入）
 const ITEMS = [
-  { id: 'royalheart', name: 'ロイヤルハート', icon: '👑', desc: '藻屑界のエリートの証！', cost: 5_000_000, overlayPos: 'top-left' },
+  { id: 'royalheart',    name: 'ロイヤルハート',   icon: '👑', desc: '藻屑界のエリートの証！',     cost: 5_000_000,  overlayPos: 'top-left'  },
+  { id: 'mo_royalheart', name: '藻ロイヤルハート', icon: '🌿', desc: '藻屑界の頂点に立つ者の証！', cost: 10_000_000, overlayPos: 'top-right' },
 ];
 
 // 購入ごとに tapBonus が加算される（baseCost * costMult^購入回数 で価格上昇）
