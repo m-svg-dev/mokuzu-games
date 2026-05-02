@@ -2194,10 +2194,13 @@ function init() {
   updateDisplay();
   updateEventDisplay();
 
-  // キャラタップ
+  // キャラタップ（キャラ画像＋ヒントテキスト両方）
   const charEl = document.getElementById('character-img');
   charEl.addEventListener('touchstart', onTap, { passive: false });
   charEl.addEventListener('click', onTap);
+  const hintEl = document.getElementById('tap-hint');
+  hintEl.addEventListener('touchstart', onTap, { passive: false });
+  hintEl.addEventListener('click', onTap);
 
   // 覚醒ボタン
   document.getElementById('awaken-btn').addEventListener('click', activateAwaken);

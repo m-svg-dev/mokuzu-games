@@ -44,7 +44,7 @@ button,
   max-width: 480px;
   background: #0c1e34;
   border-bottom: 2px solid #1a4a30;
-  padding: 10px 20px;
+  padding: 6px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -66,7 +66,7 @@ button,
 /* ========== Tab panels ========== */
 .tab-panel {
   display: none;
-  padding: 72px 14px 92px;
+  padding: 58px 14px 92px;
   min-height: 100vh;
 }
 
@@ -237,9 +237,13 @@ button,
 }
 
 #tap-hint {
-  margin-top: 6px;
+  margin-top: 0;
+  margin-bottom: 6px;
   color: #78bb99;
   font-size: 0.78rem;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ステータスパネル：2×2グリッド */
@@ -1775,28 +1779,33 @@ button,
   filter: brightness(1) saturate(1) drop-shadow(0 0 6px #3dff7a88);
 }
 
-/* ========== ヘッダーアイコンボタン ========== */
-#header-btns { display: flex; align-items: center; gap: 2px; margin-left: auto; }
-
-.header-icon-btn {
-  position: relative;
+/* ========== ヘッダー設定ボタン ========== */
+.header-settings-btn {
   background: none;
   border: none;
   cursor: pointer;
   padding: 2px;
-  opacity: 0.85;
+  opacity: 0.9;
   transition: opacity 0.15s, transform 0.2s;
+  margin-left: auto;
 }
-.header-icon-btn img { width: 54px; height: 64px; display: block; object-fit: contain; }
-.header-icon-btn:active { opacity: 1; transform: scale(0.92); }
+.header-settings-btn img { width: 44px; height: 44px; display: block; object-fit: contain; border-radius: 10px; }
+.header-settings-btn:active { opacity: 1; transform: scale(0.92); }
+
+/* ========== タブナビ お知らせボタン ========== */
+.tab-notice-btn {
+  position: relative;
+  border-left: 1px solid #1a4a30;
+}
 
 #notice-badge {
   position: absolute;
-  top: 0; right: 0;
+  top: 4px; right: 8px;
   width: 10px; height: 10px;
   background: #ff4444;
   border-radius: 50%;
-  border: 1px solid #0c1e14;
+  border: 1px solid #0c1e34;
+  pointer-events: none;
 }
 
 /* ========== お知らせモーダル ========== */
