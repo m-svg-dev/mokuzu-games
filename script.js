@@ -1344,7 +1344,10 @@ function renderUnlockedEventList() {
     <div class="unlocked-event-row">
       <span class="unlocked-event-icon">${ev.icon}</span>
       <div class="unlocked-event-info">
-        <div class="unlocked-event-name">${ev.name}</div>
+        <div class="unlocked-event-name">
+          ${ev.name}
+          ${ev.unlockCost === 0 ? '<span class="event-default-badge">基本イベント</span>' : ''}
+        </div>
         <div class="unlocked-event-desc">${ev.desc}</div>
       </div>
     </div>

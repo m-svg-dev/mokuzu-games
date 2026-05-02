@@ -1391,6 +1391,20 @@ button,
   font-size: 0.88rem;
   font-weight: bold;
   color: #d8eedd;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.event-default-badge {
+  font-size: 0.68rem;
+  font-weight: normal;
+  background: #1a3a2a;
+  border: 1px solid #2a6a44;
+  color: #78bb99;
+  border-radius: 4px;
+  padding: 1px 5px;
 }
 
 .unlocked-event-desc {
