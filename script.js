@@ -1,7 +1,19 @@
 // ========== 定数定義 ==========
 
-const SAVE_VERSION = 1;
-const SAVE_KEY     = 'mozuku_president_v1';
+const SAVE_VERSION   = 1;
+const SAVE_KEY       = 'mozuku_president_v1';
+const CHECKSUM_KEY   = '_mzk_i_v1';
+const CHECKSUM_SALT  = 'mzk_9f2x_k4p7_bq8r';
+
+function computeChecksum(str) {
+  let h = 0x811c9dc5;
+  const s = CHECKSUM_SALT + str;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(36);
+}
 
 // ========== 画像設定 ==========
 // 個別ファイル管理。画像を追加したらここのパスを変えるだけ。
@@ -1646,12 +1658,21 @@ function saveGame() {
   gameState.lastSaved = Date.now();
   const json = JSON.stringify(gameState);
   localStorage.setItem(SAVE_KEY, json);
+  localStorage.setItem(CHECKSUM_KEY, computeChecksum(json));
   if (currentUser()) saveGameData(json).catch(() => {});
 }
 
 function loadGame() {
   const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) return;
+
+  // 改ざん検知
+  const storedCs = localStorage.getItem(CHECKSUM_KEY);
+  if (storedCs && computeChecksum(raw) !== storedCs) {
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(CHECKSUM_KEY);
+    return;
+  }
 
   let saved;
   try {
