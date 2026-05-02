@@ -413,14 +413,20 @@ button,
 .event-banner-positive,
 .event-banner-negative {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 2px;
   margin: 10px 0 0;
   padding: 8px 12px;
   border-radius: 10px;
   font-size: 0.82rem;
   font-weight: bold;
   animation: banner-pulse 1.2s ease-in-out infinite alternate;
+}
+
+#event-banner-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .event-banner-positive {
@@ -443,6 +449,13 @@ button,
   font-size: 0.75rem;
   opacity: 0.85;
   white-space: nowrap;
+}
+
+#event-banner-desc {
+  font-size: 0.75rem;
+  font-weight: normal;
+  opacity: 0.85;
+  padding-left: 2px;
 }
 
 @keyframes banner-pulse {
@@ -1362,9 +1375,17 @@ button,
 }
 
 .event-next-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   margin-top: 8px;
   color: #78bb99;
   font-size: 0.85rem;
+}
+
+.event-next-desc {
+  font-size: 0.78rem;
+  opacity: 0.75;
 }
 
 #event-name {

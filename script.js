@@ -794,6 +794,8 @@ function updateEventDisplay() {
         bannerIcon.textContent  = ev.icon;
         bannerName.textContent  = `イベント発生中！！ ${ev.name}`;
         bannerTimer.textContent = `残り${gameState.activeEvent.timer}秒`;
+        const descEl = document.getElementById('event-banner-desc');
+        if (descEl) descEl.textContent = ev.desc;
       }
     } else {
       banner.className = 'hidden';
@@ -818,7 +820,10 @@ function updateEventDisplay() {
   } else {
     const nextEv = gameState.nextEventId ? EVENTS.find(e => e.id === gameState.nextEventId) : null;
     const previewHtml = nextEv
-      ? `<p class="event-next-preview">${nextEv.icon} 次は「${nextEv.name}」</p>`
+      ? `<div class="event-next-preview">
+           <span>${nextEv.icon} 次は「${nextEv.name}」</span>
+           <span class="event-next-desc">${nextEv.desc}</span>
+         </div>`
       : '';
     const cdText = gameState.eventCooldown > 0
       ? `次のイベントまで約 ${gameState.eventCooldown}秒`
