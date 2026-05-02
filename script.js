@@ -215,7 +215,7 @@ const COINS_PER_STONE = 10;
 const DAILY_COINS     = 3;
 
 const CONSUMABLE_ITEMS = [
-  { id: 'tap_boost',    name: 'タップブースト',  icon: '⚡', desc: '5分間タップ×10倍',          cost: 3,  duration: 300, type: 'timed',   effect: 'tap_boost'  },
+  { id: 'tap_boost',    name: 'タップブースト',  icon: '⚡', desc: '1分間タップ×10倍',          cost: 3,  duration: 60,  type: 'timed',   effect: 'tap_boost'  },
   { id: 'mps_boost',    name: 'MPS加速',          icon: '🌊', desc: '5分間MPS×5倍',              cost: 3,  duration: 300, type: 'timed',   effect: 'mps_boost'  },
   { id: 'auto_clicker', name: 'オートクリッカー', icon: '👆', desc: '5分間自動タップ（2回/秒）', cost: 5,  duration: 300, type: 'timed',   effect: 'auto_click' },
   { id: 'moku_storm',   name: '藻の嵐',           icon: '💎', desc: '現在のMPS×300秒分を即獲得', cost: 8,  duration: 0,   type: 'instant', effect: 'moku_storm' },
