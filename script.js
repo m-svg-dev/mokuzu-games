@@ -15,6 +15,65 @@ function computeChecksum(str) {
   return h.toString(36);
 }
 
+// ========== 更新履歴 ==========
+
+const UPDATE_LOG = [
+  {
+    id: 'v1.4',
+    date: '2026/05/03',
+    title: '🐾 ペットシステム追加',
+    items: [
+      '🥚 ペット卵を購入して育成できるようになりました',
+      '✨ 卵→成長期→成熟期→完全期→究極期の5段階進化',
+      '🌿 緑の精霊（タップ倍率）🌸 桜の精霊（MPS倍率）🌙 月の精霊（コイン倍率）',
+      '📖 ペット図鑑で収集状況を確認できます',
+      '🎨 タブナビゲーションをアイコンデザインに刷新',
+      '🐾 専用ペットタブを追加',
+    ],
+  },
+  {
+    id: 'v1.3',
+    date: '2026/05/02',
+    title: '☁️ クラウドセーブ・セキュリティ強化',
+    items: [
+      '☁️ ログインするとデータがクラウドに保存され別端末で引き継ぎ可能に',
+      '🔒 セーブデータ改ざん検知機能を追加',
+      '🎁 新規登録特典を追加（デイリー+5コイン・オフライン補填80%・石10個）',
+      '📅 起動時にデイリーボーナスを自動受け取り',
+      '🌿 藻ロイヤルハートアイテムを追加',
+      '🎲 イベントタブにイベント解放・履歴一覧を追加',
+      '⚡ タップブースト持続時間を1分に調整',
+    ],
+  },
+  {
+    id: 'v1.2',
+    date: '2026/05/01',
+    title: '🎰 ガチャ・コイン・ランキング',
+    items: [
+      '🎰 スキンガチャを追加（転生石で豪華スキンを入手）',
+      '🪙 藻コインシステムを追加（デイリーログインで獲得）',
+      '⚡ タップブースト・MPS加速などの消費アイテムを追加',
+      '🏆 ランキング機能を追加（要ユーザー登録）',
+      '👤 プレイヤー名登録・変更機能を追加',
+      '🤖 オートクリッカーアイテムを追加',
+    ],
+  },
+  {
+    id: 'v1.1',
+    date: '2026/04/30',
+    title: '🌀 転生・施設・イベントシステム',
+    items: [
+      '✨ 転生システムを追加（転生石・スキルツリー）',
+      '🏗️ 施設システムを追加（工場・研究所など）',
+      '🎲 ランダムイベントシステムを追加',
+      '💥 クリティカルヒットシステムを追加',
+      '🔊 サウンドシステムを追加',
+      '🌙 オフライン収益システムを追加',
+      '👑 ロイヤルハートアイテムを追加',
+    ],
+  },
+];
+
 // ========== 画像設定 ==========
 // 個別ファイル管理。画像を追加したらここのパスを変えるだけ。
 const IMAGE_CONFIG = {
@@ -323,6 +382,7 @@ const DEFAULT_STATE = {
   registrationBonusClaimed: false, // 登録ボーナス受取済みか
   ownedPets:            {},     // { typeId: { stageIndex, conditionMetAt } }
   activePetType:        null,   // 現在アクティブなペットのtypeId
+  lastReadUpdateId:     null,   // 最後に既読にした更新ID
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -871,10 +931,14 @@ function updateEventDisplay() {
       ? `<img class="event-illust" src="${imgSrc}" alt="${ev.name}">`
       : `<div class="event-illust-fallback">${ev.icon}</div>`;
     area.innerHTML = `
-      ${imgTag}
-      <div id="event-name">${ev.name}</div>
-      <div id="event-desc">${ev.desc}</div>
-      <div id="event-remaining">残り ${gameState.activeEvent.timer}秒</div>
+      <div id="event-active">
+        ${imgTag}
+        <div id="event-info">
+          <div id="event-name">${ev.name}</div>
+          <div id="event-desc">${ev.desc}</div>
+          <div id="event-remaining">残り ${gameState.activeEvent.timer}秒</div>
+        </div>
+      </div>
     `;
   } else {
     const nextEv = gameState.nextEventId ? EVENTS.find(e => e.id === gameState.nextEventId) : null;
@@ -1167,10 +1231,11 @@ function exchangeStonesForCoins() {
 
 function updateCoinDisplay() {
   const el = document.getElementById('coin-display');
-  if (el) el.textContent = `🪙 ${gameState.mokuCoins ?? 0}`;
+  const coinImg = `<img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン">`;
+  if (el) el.innerHTML = `${coinImg} ${gameState.mokuCoins ?? 0}`;
 
   const balEl = document.getElementById('coin-balance-val');
-  if (balEl) balEl.textContent = `🪙 ${gameState.mokuCoins ?? 0} コイン`;
+  if (balEl) balEl.innerHTML = `${coinImg} ${gameState.mokuCoins ?? 0} コイン`;
 
   const last     = gameState.lastDailyLogin ?? 0;
   const claimed  = Date.now() - last < DAILY_INTERVAL_MS;
@@ -1376,6 +1441,55 @@ function tryEvolvePet() {
   renderPetZukan();
   updateDisplay();
   showEvolveModal(typeId, pet.stageIndex);
+}
+
+// ========== お知らせ ==========
+
+function hasUnreadUpdate() {
+  const lastRead = gameState.lastReadUpdateId;
+  return UPDATE_LOG.length > 0 && UPDATE_LOG[0].id !== lastRead;
+}
+
+function updateNoticeBadge() {
+  const badge = document.getElementById('notice-badge');
+  if (badge) badge.classList.toggle('hidden', !hasUnreadUpdate());
+}
+
+function openNoticeModal() {
+  const modal = document.getElementById('notice-modal');
+  if (!modal) return;
+
+  const listEl = document.getElementById('notice-list');
+  listEl.innerHTML = '';
+
+  const lastRead = gameState.lastReadUpdateId;
+  let foundRead = false;
+
+  for (const entry of UPDATE_LOG) {
+    const isUnread = !foundRead && entry.id !== lastRead;
+    if (entry.id === lastRead) foundRead = true;
+
+    const card = document.createElement('div');
+    card.className = `notice-card${isUnread ? ' unread' : ''}`;
+    card.innerHTML = `
+      <div class="notice-card-header">
+        <span class="notice-date">${entry.date}</span>
+        ${isUnread ? '<span class="notice-new-badge">NEW</span>' : ''}
+      </div>
+      <div class="notice-title">${entry.title}</div>
+      <ul class="notice-items">
+        ${entry.items.map(i => `<li>${i}</li>`).join('')}
+      </ul>
+    `;
+    listEl.appendChild(card);
+  }
+
+  modal.classList.remove('hidden');
+
+  // 既読にする
+  gameState.lastReadUpdateId = UPDATE_LOG[0].id;
+  saveGame();
+  updateNoticeBadge();
 }
 
 function showEvolveModal(typeId, stageIndex) {
@@ -2132,6 +2246,13 @@ function init() {
   document.getElementById('settings-btn').addEventListener('click', () => {
     document.getElementById('settings-modal').classList.remove('hidden');
   });
+
+  document.getElementById('notice-btn').addEventListener('click', openNoticeModal);
+  document.getElementById('notice-modal-close').addEventListener('click', () => {
+    document.getElementById('notice-modal').classList.add('hidden');
+  });
+
+  updateNoticeBadge();
   document.getElementById('settings-close-btn').addEventListener('click', () => {
     document.getElementById('settings-modal').classList.add('hidden');
   });

@@ -673,7 +673,18 @@ button,
 }
 
 /* ========== 藻コイン表示 ========== */
+.mocoin-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  vertical-align: middle;
+  border-radius: 50%;
+}
+
 #coin-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.85rem;
   font-weight: bold;
   color: #ffd700;
@@ -681,6 +692,12 @@ button,
   border: 1px solid #ffd70050;
   border-radius: 8px;
   padding: 3px 8px;
+}
+
+#coin-balance-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* ========== アクティブ効果バー ========== */
@@ -1500,26 +1517,39 @@ button,
   background: #0c1e34;
   border: 1px solid #1a3a2e;
   border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  min-height: 100px;
+  padding: 12px;
+  min-height: 80px;
   overflow: hidden;
 }
 
+#event-active {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .event-illust {
-  display: block;
-  width: 55%;
-  height: auto;
-  object-fit: contain;
-  object-position: center;
-  border-radius: 8px;
-  margin: 0 auto 10px;
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+#event-info {
+  flex: 1;
+  text-align: left;
 }
 
 .event-illust-fallback {
-  font-size: 4rem;
-  margin-bottom: 10px;
-  line-height: 1;
+  width: 96px;
+  height: 96px;
+  font-size: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .event-standby {
@@ -1581,20 +1611,20 @@ button,
 }
 
 #event-name {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #ffd700;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 #event-desc {
   color: #78bb99;
-  font-size: 0.85rem;
-  margin-bottom: 10px;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
 }
 
 #event-remaining {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: #00ffcc;
   font-weight: bold;
 }
@@ -1710,21 +1740,114 @@ button,
   filter: brightness(1) saturate(1) drop-shadow(0 0 6px #3dff7a88);
 }
 
-/* ========== 設定ボタン & モーダル ========== */
-#settings-btn {
+/* ========== ヘッダーアイコンボタン ========== */
+#header-btns { display: flex; align-items: center; gap: 4px; }
+
+.header-icon-btn {
+  position: relative;
   background: none;
   border: none;
-  font-size: 1.4rem;
   cursor: pointer;
-  padding: 4px 6px;
-  line-height: 1;
-  opacity: 0.8;
+  padding: 2px;
+  opacity: 0.85;
   transition: opacity 0.15s, transform 0.2s;
 }
-#settings-btn:active {
-  opacity: 1;
-  transform: rotate(30deg);
+.header-icon-btn img { width: 46px; height: 46px; display: block; }
+.header-icon-btn:active { opacity: 1; transform: scale(0.92); }
+
+#notice-badge {
+  position: absolute;
+  top: 0; right: 0;
+  width: 10px; height: 10px;
+  background: #ff4444;
+  border-radius: 50%;
+  border: 1px solid #0c1e14;
 }
+
+/* ========== お知らせモーダル ========== */
+#notice-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8000;
+}
+#notice-modal.hidden { display: none; }
+
+#notice-modal-inner {
+  background: #0d1e14;
+  border: 1px solid #2a6a44;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 440px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#notice-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #1a4a30;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #d8eedd;
+  flex-shrink: 0;
+}
+#notice-modal-close {
+  background: none;
+  border: none;
+  color: #8ab;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+#notice-list {
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notice-card {
+  background: #0a1f14;
+  border: 1px solid #1e4a30;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.notice-card.unread {
+  background: #0d2e1a;
+  border-color: #3dff7a66;
+  box-shadow: 0 0 10px #3dff7a22;
+}
+
+.notice-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.notice-date { font-size: 0.75rem; color: #8ab; }
+.notice-new-badge {
+  background: #3dff7a;
+  color: #0a1f14;
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.notice-title { font-size: 0.9rem; font-weight: bold; color: #d8eedd; margin-bottom: 8px; }
+.notice-items { padding-left: 16px; display: flex; flex-direction: column; gap: 3px; }
+.notice-items li { font-size: 0.78rem; color: #8ab; }
+
+/* ========== 設定ボタン & モーダル ========== */
 
 #settings-modal {
   position: fixed;
