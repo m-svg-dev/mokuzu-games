@@ -612,7 +612,7 @@ function updatePrestigeBar() {
     if (!document.getElementById('prestige-do-btn')) {
       const btn = document.createElement('button');
       btn.id = 'prestige-do-btn';
-      btn.textContent = '🌀 転生する';
+      btn.innerHTML = '<img class="prestige-effect-icon" src="assets/prestige/prestige_effect.png" alt=""> 転生する';
       btn.addEventListener('click', doPrestige);
       bar.appendChild(btn);
     }
@@ -1585,8 +1585,8 @@ function renderPetEggShop() {
       ? (gameState.mokuCoins ?? 0) >= type.buyCost.amount
       : (gameState.prestigeStones ?? 0) >= type.buyCost.amount;
     const costLabel = type.buyCost.type === 'coins'
-      ? `🪙 ${type.buyCost.amount} コイン`
-      : `✨ ${type.buyCost.amount} 石`;
+      ? `<img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン"> ${type.buyCost.amount} コイン`
+      : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt="転生石"> ${type.buyCost.amount} 石`;
 
     let btnLabel, btnClass, btnDisabled;
     if (!isOwned) {
@@ -1863,7 +1863,7 @@ function showGachaResult(results) {
         <div class="gacha-card-name">${skin.name}</div>
         ${isNew
           ? '<div class="gacha-card-new">NEW!</div>'
-          : `<div class="gacha-card-dupe">✨ +${dupeStones}石</div>`}
+          : `<div class="gacha-card-dupe"><img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt=""> +${dupeStones}石</div>`}
       </div>`;
   }).join('');
 
@@ -2002,7 +2002,7 @@ function renderPrestigeSkillList() {
         <div class="item-count-bar">${dots}</div>
       </div>
       <div class="item-right">
-        <div class="item-cost" style="color:#cc88ff">${maxed ? 'MAX' : cost + ' 石'}</div>
+        <div class="item-cost" style="color:#cc88ff">${maxed ? 'MAX' : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt=""> ${cost} 石`}</div>
         <div class="item-count-label">${lv} / ${s.maxLevel}</div>
       </div>
     `;
@@ -2012,8 +2012,8 @@ function renderPrestigeSkillList() {
 function updatePrestigeTab() {
   const lvEl     = document.getElementById('prestige-tab-level');
   const stoneEl  = document.getElementById('prestige-tab-stones');
-  if (lvEl)    lvEl.textContent    = `転生 Lv.${gameState.prestigeLevel ?? 0}`;
-  if (stoneEl) stoneEl.textContent = `✨ 転生石: ${gameState.prestigeStones ?? 0}`;
+  if (lvEl)    lvEl.innerHTML    = `<img class="prestige-badge-icon" src="assets/prestige/prestige_badge.png" alt=""> 転生 Lv.${gameState.prestigeLevel ?? 0}`;
+  if (stoneEl) stoneEl.innerHTML = `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt="転生石"> 転生石: ${gameState.prestigeStones ?? 0}`;
 
   const exampleEl = document.getElementById('stone-guide-example');
   if (exampleEl) {

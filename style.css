@@ -90,8 +90,8 @@ button,
 }
 
 #character-img {
-  width: 260px;
-  height: 335px;
+  width: 230px;
+  height: 296px;
   border-radius: 14px;
   background: radial-gradient(circle at center, #1a3a2e 0%, #071420 80%);
   border: 5px solid #cccccc;
@@ -1289,6 +1289,29 @@ button,
 }
 
 /* ========== 転生タブ ========== */
+.prestige-stone-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  vertical-align: middle;
+  border-radius: 50%;
+}
+
+.prestige-badge-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.prestige-effect-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  vertical-align: middle;
+  border-radius: 50%;
+}
+
 #prestige-tab-header {
   display: flex;
   justify-content: space-between;
@@ -1301,12 +1324,18 @@ button,
 }
 
 #prestige-tab-level {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 1.1rem;
   font-weight: bold;
   color: #cc88ff;
 }
 
 #prestige-tab-stones {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 1rem;
   color: #aa88cc;
   font-weight: bold;
@@ -1713,7 +1742,7 @@ button,
 
 .tab-btn {
   flex: 1;
-  padding: 6px 2px 8px;
+  padding: 5px 2px 7px;
   background: none;
   border: none;
   border-top: 2px solid transparent;
@@ -1724,7 +1753,7 @@ button,
 
 .tab-btn img {
   width: 100%;
-  max-width: 52px;
+  max-width: 58px;
   height: auto;
   display: block;
   margin: 0 auto;
