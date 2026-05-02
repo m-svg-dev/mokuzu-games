@@ -1748,18 +1748,23 @@ button,
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
+  overflow: hidden;
+  background: #0c1e34;
+  border-top: 2px solid #1a4a30;
+  z-index: 100;
+}
+
+#tab-nav-inner {
   display: flex;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  background: #0c1e34;
-  border-top: 2px solid #1a4a30;
-  z-index: 100;
+  width: 100%;
 }
 
-#tab-nav::-webkit-scrollbar {
+#tab-nav-inner::-webkit-scrollbar {
   display: none;
 }
 
