@@ -986,6 +986,13 @@ button,
   min-height: 1em;
 }
 
+.register-hint {
+  font-size: 0.72rem;
+  color: #556677;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
 #auth-submit-btn {
   background: #1a4a2e;
   border: 1px solid #3dff7a;
