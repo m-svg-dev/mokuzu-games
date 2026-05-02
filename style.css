@@ -1782,28 +1782,35 @@ button,
   filter: brightness(1) saturate(1) drop-shadow(0 0 6px #3dff7a88);
 }
 
-/* ========== ヘッダー設定ボタン ========== */
-.header-settings-btn {
+/* ========== ヘッダーアイコンボタン ========== */
+#header-btns {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  margin-left: auto;
+}
+
+.header-icon-btn {
+  position: relative;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 2px;
+  padding: 1px;
   opacity: 0.9;
   transition: opacity 0.15s, transform 0.2s;
-  margin-left: auto;
 }
-.header-settings-btn img { width: 44px; height: 44px; display: block; object-fit: contain; border-radius: 10px; }
-.header-settings-btn:active { opacity: 1; transform: scale(0.92); }
-
-/* ========== タブナビ お知らせボタン ========== */
-.tab-notice-btn {
-  position: relative;
-  border-left: 1px solid #1a4a30;
+.header-icon-btn img {
+  width: 40px;
+  height: 40px;
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
 }
+.header-icon-btn:active { opacity: 1; transform: scale(0.92); }
 
 #notice-badge {
   position: absolute;
-  top: 4px; right: 8px;
+  top: 1px; right: 1px;
   width: 10px; height: 10px;
   background: #ff4444;
   border-radius: 50%;
