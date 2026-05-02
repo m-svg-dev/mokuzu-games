@@ -280,8 +280,10 @@ const DEFAULT_STATE = {
   lastSaved:       0,
   mokuCoins:       0,
   lastDailyLogin:  null,
-  consumables:     {},     // { itemId: 所持数 }
-  activeEffects:   {},     // { effectId: 終了timestamp(ms) }
+  consumables:          {},     // { itemId: 所持数 }
+  activeEffects:        {},     // { effectId: 終了timestamp(ms) }
+  hasRegistered:        false,  // 一度でもログインしたか
+  registrationBonusClaimed: false, // 登録ボーナス受取済みか
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -1087,11 +1089,17 @@ function timeUntilNextClaim() {
   return hours > 0 ? `${hours}時間${minutes}分後` : `${minutes}分後`;
 }
 
+function getDailyCoins() {
+  return gameState.hasRegistered ? 5 : DAILY_COINS;
+}
+
 function claimDailyCoins() {
   const last = gameState.lastDailyLogin ?? 0;
   if (Date.now() - last < DAILY_INTERVAL_MS) return;
   gameState.lastDailyLogin = Date.now();
-  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + DAILY_COINS;
+  const coins = getDailyCoins();
+  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coins;
+  document.getElementById('daily-modal-body').textContent = `🪙 藻コイン ×${coins} を受け取りました！`;
   playSound('buy');
   updateDisplay();
   document.getElementById('daily-modal').classList.remove('hidden');
@@ -1634,8 +1642,9 @@ function checkOfflineEarnings() {
 
   if (elapsedSec < MIN_SEC) return;
 
-  const cappedSec = Math.min(elapsedSec, MAX_SEC);
-  const earned    = Math.floor(gameState.mokuPerSecond * cappedSec * 0.5);
+  const cappedSec   = Math.min(elapsedSec, MAX_SEC);
+  const offlineRate = gameState.hasRegistered ? 0.8 : 0.5;
+  const earned      = Math.floor(gameState.mokuPerSecond * cappedSec * offlineRate);
   if (earned <= 0) return;
 
   gameState.moku      += earned;
@@ -1646,9 +1655,11 @@ function checkOfflineEarnings() {
   const timeStr = hours > 0 ? `${hours}時間${minutes}分` : `${minutes}分`;
   const capped  = elapsedSec > MAX_SEC ? `（最大8時間で計算）` : '';
 
+  const rateLabel = gameState.hasRegistered ? '80%' : '50%';
   document.getElementById('offline-title').textContent  = 'おかえり！🌿';
   document.getElementById('offline-time').textContent   = `${timeStr}ぶりのお帰り！${capped}`;
   document.getElementById('offline-earned').textContent = `+${fmt(earned)} 藻`;
+  document.getElementById('offline-note').textContent   = `（MPS × ${rateLabel} × 離脱時間）`;
   document.getElementById('offline-modal').classList.remove('hidden');
 }
 
@@ -1769,6 +1780,10 @@ function init() {
     document.getElementById('daily-modal').classList.add('hidden');
   });
 
+  document.getElementById('regbonus-ok').addEventListener('click', () => {
+    document.getElementById('regbonus-modal').classList.add('hidden');
+  });
+
   document.getElementById('gacha-btn-1') .addEventListener('click', () => doGachaPull(1));
   document.getElementById('gacha-btn-10').addEventListener('click', () => doGachaPull(10));
   document.getElementById('gacha-result-close').addEventListener('click', () => {
@@ -1843,6 +1858,33 @@ function initFirebase() {
       authSec.classList.add('hidden');
       loggedSec.classList.remove('hidden');
       if (nameEl) nameEl.textContent = user.displayName ?? '名無し';
+
+      // 登録ボーナス付与
+      if (!gameState.registrationBonusClaimed) {
+        gameState.registrationBonusClaimed = true;
+        const isPrestiged = (gameState.prestigeLevel ?? 0) >= 1;
+        const bonusLines = [
+          '☁️ クラウドセーブ有効化',
+          '📅 デイリーボーナス +5コイン（毎回）',
+          '🌙 オフライン補填 80% にアップ！',
+        ];
+        if (isPrestiged) {
+          gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 10;
+          bonusLines.push('🪙 藻コイン +10枚 プレゼント！');
+        } else {
+          gameState.prestigeStones = (gameState.prestigeStones ?? 0) + 10;
+          bonusLines.push('✨ 転生石 +10石 プレゼント！');
+        }
+        gameState.hasRegistered = true;
+        saveGame();
+        updateDisplay();
+        document.getElementById('regbonus-list').innerHTML =
+          bonusLines.map(l => `<p class="regbonus-line">${l}</p>`).join('');
+        document.getElementById('regbonus-modal').classList.remove('hidden');
+      } else {
+        gameState.hasRegistered = true;
+        saveGame();
+      }
 
       // クラウドセーブとローカルを比較
       try {

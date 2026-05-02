@@ -352,6 +352,54 @@ button,
 .hidden { display: none !important; }
 
 /* ========== オフライン収益モーダル ========== */
+#regbonus-modal {
+  position: fixed;
+  inset: 0;
+  background: #000000bb;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#regbonus-modal.hidden { display: none; }
+
+#regbonus-modal-inner {
+  background: #0c1e34;
+  border: 2px solid #3dff7a;
+  border-radius: 16px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 300px;
+  width: 88%;
+  box-shadow: 0 0 48px #3dff7a40;
+}
+
+#regbonus-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #3dff7a;
+  margin-bottom: 16px;
+}
+
+.regbonus-line {
+  font-size: 0.9rem;
+  color: #d8eedd;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+#regbonus-ok {
+  margin-top: 16px;
+  background: #3dff7a;
+  color: #071420;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 28px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 #daily-modal {
   position: fixed;
   inset: 0;
