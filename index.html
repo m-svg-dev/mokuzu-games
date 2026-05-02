@@ -242,7 +242,10 @@
           <p class="register-hint">💡 パスワード再設定機能がないため、存在しないメアドでも登録できます！いたずらしないでね😉</p>
         </div>
         <input id="auth-email" type="email" placeholder="メールアドレス（例: test@test.com）">
-        <input id="auth-password" type="password" placeholder="パスワード（6文字以上）">
+        <div id="password-wrap">
+          <input id="auth-password" type="password" placeholder="パスワード（6文字以上）">
+          <button id="password-toggle" type="button">👁️</button>
+        </div>
         <p id="auth-error" class="auth-error"></p>
         <button id="auth-submit-btn">ログイン</button>
       </div>

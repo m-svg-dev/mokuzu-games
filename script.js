@@ -1776,6 +1776,18 @@ function init() {
   });
 
   document.getElementById('daily-claim-btn').addEventListener('click', claimDailyCoins);
+
+  document.getElementById('password-toggle').addEventListener('click', () => {
+    const input = document.getElementById('auth-password');
+    const btn   = document.getElementById('password-toggle');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁️';
+    }
+  });
   document.getElementById('stone-exchange-btn').addEventListener('click', exchangeStonesForCoins);
 
   document.getElementById('settings-btn').addEventListener('click', () => {
