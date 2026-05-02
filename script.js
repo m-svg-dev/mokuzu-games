@@ -2155,6 +2155,7 @@ function initTabs() {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(`tab-${tabId}`).classList.add('active');
       btn.classList.add('active');
+      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       if (tabId === 'ranking') loadRanking();
     });
   });
@@ -2301,13 +2302,21 @@ let _authMode = 'login'; // 'login' | 'register'
 function initFirebase() {
   // 認証状態の監視
   onAuthChanged(async user => {
-    const authSec   = document.getElementById('auth-section');
-    const loggedSec = document.getElementById('loggedin-section');
-    const nameEl    = document.getElementById('user-name-display');
+    const authSec        = document.getElementById('auth-section');
+    const loggedSec      = document.getElementById('loggedin-section');
+    const nameEl         = document.getElementById('user-name-display');
+    const rankingPrompt  = document.getElementById('ranking-login-prompt');
+    const rankingUserBar = document.getElementById('ranking-user-bar');
+    const rankingUserName = document.getElementById('ranking-user-name');
+    const scoreNote      = document.getElementById('score-upload-note');
     if (user) {
       authSec.classList.add('hidden');
       loggedSec.classList.remove('hidden');
+      rankingPrompt.classList.add('hidden');
+      rankingUserBar.classList.remove('hidden');
+      if (scoreNote) scoreNote.classList.remove('hidden');
       if (nameEl) nameEl.textContent = user.displayName ?? '名無し';
+      if (rankingUserName) rankingUserName.textContent = `👋 ${user.displayName ?? '名無し'}`;
 
       // 登録ボーナス付与
       if (!gameState.registrationBonusClaimed) {
@@ -2364,6 +2373,9 @@ function initFirebase() {
     } else {
       authSec.classList.remove('hidden');
       loggedSec.classList.add('hidden');
+      rankingPrompt.classList.remove('hidden');
+      rankingUserBar.classList.add('hidden');
+      if (scoreNote) scoreNote.classList.add('hidden');
     }
     loadRanking();
   });
@@ -2470,11 +2482,20 @@ function initFirebase() {
 
   // ランキング更新
   document.getElementById('ranking-refresh-btn').addEventListener('click', loadRanking);
+
+  // ランキングタブの設定を開くボタン
+  document.getElementById('open-settings-from-ranking').addEventListener('click', () => {
+    document.getElementById('settings-modal').classList.remove('hidden');
+  });
 }
 
 async function loadRanking() {
   const list = document.getElementById('ranking-list');
+  const btn  = document.getElementById('ranking-refresh-btn');
   if (!list) return;
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 読み込み中...'; }
+
   try {
     const combined = (await fetchRanking()).map((r, i) => ({ rank: i + 1, ...r }));
     if (combined.length === 0) {
@@ -2497,5 +2518,7 @@ async function loadRanking() {
     }).join('');
   } catch {
     list.innerHTML = '<p class="section-note">読み込みに失敗しました</p>';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 更新'; }
   }
 }

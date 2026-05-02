@@ -37,6 +37,52 @@
         <button id="sound-btn">🔊 サウンド ON</button>
         <button id="save-btn">💾 セーブ</button>
         <button id="reset-btn">🗑️ リセット</button>
+
+        <hr class="settings-divider">
+
+        <!-- 未ログイン時 -->
+        <div id="auth-section">
+          <p class="settings-section-label">👤 アカウント</p>
+          <div id="auth-tabs">
+            <button id="auth-tab-login" class="auth-tab-btn active">ログイン</button>
+            <button id="auth-tab-register" class="auth-tab-btn">新規登録</button>
+          </div>
+          <div id="auth-form">
+            <div id="register-name-wrap" class="hidden">
+              <input id="auth-name" type="text" placeholder="プレイヤー名" maxlength="20">
+              <div id="register-benefits">
+                <p class="register-benefits-title">🎁 登録特典</p>
+                <p class="register-benefits-item">✨ 転生石 +10石（転生済みは🪙コイン +10枚）</p>
+                <p class="register-benefits-item">📅 デイリーボーナス 3→5コインにアップ！</p>
+                <p class="register-benefits-item">🌙 オフライン補填 50→80%にアップ！</p>
+                <p class="register-benefits-item">☁️ クロスデバイスでデータ引き継ぎ可能！</p>
+              </div>
+              <p class="register-hint">💡 パスワード再設定機能がないため、存在しないメアドでも登録できます！いたずらしないでね😉</p>
+            </div>
+            <input id="auth-email" type="email" placeholder="メールアドレス（例: test@test.com）">
+            <div id="password-wrap">
+              <input id="auth-password" type="password" placeholder="パスワード（6文字以上）">
+              <button id="password-toggle" type="button">👁️</button>
+            </div>
+            <p id="auth-error" class="auth-error"></p>
+            <button id="auth-submit-btn">ログイン</button>
+          </div>
+        </div>
+
+        <!-- ログイン後 -->
+        <div id="loggedin-section" class="hidden">
+          <p class="settings-section-label">👤 アカウント</p>
+          <div id="user-info-bar">
+            <span id="user-name-display">名無し</span>
+            <button id="logout-btn">ログアウト</button>
+          </div>
+          <p class="section-note" style="margin-top:10px">✏️ プレイヤー名を変更する場合：</p>
+          <div id="name-change-row">
+            <input id="name-change-input" type="text" placeholder="新しいプレイヤー名" maxlength="20">
+            <button id="name-change-btn">変更</button>
+          </div>
+          <p id="name-change-msg" class="section-note"></p>
+        </div>
       </div>
     </div>
   </div>
@@ -44,52 +90,25 @@
   <!-- ① メイン画面 -->
   <div id="tab-main" class="tab-panel active">
 
-    <!-- キャラ＋ステータス 横並び -->
-    <div id="main-top">
-
-      <!-- 左：キャラクター -->
-      <div id="tap-area">
-        <div id="character-img" class="suit-black">
-          <img id="character-sprite" src="" alt="">
-          <div id="item-overlays"></div>
-        </div>
-        <div id="level-display">Lv.1　⬛ 黒スーツ</div>
-        <div id="xp-wrap">
-          <div id="xp-bar-bg"><div id="xp-bar"></div></div>
-          <span id="xp-text">0 / 56</span>
-        </div>
-        <div id="goal-panel">
-          <span id="goal-label"></span>
-          <span id="goal-remaining"></span>
-        </div>
-        <p id="tap-hint">タップで増殖！</p>
+    <!-- キャラクター（タップエリア） -->
+    <div id="tap-area">
+      <div id="character-img" class="suit-black">
+        <img id="character-sprite" src="" alt="">
+        <div id="item-overlays"></div>
       </div>
-
-      <!-- 右：ステータスパネル -->
-      <div id="stats-panel">
-        <div class="stat-block">
-          <div class="stat-label">💪 タップ</div>
-          <div class="stat-value" id="stat-tap-power">+1</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-block">
-          <div class="stat-label">⚙️ 自動収益</div>
-          <div class="stat-value" id="stat-mps">0<span class="stat-unit">/秒</span></div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-block">
-          <div class="stat-label">👔 社員数</div>
-          <div class="stat-value" id="stat-employees">0<span class="stat-unit">体</span></div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-block">
-          <div class="stat-label">📈 総獲得藻</div>
-          <div class="stat-value" id="stat-total-moku">0</div>
-        </div>
+      <div id="level-display">Lv.1　⬛ 黒スーツ</div>
+      <div id="xp-wrap">
+        <div id="xp-bar-bg"><div id="xp-bar"></div></div>
+        <span id="xp-text">0 / 56</span>
       </div>
+      <div id="goal-panel">
+        <span id="goal-label"></span>
+        <span id="goal-remaining"></span>
+      </div>
+      <p id="tap-hint">タップで増殖！</p>
     </div>
 
-    <!-- 覚醒バー -->
+    <!-- 覚醒バー（キャラ直下） -->
     <div id="awaken-bar">
       <div id="awaken-gauge-wrap">
         <div id="awaken-gauge-bar"></div>
@@ -99,6 +118,26 @@
 
     <div id="awaken-timer" class="hidden">
       ⚡ 覚醒中！残り <span id="awaken-time-val">30</span>秒
+    </div>
+
+    <!-- ステータスパネル（覚醒直下） -->
+    <div id="stats-panel">
+      <div class="stat-block">
+        <div class="stat-label">💪 タップ</div>
+        <div class="stat-value" id="stat-tap-power">+1</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">⚙️ 自動収益</div>
+        <div class="stat-value" id="stat-mps">0<span class="stat-unit">/秒</span></div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">👔 社員数</div>
+        <div class="stat-value" id="stat-employees">0<span class="stat-unit">体</span></div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">📈 総獲得藻</div>
+        <div class="stat-value" id="stat-total-moku">0</div>
+      </div>
     </div>
 
     <!-- アクティブ効果バー -->
@@ -272,57 +311,21 @@
   <!-- ⑥ ランキング画面 -->
   <div id="tab-ranking" class="tab-panel">
 
-    <!-- 未ログイン時 -->
-    <div id="auth-section">
-      <h2 class="panel-title">🏆 ランキング</h2>
-      <p class="section-note">登録するとランキングに参加できます</p>
-
-      <div id="auth-tabs">
-        <button id="auth-tab-login" class="auth-tab-btn active">ログイン</button>
-        <button id="auth-tab-register" class="auth-tab-btn">新規登録</button>
-      </div>
-
-      <div id="auth-form">
-        <div id="register-name-wrap" class="hidden">
-          <input id="auth-name" type="text" placeholder="プレイヤー名" maxlength="20">
-          <div id="register-benefits">
-            <p class="register-benefits-title">🎁 登録特典</p>
-            <p class="register-benefits-item">✨ 転生石 +10石（転生済みは🪙コイン +10枚）</p>
-            <p class="register-benefits-item">📅 デイリーボーナス 3→5コインにアップ！</p>
-            <p class="register-benefits-item">🌙 オフライン補填 50→80%にアップ！</p>
-            <p class="register-benefits-item">☁️ クロスデバイスでデータ引き継ぎ可能！</p>
-          </div>
-          <p class="register-hint">💡 パスワード再設定機能がないため、存在しないメアドでも登録できます！いたずらしないでね😉</p>
-        </div>
-        <input id="auth-email" type="email" placeholder="メールアドレス（例: test@test.com）">
-        <div id="password-wrap">
-          <input id="auth-password" type="password" placeholder="パスワード（6文字以上）">
-          <button id="password-toggle" type="button">👁️</button>
-        </div>
-        <p id="auth-error" class="auth-error"></p>
-        <button id="auth-submit-btn">ログイン</button>
-      </div>
+    <!-- 未ログイン時の案内 -->
+    <div id="ranking-login-prompt">
+      <p class="ranking-prompt-text">🏆 ランキングに参加するには<br>右上の設定からログイン・新規登録できます</p>
+      <button id="open-settings-from-ranking">⚙️ 設定を開く</button>
     </div>
 
     <!-- ログイン後 -->
-    <div id="loggedin-section" class="hidden">
-      <h2 class="panel-title">👤 マイページ</h2>
-      <div id="user-info-bar">
-        <span id="user-name-display">名無し</span>
-        <button id="logout-btn">ログアウト</button>
-      </div>
-      <p class="section-note" style="margin-top:12px">✏️ プレイヤー名を変更する場合：</p>
-      <div id="name-change-row">
-        <input id="name-change-input" type="text" placeholder="新しいプレイヤー名" maxlength="20">
-        <button id="name-change-btn">変更</button>
-      </div>
-      <p id="name-change-msg" class="section-note"></p>
+    <div id="ranking-user-bar" class="hidden">
+      <span id="ranking-user-name"></span>
       <button id="score-upload-btn">📤 スコアを登録する</button>
-      <p id="score-upload-note" class="section-note">総獲得藻とランクをサーバーに送信します</p>
     </div>
+    <p id="score-upload-note" class="section-note hidden">総獲得藻とランクをサーバーに送信します</p>
 
     <!-- ランキング表示（共通） -->
-    <h2 class="panel-title" style="margin-top:20px">🏅 総獲得藻ランキング</h2>
+    <h2 class="panel-title" style="margin-top:16px">🏅 総獲得藻ランキング</h2>
     <button id="ranking-refresh-btn">🔄 更新</button>
     <p class="section-note" style="margin-top:6px">※ スコアの自動登録機能はDBの余裕がないため未実装です。実装してほしい方はお賽銭をお願いします🙏💸</p>
     <div id="ranking-list"><p class="section-note">読み込み中...</p></div>

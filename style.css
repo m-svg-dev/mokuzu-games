@@ -74,19 +74,13 @@ button,
   display: block;
 }
 
-/* ========== メイン画面：縦1カラム ========== */
-#main-top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding-top: 12px;
-}
-
+/* ========== メイン画面 ========== */
 #tap-area {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-top: 10px;
+  margin-bottom: 8px;
 }
 
 #character-img {
@@ -254,6 +248,7 @@ button,
   background: transparent;
   border: none;
   padding: 0;
+  margin-top: 8px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
@@ -1735,26 +1730,37 @@ button,
   width: 100%;
   max-width: 480px;
   display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   background: #0c1e34;
   border-top: 2px solid #1a4a30;
   z-index: 100;
 }
 
+#tab-nav::-webkit-scrollbar {
+  display: none;
+}
+
 .tab-btn {
-  flex: 1;
-  padding: 5px 2px 7px;
+  flex-shrink: 0;
+  width: 76px;
+  padding: 5px 4px 7px;
   background: none;
   border: none;
   border-top: 2px solid transparent;
   cursor: pointer;
   transition: filter 0.15s;
   -webkit-tap-highlight-color: transparent;
+  scroll-snap-align: start;
 }
 
 .tab-btn img {
-  width: 100%;
-  max-width: 58px;
-  height: auto;
+  width: 66px;
+  height: 66px;
+  object-fit: contain;
   display: block;
   margin: 0 auto;
   filter: brightness(0.4) saturate(0);
@@ -1770,7 +1776,7 @@ button,
 }
 
 /* ========== ヘッダーアイコンボタン ========== */
-#header-btns { display: flex; align-items: center; gap: 4px; }
+#header-btns { display: flex; align-items: center; gap: 2px; margin-left: auto; }
 
 .header-icon-btn {
   position: relative;
@@ -1781,7 +1787,7 @@ button,
   opacity: 0.85;
   transition: opacity 0.15s, transform 0.2s;
 }
-.header-icon-btn img { width: 46px; height: 46px; display: block; }
+.header-icon-btn img { width: 54px; height: 64px; display: block; object-fit: contain; }
 .header-icon-btn:active { opacity: 1; transform: scale(0.92); }
 
 #notice-badge {
@@ -1893,9 +1899,12 @@ button,
   background: #0c1e34;
   border: 2px solid #1a4a30;
   border-radius: 14px;
-  width: 280px;
+  width: 320px;
+  max-height: 85vh;
   padding: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 #settings-modal-header {
@@ -1924,8 +1933,9 @@ button,
   flex-direction: column;
   gap: 10px;
   padding: 16px;
+  overflow-y: auto;
 }
-#settings-modal-body button {
+#settings-modal-body > button {
   background: #1a3a2a;
   border: 1px solid #2a6a44;
   border-radius: 8px;
@@ -1936,7 +1946,69 @@ button,
   text-align: left;
   transition: background 0.15s;
 }
-#settings-modal-body button:active { background: #2a5a3a; }
+#settings-modal-body > button:active { background: #2a5a3a; }
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid #1a4a30;
+  margin: 2px 0;
+}
+
+.settings-section-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #78bb99;
+  margin-bottom: 4px;
+}
+
+/* ========== ランキング未ログイン案内 ========== */
+#ranking-login-prompt {
+  background: #0c1e34;
+  border: 1px solid #1a3a2e;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.ranking-prompt-text {
+  font-size: 0.88rem;
+  color: #78bb99;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+#open-settings-from-ranking {
+  background: #1a3a2a;
+  border: 1px solid #3dff7a60;
+  border-radius: 8px;
+  color: #3dff7a;
+  font-size: 0.9rem;
+  padding: 8px 20px;
+  cursor: pointer;
+}
+#open-settings-from-ranking:active { opacity: 0.8; }
+
+/* ========== ランキングユーザーバー ========== */
+#ranking-user-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0c1e34;
+  border: 1px solid #1a3a2e;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 4px;
+}
+#ranking-user-name {
+  font-size: 0.9rem;
+  color: #d8eedd;
+  font-weight: bold;
+}
+
+/* ========== 更新ボタン ========== */
+#ranking-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* ========== ペットシステム ========== */
 
