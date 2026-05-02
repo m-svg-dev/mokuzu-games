@@ -164,6 +164,42 @@ const FACILITIES = [
   { id: 'facility_tower',   name: '光合成タワー',   icon: '🗼', desc: '+1500 / 秒',   baseCost: 3_000_000, costMult: 2.5, mpsBonus: 1500, maxCount: 5 },
 ];
 
+// ========== ペットシステム ==========
+
+const PET_TYPES = [
+  { id: 'green',  name: '緑の精霊',  icon: '🌿', row: 0, buyCost: { type: 'coins',  amount: 30 }, effectType: 'tap',  effectDesc: 'タップ倍率アップ' },
+  { id: 'pink',   name: '桜の精霊',  icon: '🌸', row: 1, buyCost: { type: 'stones', amount: 20 }, effectType: 'mps',  effectDesc: 'MPS倍率アップ'   },
+  { id: 'purple', name: '月の精霊',  icon: '🌙', row: 2, buyCost: { type: 'stones', amount: 50 }, effectType: 'coin', effectDesc: 'コイン獲得アップ' },
+];
+
+const PET_STAGES = [
+  { id: 'egg',     name: '卵',     col: 0, mult: 1.0, condition: null,                                             waitHours: 0  },
+  { id: 'growth',  name: '成長期', col: 1, mult: 1.1, condition: { mokuCost: 500_000 },                           waitHours: 1  },
+  { id: 'mature',  name: '成熟期', col: 2, mult: 1.25,condition: { mokuCost: 3_000_000 },                         waitHours: 12 },
+  { id: 'perfect', name: '完全期', col: 3, mult: 1.5, condition: { mokuCost: 20_000_000, prestigeMin: 1 },        waitHours: 24 },
+  { id: 'ultimate',name: '究極期', col: 4, mult: 2.0, condition: { mokuCost: 100_000_000, prestigeMin: 3 },       waitHours: 72 },
+];
+
+function getPetSpriteStyle(typeId, stageIndex) {
+  const type = PET_TYPES.find(t => t.id === typeId);
+  if (!type) return '';
+  const xPct = stageIndex * 25;
+  const yPct = type.row * 50;
+  return `background-image:url('assets/pet/pet_image.png');background-size:500% 300%;background-position:${xPct}% ${yPct}%;`;
+}
+
+function getPetMultiplier() {
+  const pet = gameState.activePet;
+  if (!pet) return { tap: 1, mps: 1, coin: 1 };
+  const mult = PET_STAGES[pet.stageIndex ?? 0]?.mult ?? 1;
+  const type = PET_TYPES.find(t => t.id === pet.typeId);
+  return {
+    tap:  type?.effectType === 'tap'  ? mult : 1,
+    mps:  type?.effectType === 'mps'  ? mult : 1,
+    coin: type?.effectType === 'coin' ? mult : 1,
+  };
+}
+
 // ネタアイテム・装飾アイテム（一度きりの購入）
 const ITEMS = [
   { id: 'royalheart',    name: 'ロイヤルハート',   icon: '👑', desc: '藻屑界のエリートの証！',     cost: 5_000_000,  overlayPos: 'top-left'  },
@@ -284,6 +320,7 @@ const DEFAULT_STATE = {
   activeEffects:        {},     // { effectId: 終了timestamp(ms) }
   hasRegistered:        false,  // 一度でもログインしたか
   registrationBonusClaimed: false, // 登録ボーナス受取済みか
+  activePet:            null,   // { typeId, stageIndex, conditionMetAt }
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -581,10 +618,11 @@ function onTap(e) {
   const awakenMult   = gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1;
   const eventMult    = gameState.eventTapMult ?? 1;
   const tapBoostMult = isEffectActive('tap_boost') ? 10 : 1;
+  const petTapMult   = getPetMultiplier().tap;
   const critRate     = 0.05 + getPrestigeBonus('critRate');
   const critMult     = 3    + getPrestigeBonus('critMult');
   const isCritical   = Math.random() < critRate;
-  const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult * (isCritical ? critMult : 1);
+  const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult * petTapMult * (isCritical ? critMult : 1);
 
   gameState.moku      += gained;
   gameState.totalMoku += gameState.tapPower; // ボーナス倍率は totalMoku に含めない
@@ -671,7 +709,8 @@ function gameLoop() {
   const awakenMult   = gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1;
   const eventMult    = gameState.eventMpsMult ?? 1;
   const mpsBoostMult = isEffectActive('mps_boost') ? 5 : 1;
-  const gained       = gameState.mokuPerSecond * awakenMult * eventMult * mpsBoostMult;
+  const petMpsMult   = getPetMultiplier().mps;
+  const gained       = gameState.mokuPerSecond * awakenMult * eventMult * mpsBoostMult * petMpsMult;
 
   gameState.moku      += gained;
   gameState.totalMoku += gameState.mokuPerSecond; // ボーナス倍率は含めない
@@ -1091,7 +1130,9 @@ function timeUntilNextClaim() {
 }
 
 function getDailyCoins() {
-  return gameState.hasRegistered ? 5 : DAILY_COINS;
+  const base = gameState.hasRegistered ? 5 : DAILY_COINS;
+  const petCoinMult = getPetMultiplier().coin;
+  return Math.floor(base * petCoinMult);
 }
 
 function claimDailyCoins() {
@@ -1263,6 +1304,159 @@ function updateItemOverlays() {
     img.alt = item.name;
     container.appendChild(img);
   }
+}
+
+// ========== ペット購入・進化・表示 ==========
+
+function buyEgg(typeId) {
+  if (gameState.activePet) { alert('すでにペットを育てています！'); return; }
+  const type = PET_TYPES.find(t => t.id === typeId);
+  if (!type) return;
+  if (type.buyCost.type === 'coins') {
+    if ((gameState.mokuCoins ?? 0) < type.buyCost.amount) return;
+    gameState.mokuCoins -= type.buyCost.amount;
+  } else {
+    if ((gameState.prestigeStones ?? 0) < type.buyCost.amount) return;
+    gameState.prestigeStones -= type.buyCost.amount;
+  }
+  gameState.activePet = { typeId, stageIndex: 0, conditionMetAt: null };
+  playSound('buy');
+  saveGame();
+  renderPetEggShop();
+  renderPetSection();
+  updateDisplay();
+}
+
+function tryEvolvePet() {
+  const pet = gameState.activePet;
+  if (!pet || pet.stageIndex >= PET_STAGES.length - 1) return;
+  const nextStage = PET_STAGES[pet.stageIndex + 1];
+  const cond = nextStage.condition;
+
+  if (!pet.conditionMetAt) {
+    if (cond.prestigeMin && (gameState.prestigeLevel ?? 0) < cond.prestigeMin) {
+      alert(`転生${cond.prestigeMin}回以上が必要です！`); return;
+    }
+    if (gameState.moku < cond.mokuCost) {
+      alert(`藻が足りません！${fmt(cond.mokuCost)} 藻必要です`); return;
+    }
+    gameState.moku -= cond.mokuCost;
+    pet.conditionMetAt = Date.now();
+    playSound('buy');
+    saveGame();
+    renderPetSection();
+    updateDisplay();
+    return;
+  }
+
+  const waitMs = nextStage.waitHours * 3600 * 1000;
+  if (Date.now() - pet.conditionMetAt < waitMs) return;
+
+  pet.stageIndex += 1;
+  pet.conditionMetAt = null;
+  playSound('levelup');
+  saveGame();
+  renderPetSection();
+  updateDisplay();
+}
+
+function renderPetEggShop() {
+  const container = document.getElementById('pet-egg-shop');
+  if (!container) return;
+  const hasPet = !!gameState.activePet;
+  container.innerHTML = '';
+
+  for (const type of PET_TYPES) {
+    const canAfford = type.buyCost.type === 'coins'
+      ? (gameState.mokuCoins ?? 0) >= type.buyCost.amount
+      : (gameState.prestigeStones ?? 0) >= type.buyCost.amount;
+    const costLabel = type.buyCost.type === 'coins'
+      ? `🪙 ${type.buyCost.amount} コイン`
+      : `✨ ${type.buyCost.amount} 石`;
+    const disabled = hasPet || !canAfford;
+
+    const card = document.createElement('div');
+    card.className = 'pet-egg-card';
+    card.innerHTML = `
+      <div class="pet-egg-sprite" style="${getPetSpriteStyle(type.id, 0)}"></div>
+      <div class="pet-egg-info">
+        <div class="pet-egg-name">${type.icon} ${type.name}の卵</div>
+        <div class="pet-egg-effect">${type.effectDesc}</div>
+        <div class="pet-egg-cost">${costLabel}</div>
+      </div>
+      <button class="pet-egg-btn${disabled ? ' disabled' : ''}" ${disabled ? 'disabled' : ''}>
+        ${hasPet ? '育成中' : '購入'}
+      </button>
+    `;
+    if (!disabled) {
+      card.querySelector('.pet-egg-btn').addEventListener('click', () => buyEgg(type.id));
+    }
+    container.appendChild(card);
+  }
+}
+
+function renderPetSection() {
+  const container = document.getElementById('pet-section');
+  if (!container) return;
+  const pet = gameState.activePet;
+
+  if (!pet) {
+    container.innerHTML = '<p class="section-note">アイテムタブから卵を購入してペットを育てよう！</p>';
+    return;
+  }
+
+  const type      = PET_TYPES.find(t => t.id === pet.typeId);
+  const stage     = PET_STAGES[pet.stageIndex];
+  const nextStage = PET_STAGES[pet.stageIndex + 1];
+  const mult      = stage.mult;
+  const effectLabel = type.effectType === 'tap' ? 'タップ倍率'
+    : type.effectType === 'mps' ? 'MPS倍率' : 'コイン獲得倍率';
+
+  let evolveHtml = '';
+  if (nextStage) {
+    const cond = nextStage.condition;
+    if (pet.conditionMetAt) {
+      const waitMs    = nextStage.waitHours * 3600 * 1000;
+      const remaining = waitMs - (Date.now() - pet.conditionMetAt);
+      if (remaining <= 0) {
+        evolveHtml = `
+          <p class="pet-evolve-ready">✨ 進化の準備完了！</p>
+          <button class="pet-evolve-btn ready" id="pet-evolve-btn">👑 進化！</button>`;
+      } else {
+        const hours = Math.ceil(remaining / 3_600_000);
+        evolveHtml = `<p class="pet-evolve-waiting">⏳ 進化準備中... あと約${hours}時間</p>`;
+      }
+    } else {
+      const prestigeOk = !cond.prestigeMin || (gameState.prestigeLevel ?? 0) >= cond.prestigeMin;
+      const mokuOk     = gameState.moku >= cond.mokuCost;
+      const canEvolve  = prestigeOk && mokuOk;
+      let condText = `藻 ${fmt(cond.mokuCost)} を消費`;
+      if (cond.prestigeMin) condText += ` + 転生${cond.prestigeMin}回以上`;
+      condText += ` → ${nextStage.waitHours}時間待機後に進化`;
+      evolveHtml = `
+        <p class="pet-evolve-cond">${condText}</p>
+        <button class="pet-evolve-btn${canEvolve ? '' : ' disabled'}" id="pet-evolve-btn" ${canEvolve ? '' : 'disabled'}>
+          🌱 進化準備する
+        </button>`;
+    }
+  } else {
+    evolveHtml = '<p class="pet-evolve-cond">👑 最終進化形態です</p>';
+  }
+
+  container.innerHTML = `
+    <div class="pet-card">
+      <div class="pet-sprite" style="${getPetSpriteStyle(pet.typeId, pet.stageIndex)}"></div>
+      <div class="pet-info">
+        <div class="pet-name">${type.icon} ${type.name}</div>
+        <div class="pet-stage-badge">${stage.name}</div>
+        <div class="pet-effect-label">${effectLabel} × ${mult}</div>
+      </div>
+    </div>
+    <div class="pet-evolve-section">${evolveHtml}</div>
+  `;
+
+  const btn = document.getElementById('pet-evolve-btn');
+  if (btn && !btn.disabled) btn.addEventListener('click', tryEvolvePet);
 }
 
 function renderItemList() {
@@ -1761,6 +1955,8 @@ function init() {
   renderItemList();
   renderConsumableList();
   renderUnlockedEventList();
+  renderPetEggShop();
+  renderPetSection();
   updateDisplay();
   updateEventDisplay();
 

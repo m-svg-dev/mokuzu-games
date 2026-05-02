@@ -1773,3 +1773,109 @@ button,
   transition: background 0.15s;
 }
 #settings-modal-body button:active { background: #2a5a3a; }
+
+/* ========== ペットシステム ========== */
+
+/* 卵ショップ */
+#pet-egg-shop { display: flex; flex-direction: column; gap: 10px; }
+
+.pet-egg-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #0d2a1a;
+  border: 1px solid #1e4a30;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.pet-egg-sprite {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background-color: #0a1f14;
+}
+
+.pet-egg-info { flex: 1; }
+.pet-egg-name { font-size: 0.9rem; font-weight: bold; color: #d8eedd; }
+.pet-egg-effect { font-size: 0.75rem; color: #3dff7a; margin-top: 2px; }
+.pet-egg-cost { font-size: 0.8rem; color: #ffd700; margin-top: 4px; }
+
+.pet-egg-btn {
+  background: #1a5a30;
+  border: 1px solid #3dff7a;
+  border-radius: 8px;
+  color: #3dff7a;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pet-egg-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+.pet-egg-btn:not(.disabled):active { background: #2a7a44; }
+
+/* ペット管理カード */
+.pet-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #0d2a1a;
+  border: 1px solid #3dff7a44;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.pet-sprite {
+  width: 90px;
+  height: 90px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background-color: #0a1f14;
+}
+
+.pet-info { flex: 1; }
+.pet-name { font-size: 1rem; font-weight: bold; color: #d8eedd; }
+.pet-stage-badge {
+  display: inline-block;
+  background: #1a4a2a;
+  border: 1px solid #2a8a44;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  color: #3dff7a;
+  padding: 2px 10px;
+  margin-top: 4px;
+}
+.pet-effect-label { font-size: 0.8rem; color: #ffd700; margin-top: 6px; }
+
+/* 進化セクション */
+.pet-evolve-section { padding: 4px 0 8px; }
+.pet-evolve-cond { font-size: 0.78rem; color: #8ab; margin-bottom: 8px; }
+.pet-evolve-waiting { font-size: 0.82rem; color: #ffa050; margin-bottom: 8px; }
+.pet-evolve-ready { font-size: 0.82rem; color: #3dff7a; margin-bottom: 8px; font-weight: bold; }
+
+.pet-evolve-btn {
+  background: #1a4a2a;
+  border: 1px solid #2a8a44;
+  border-radius: 8px;
+  color: #d8eedd;
+  font-size: 0.88rem;
+  padding: 10px 20px;
+  cursor: pointer;
+  width: 100%;
+}
+.pet-evolve-btn.ready {
+  background: #1a5a30;
+  border-color: #3dff7a;
+  color: #3dff7a;
+  font-weight: bold;
+  animation: pulse-green 1.5s infinite;
+}
+.pet-evolve-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+.pet-evolve-btn:not(.disabled):active { background: #2a6a3a; }
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 #3dff7a44; }
+  50%       { box-shadow: 0 0 0 6px #3dff7a00; }
+}
