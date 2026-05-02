@@ -87,6 +87,25 @@ export async function saveScore(totalMoku, prestigeLevel) {
   }, { merge: true });
 }
 
+// ========== セーブデータ全体の同期 ==========
+
+export async function saveGameData(gameStateJson) {
+  const user = auth.currentUser;
+  if (!user) return;
+  await setDoc(doc(db, 'users', user.uid), {
+    saveData:  gameStateJson,
+    updatedAt: Date.now(),
+  }, { merge: true });
+}
+
+export async function loadGameData() {
+  const user = auth.currentUser;
+  if (!user) return null;
+  const snap = await getDoc(doc(db, 'users', user.uid));
+  if (!snap.exists()) return null;
+  return snap.data().saveData ?? null;
+}
+
 // ========== ランキング取得（総獲得藻 上位20件） ==========
 
 export async function fetchRanking() {

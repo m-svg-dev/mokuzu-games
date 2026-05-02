@@ -1609,7 +1609,9 @@ function checkOfflineEarnings() {
 
 function saveGame() {
   gameState.lastSaved = Date.now();
-  localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
+  const json = JSON.stringify(gameState);
+  localStorage.setItem(SAVE_KEY, json);
+  if (currentUser()) saveGameData(json).catch(() => {});
 }
 
 function loadGame() {
@@ -1751,20 +1753,47 @@ import {
   registerUser, loginUser, logoutUser,
   onAuthChanged, currentUser,
   saveScore, fetchRanking, changeDisplayName,
+  saveGameData, loadGameData,
 } from './firebase.js';
 
 let _authMode = 'login'; // 'login' | 'register'
 
 function initFirebase() {
   // 認証状態の監視
-  onAuthChanged(user => {
-    const authSec    = document.getElementById('auth-section');
-    const loggedSec  = document.getElementById('loggedin-section');
-    const nameEl     = document.getElementById('user-name-display');
+  onAuthChanged(async user => {
+    const authSec   = document.getElementById('auth-section');
+    const loggedSec = document.getElementById('loggedin-section');
+    const nameEl    = document.getElementById('user-name-display');
     if (user) {
       authSec.classList.add('hidden');
       loggedSec.classList.remove('hidden');
       if (nameEl) nameEl.textContent = user.displayName ?? '名無し';
+
+      // クラウドセーブとローカルを比較
+      try {
+        const cloudJson = await loadGameData();
+        if (cloudJson) {
+          const cloudState = JSON.parse(cloudJson);
+          const localSaved = gameState.lastSaved ?? 0;
+          const cloudSaved = cloudState.lastSaved ?? 0;
+          if (cloudSaved > localSaved) {
+            const d = new Date(cloudSaved);
+            const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+            if (confirm(`☁️ クラウドにセーブデータが見つかりました！\n保存日時: ${dateStr}\n\nクラウドのデータを引き継ぎますか？`)) {
+              Object.assign(gameState, cloudState);
+              recalcTapPower();
+              recalcMPS();
+              saveGame();
+              location.reload();
+            }
+          } else {
+            // ローカルが新しければクラウドを自動更新
+            saveGameData(JSON.stringify(gameState)).catch(() => {});
+          }
+        }
+      } catch (e) {
+        console.warn('[mokuzu] クラウドセーブの読み込みに失敗', e);
+      }
     } else {
       authSec.classList.remove('hidden');
       loggedSec.classList.add('hidden');
