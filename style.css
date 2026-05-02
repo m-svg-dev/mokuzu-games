@@ -994,6 +994,7 @@ button,
 #password-toggle {
   position: absolute;
   right: 8px;
+  z-index: 2;
   background: none;
   border: none;
   cursor: pointer;
