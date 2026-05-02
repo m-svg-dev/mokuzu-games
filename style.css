@@ -6,7 +6,6 @@
 }
 
 html {
-  overflow-x: hidden;
   overscroll-behavior: none;
   touch-action: manipulation;
 }
@@ -43,7 +42,6 @@ button,
   top: 0;
   left: 0;
   right: 0;
-  width: 100%;
   max-width: 480px;
   margin: 0 auto;
   background: #0c1e34;
@@ -1747,7 +1745,6 @@ button,
   bottom: 0;
   left: 0;
   right: 0;
-  width: 100%;
   max-width: 480px;
   margin: 0 auto;
   overflow: hidden;
