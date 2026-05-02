@@ -1671,6 +1671,7 @@ function loadGame() {
   if (storedCs && computeChecksum(raw) !== storedCs) {
     localStorage.removeItem(SAVE_KEY);
     localStorage.removeItem(CHECKSUM_KEY);
+    alert('🚨 不正はダメだぜ！！\n0から頑張りな！！！');
     return;
   }
 
