@@ -1586,7 +1586,7 @@ function renderPetEggShop() {
       : (gameState.prestigeStones ?? 0) >= type.buyCost.amount;
     const costLabel = type.buyCost.type === 'coins'
       ? `<img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン"> ${type.buyCost.amount} コイン`
-      : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt="転生石"> ${type.buyCost.amount} 石`;
+      : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt="転生石"> ${type.buyCost.amount} 転生石`;
 
     let btnLabel, btnClass, btnDisabled;
     if (!isOwned) {
@@ -1633,7 +1633,7 @@ function renderPetSection() {
   const pet    = typeId ? (gameState.ownedPets ?? {})[typeId] : null;
 
   if (!pet) {
-    container.innerHTML = '<p class="section-note">アイテムタブから卵を購入してペットを育てよう！</p>';
+    container.innerHTML = '<p class="section-note">下のペット卵ショップから卵を購入してペットを育てよう！</p>';
     return;
   }
 
@@ -2002,7 +2002,7 @@ function renderPrestigeSkillList() {
         <div class="item-count-bar">${dots}</div>
       </div>
       <div class="item-right">
-        <div class="item-cost" style="color:#cc88ff">${maxed ? 'MAX' : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt=""> ${cost} 石`}</div>
+        <div class="item-cost" style="color:#cc88ff">${maxed ? 'MAX' : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt=""> ${cost} 転生石`}</div>
         <div class="item-count-label">${lv} / ${s.maxLevel}</div>
       </div>
     `;
