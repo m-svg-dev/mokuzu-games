@@ -1877,9 +1877,20 @@ function initFirebase() {
         await loginUser(email, password);
       }
     } catch (e) {
-      errorEl.textContent = _authMode === 'register'
-        ? '登録に失敗しました。メール・パスワードを確認してください'
-        : 'ログインに失敗しました。メール・パスワードを確認してください';
+      const code = e?.code ?? '';
+      if (_authMode === 'register') {
+        if (code === 'auth/email-already-in-use') {
+          errorEl.textContent = 'このメールアドレスはすでに使われています';
+        } else if (code === 'auth/invalid-email') {
+          errorEl.textContent = 'メールアドレスの形式が正しくありません（例: test@test.com）';
+        } else if (code === 'auth/weak-password') {
+          errorEl.textContent = 'パスワードは6文字以上にしてください';
+        } else {
+          errorEl.textContent = '登録に失敗しました。入力内容を確認してください';
+        }
+      } else {
+        errorEl.textContent = 'メールアドレスまたはパスワードが間違っています';
+      }
     }
   });
 
