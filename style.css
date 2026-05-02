@@ -352,6 +352,52 @@ button,
 .hidden { display: none !important; }
 
 /* ========== オフライン収益モーダル ========== */
+#daily-modal {
+  position: fixed;
+  inset: 0;
+  background: #000000bb;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#daily-modal.hidden { display: none; }
+
+#daily-modal-inner {
+  background: #0c1e34;
+  border: 2px solid #ffd700;
+  border-radius: 16px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 300px;
+  width: 88%;
+  box-shadow: 0 0 48px #ffd70040;
+}
+
+#daily-modal-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #ffd700;
+  margin-bottom: 12px;
+}
+
+#daily-modal-body {
+  font-size: 1rem;
+  color: #d8eedd;
+  margin-bottom: 20px;
+}
+
+#daily-modal-ok {
+  background: #ffd700;
+  color: #071420;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 28px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 #offline-modal {
   position: fixed;
   inset: 0;

@@ -1082,6 +1082,14 @@ function claimDailyCoins() {
   gameState.mokuCoins = (gameState.mokuCoins ?? 0) + DAILY_COINS;
   playSound('buy');
   updateDisplay();
+  document.getElementById('daily-modal').classList.remove('hidden');
+}
+
+function checkDailyOnStartup() {
+  const last = gameState.lastDailyLogin ?? 0;
+  if (Date.now() - last >= DAILY_INTERVAL_MS) {
+    claimDailyCoins();
+  }
 }
 
 function exchangeStonesForCoins() {
@@ -1689,6 +1697,7 @@ function initTabs() {
 function init() {
   loadGame();
   checkOfflineEarnings();
+  checkDailyOnStartup();
 
   // 初回起動 or 旧セーブ：待機中なら次のイベントを先行決定
   if (!gameState.nextEventId && !gameState.activeEvent) {
@@ -1732,6 +1741,10 @@ function init() {
 
   document.getElementById('offline-ok').addEventListener('click', () => {
     document.getElementById('offline-modal').classList.add('hidden');
+  });
+
+  document.getElementById('daily-modal-ok').addEventListener('click', () => {
+    document.getElementById('daily-modal').classList.add('hidden');
   });
 
   document.getElementById('gacha-btn-1') .addEventListener('click', () => doGachaPull(1));
