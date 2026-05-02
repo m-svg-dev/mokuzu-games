@@ -466,6 +466,7 @@ function updateDisplay() {
   renderFacilityList();
   renderItemList();
   renderConsumableList();
+  renderUnlockedEventList();
   updateCoinDisplay();
   updateActiveEffectsBar();
   updateSoundBtn();
@@ -1334,6 +1335,22 @@ function renderEventUnlockList() {
   }
 }
 
+function renderUnlockedEventList() {
+  const container = document.getElementById('unlocked-event-list');
+  if (!container) return;
+  const unlocked = gameState.unlockedEvents ?? [];
+  const list = EVENTS.filter(e => unlocked.includes(e.id));
+  container.innerHTML = list.map(ev => `
+    <div class="unlocked-event-row">
+      <span class="unlocked-event-icon">${ev.icon}</span>
+      <div class="unlocked-event-info">
+        <div class="unlocked-event-name">${ev.name}</div>
+        <div class="unlocked-event-desc">${ev.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
 // ========== ガチャ ==========
 
 function pullOnce(pitied = false) {
@@ -1687,6 +1704,7 @@ function init() {
   renderFacilityList();
   renderItemList();
   renderConsumableList();
+  renderUnlockedEventList();
   updateDisplay();
   updateEventDisplay();
 
