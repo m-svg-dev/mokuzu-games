@@ -1908,7 +1908,7 @@ function initFirebase() {
         } else if (code === 'auth/weak-password') {
           errorEl.textContent = 'パスワードは6文字以上にしてください';
         } else {
-          errorEl.textContent = '登録に失敗しました。入力内容を確認してください';
+          errorEl.textContent = `登録に失敗しました（${code}）`;
         }
       } else {
         errorEl.textContent = 'メールアドレスまたはパスワードが間違っています';
