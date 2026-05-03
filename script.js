@@ -1,5 +1,6 @@
 // ========== 定数定義 ==========
 
+const CURRENT_VERSION = '1.8';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -2517,6 +2518,25 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ========== バージョンポーリング ==========
+
+async function checkForUpdate() {
+  try {
+    const res  = await fetch(`version.json?t=${Date.now()}`);
+    const data = await res.json();
+    if (data.version !== CURRENT_VERSION) {
+      const banner = document.getElementById('update-banner');
+      if (banner) banner.classList.remove('hidden');
+    }
+  } catch (_) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('update-banner-btn')?.addEventListener('click', () => location.reload(true));
+  setTimeout(checkForUpdate, 10_000);
+  setInterval(checkForUpdate, 5 * 60 * 1000);
+});
 
 // デバッグ用（コンソールからアクセス可能にする）
 window._gs = () => gameState;
