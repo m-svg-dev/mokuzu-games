@@ -19,6 +19,17 @@ function computeChecksum(str) {
 
 const UPDATE_LOG = [
   {
+    id: 'v1.8',
+    date: '2026/05/04',
+    title: '🐱 新ペット追加：ピンクにゃんこ・しろにゃんこ',
+    items: [
+      '🐱 新ペット「ピンクにゃんこ」「しろにゃんこ」を追加！',
+      '🌿 藻1000万個で卵から入手できます',
+      '🐱 卵 → 子猫 → 成長にゃんこ と進化します',
+      '📖 図鑑にも新ペットが追加されました',
+    ],
+  },
+  {
     id: 'v1.7',
     date: '2026/05/03',
     title: '📲 アプリとしてインストール対応 & バグ修正',
@@ -279,8 +290,8 @@ const PET_TYPES = [
   { id: 'green',     name: '緑の精霊',     icon: '🌿', row: 0, buyCost: { type: 'coins',  amount: 30         }, effectType: 'tap',  effectDesc: 'タップ倍率アップ' },
   { id: 'pink',      name: '桜の精霊',     icon: '🌸', row: 1, buyCost: { type: 'stones', amount: 20         }, effectType: 'mps',  effectDesc: 'MPS倍率アップ'   },
   { id: 'purple',    name: '月の精霊',     icon: '🌙', row: 2, buyCost: { type: 'stones', amount: 50         }, effectType: 'coin', effectDesc: 'デイリー藻コイン獲得アップ' },
-  { id: 'cat_pink',  name: 'ピンクにゃんこ', icon: '🐱', row: 3, buyCost: { type: 'moku',   amount: 10_000_000 }, effectType: 'tap',  effectDesc: 'タップ倍率アップ', stages: CAT_STAGES },
-  { id: 'cat_white', name: 'しろにゃんこ',  icon: '🐈', row: 4, buyCost: { type: 'moku',   amount: 10_000_000 }, effectType: 'mps',  effectDesc: 'MPS倍率アップ',   stages: CAT_STAGES },
+  { id: 'cat_pink',  name: 'ピンクにゃんこ', icon: '🐱', row: 3, buyCost: { type: 'moku',   amount: 10_000_000 }, effectType: 'tap',  effectDesc: 'タップ倍率アップ', stages: CAT_STAGES, sprites: ['pink_cat_egg', 'pink_cat_child', 'pink_gorira']  },
+  { id: 'cat_white', name: 'しろにゃんこ',  icon: '🐈', row: 4, buyCost: { type: 'moku',   amount: 10_000_000 }, effectType: 'mps',  effectDesc: 'MPS倍率アップ',   stages: CAT_STAGES, sprites: ['white_cat_egg', 'white_cat_child', 'white_gorira'] },
 ];
 
 const PET_STAGES = [
@@ -299,8 +310,9 @@ function getPetStages(typeId) {
 function getPetSpriteStyle(typeId, stageIndex) {
   const stage = getPetStages(typeId)[stageIndex];
   if (!stage) return '';
-  const path = `assets/pet/${typeId}_${stage.id}.png`;
-  return `background-image:url('${path}');background-size:cover;background-position:center;background-repeat:no-repeat;`;
+  const type = PET_TYPES.find(t => t.id === typeId);
+  const file = type?.sprites?.[stageIndex] ?? `${typeId}_${stage.id}`;
+  return `background-image:url('assets/pet/${file}.png');background-size:cover;background-position:top center;background-repeat:no-repeat;`;
 }
 
 function getPetMultiplier() {
