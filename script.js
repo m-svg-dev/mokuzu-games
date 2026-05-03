@@ -1224,6 +1224,7 @@ function buyConsumable(itemId) {
   const item = CONSUMABLE_ITEMS.find(x => x.id === itemId);
   if (!item) return;
   if ((gameState.mokuCoins ?? 0) < item.cost) return;
+  if (!confirm(`「${item.name}」を${item.cost}コインで購入しますか？`)) return;
 
   gameState.mokuCoins  = (gameState.mokuCoins  ?? 0) - item.cost;
   gameState.consumables = {
