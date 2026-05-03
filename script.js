@@ -1263,7 +1263,7 @@ function updateCoinDisplay() {
     dailyBtn.disabled      = claimed;
     dailyBtn.textContent   = claimed
       ? `📅 受取済み (次回: ${timeUntilNextClaim()})`
-      : `📅 デイリー +${DAILY_COINS}`;
+      : `📅 デイリー +${getDailyCoins()}`;
     dailyBtn.style.opacity = claimed ? '0.5' : '1';
   }
 
@@ -1957,6 +1957,7 @@ function doPrestige() {
     lastDailyLogin:  gameState.lastDailyLogin,
     consumables:     gameState.consumables,
     activeEffects:   gameState.activeEffects,
+    hasRegistered:   gameState.hasRegistered,
   };
 
   gameState = structuredClone(DEFAULT_STATE);
