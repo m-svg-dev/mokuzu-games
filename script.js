@@ -160,8 +160,14 @@ const IMAGE_CONFIG = {
     facility_tower:   'assets/facilities/facility_tower.png',
   },
   items: {
-    royalheart:    'assets/items/royalheart.png',
-    mo_royalheart: 'assets/items/mo_royalheart.png',
+    royalheart:     'assets/items/royalheart.png',
+    mo_royalheart:  'assets/items/mo_royalheart.png',
+    trophy_black:   'assets/trophy/black.png',
+    trophy_bronze:  'assets/trophy/bronze.png',
+    trophy_silver:  'assets/trophy/silver.png',
+    trophy_gold:    'assets/trophy/gold.png',
+    trophy_kirin:   'assets/trophy/kirin.png',
+    trophy_rainbow: 'assets/trophy/rainbow.png',
   },
   effects: {
     // tapPower に応じて切り替え
@@ -300,8 +306,14 @@ function getPetMultiplier() {
 
 // ネタアイテム・装飾アイテム（一度きりの購入）
 const ITEMS = [
-  { id: 'royalheart',    name: 'ロイヤルハート',   icon: '👑', desc: '藻屑界のエリートの証！',     cost: 5_000_000,  overlayPos: 'top-left'  },
-  { id: 'mo_royalheart', name: '藻ロイヤルハート', icon: '🌿', desc: '藻屑界の頂点に立つ者の証！', cost: 10_000_000, overlayPos: 'top-right' },
+  { id: 'royalheart',     name: 'ロイヤルハート',         icon: '👑', desc: '藻屑界のエリートの証！',             cost:          5_000_000, overlayPos: 'top-left'  },
+  { id: 'mo_royalheart',  name: '藻ロイヤルハート',       icon: '🌿', desc: '藻屑界の頂点に立つ者の証！',         cost:         10_000_000, overlayPos: 'top-right' },
+  { id: 'trophy_black',   name: '黒トロフィー',           icon: '🏆', desc: '藻屑界への第一歩の証。',             cost:          2_000_000, overlayPos: 'trophy'    },
+  { id: 'trophy_bronze',  name: '銅トロフィー',           icon: '🏆', desc: '着実に積み上げてきた実力の証。',     cost:          8_000_000, overlayPos: 'trophy'    },
+  { id: 'trophy_silver',  name: '銀トロフィー',           icon: '🏆', desc: '藻屑界でも一目置かれる存在の証。', cost:         40_000_000, overlayPos: 'trophy'    },
+  { id: 'trophy_gold',    name: '金トロフィー',           icon: '🏆', desc: '選ばれし藻屑エリートの証。',         cost:        200_000_000, overlayPos: 'trophy'    },
+  { id: 'trophy_kirin',   name: 'キリントロフィー',       icon: '🏆', desc: '幻の領域に踏み込んだ者の証。',       cost:      1_000_000_000, overlayPos: 'trophy'    },
+  { id: 'trophy_rainbow', name: 'レインボートロフィー',   icon: '🏆', desc: '藻屑界の伝説。この先に何がある？',   cost:      8_000_000_000, overlayPos: 'trophy'    },
 ];
 
 // 購入ごとに tapBonus が加算される（baseCost * costMult^購入回数 で価格上昇）
@@ -1412,15 +1424,35 @@ function updateItemOverlays() {
   if (!container) return;
   container.innerHTML = '';
 
+  const equipped = gameState.equippedItems ?? [];
+  const trophies = [];
+
   for (const item of ITEMS) {
-    if (!(gameState.equippedItems ?? []).includes(item.id)) continue;
+    if (!equipped.includes(item.id)) continue;
     const src = IMAGE_CONFIG.items[item.id];
     if (!src) continue;
-    const img = document.createElement('img');
-    img.src = src;
-    img.className = `item-overlay item-overlay-${item.overlayPos ?? 'top-left'}`;
-    img.alt = item.name;
-    container.appendChild(img);
+
+    if (item.overlayPos === 'trophy') {
+      trophies.push({ src, name: item.name });
+    } else {
+      const img = document.createElement('img');
+      img.src = src;
+      img.className = `item-overlay item-overlay-${item.overlayPos}`;
+      img.alt = item.name;
+      container.appendChild(img);
+    }
+  }
+
+  if (trophies.length > 0) {
+    const shelf = document.createElement('div');
+    shelf.className = 'trophy-shelf';
+    trophies.forEach(({ src, name }) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = name;
+      shelf.appendChild(img);
+    });
+    container.appendChild(shelf);
   }
 }
 

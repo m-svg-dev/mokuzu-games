@@ -144,6 +144,24 @@ button,
   right: 10px;
 }
 
+.trophy-shelf {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 148px;
+  pointer-events: none;
+}
+
+.trophy-shelf img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+}
+
 /* スーツカラー */
 .suit-black  { border-color: #cccccc; box-shadow: 0 0 20px #aaaaaa40; }
 .suit-blue   { border-color: #4499ff; box-shadow: 0 0 28px #4499ff70; }
