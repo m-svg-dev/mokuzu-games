@@ -1881,6 +1881,11 @@ button,
 }
 
 /* ========== PC表示（スマホUIを中央固定） ========== */
+#sidebar-left,
+#sidebar-right {
+  display: none;
+}
+
 @media (min-width: 768px) {
   body {
     max-width: 100%;
@@ -1891,6 +1896,8 @@ button,
       linear-gradient(180deg, #02101c 0%, #02070d 100%);
     display: flex;
     justify-content: center;
+    align-items: flex-start;
+    gap: 0;
   }
 
   #app {
@@ -1901,6 +1908,84 @@ button,
     border-left: 1px solid rgba(61, 255, 122, 0.2);
     border-right: 1px solid rgba(61, 255, 122, 0.2);
     position: relative;
+    flex-shrink: 0;
+  }
+}
+
+@media (min-width: 900px) {
+  #sidebar-left,
+  #sidebar-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 200px;
+    padding: 80px 20px 20px;
+    color: #78bb99;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+  }
+
+  .sidebar-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #3dff7a;
+    line-height: 1.4;
+  }
+
+  .sidebar-catch {
+    font-size: 0.78rem;
+    color: #4a8a66;
+    margin-top: -12px;
+  }
+
+  .sidebar-section-title {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #3dff7a;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .sidebar-list li::before {
+    content: '▸ ';
+    color: #3dff7a;
+  }
+
+  .sidebar-text {
+    font-size: 0.78rem;
+    color: #78bb99;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-footer {
+    font-size: 0.72rem;
+    color: #3a5a44;
+    line-height: 1.6;
+    margin-top: auto;
+  }
+
+  .sidebar-share-btn {
+    display: block;
+    background: #0c1e34;
+    border: 1px solid #1a4a30;
+    border-radius: 8px;
+    color: #3dff7a;
+    text-decoration: none;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    text-align: center;
+    transition: background 0.2s;
+  }
+
+  .sidebar-share-btn:hover {
+    background: #1a3a2e;
   }
 }
 
