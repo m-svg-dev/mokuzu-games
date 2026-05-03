@@ -283,7 +283,7 @@ const FACILITIES = [
 const CAT_STAGES = [
   { id: 'egg',     name: '卵',    col: 0, mult: 1.0, condition: null,                     waitHours: 0 },
   { id: 'growth',  name: '子猫',  col: 1, mult: 1.5, condition: { mokuCost: 5_000_000 }, waitHours: 1 },
-  { id: 'ultimate',name: 'ゴリラ', col: 2, mult: 2.5, condition: { mokuCost: 30_000_000 }, waitHours: 6 },
+  { id: 'ultimate',name: 'ゴリラ', col: 2, mult: 2.5, condition: { mokuCost: 50_000_000 }, waitHours: 6 },
 ];
 
 const PET_TYPES = [
