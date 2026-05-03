@@ -2179,6 +2179,14 @@ function initTabs() {
       if (tabId === 'ranking') loadRanking();
     });
   });
+
+  const inner = document.getElementById('tab-nav-inner');
+  if (inner) {
+    inner.addEventListener('wheel', e => {
+      e.preventDefault();
+      inner.scrollLeft += e.deltaY;
+    }, { passive: false });
+  }
 }
 
 // ========== 起動 ==========
