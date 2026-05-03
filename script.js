@@ -162,12 +162,12 @@ const IMAGE_CONFIG = {
   items: {
     royalheart:     'assets/items/royalheart.png',
     mo_royalheart:  'assets/items/mo_royalheart.png',
-    trophy_black:   'assets/trophy/black.png',
-    trophy_bronze:  'assets/trophy/bronze.png',
-    trophy_silver:  'assets/trophy/silver.png',
-    trophy_gold:    'assets/trophy/gold.png',
-    trophy_kirin:   'assets/trophy/kirin.png',
-    trophy_rainbow: 'assets/trophy/rainbow.png',
+    trophy_black:   'assets/trophy/black-removebg-preview.png',
+    trophy_bronze:  'assets/trophy/bronze-removebg-preview.png',
+    trophy_silver:  'assets/trophy/silver-removebg-preview.png',
+    trophy_gold:    'assets/trophy/gold-removebg-preview.png',
+    trophy_kirin:   'assets/trophy/kirin-removebg-preview.png',
+    trophy_rainbow: 'assets/trophy/rainbow-removebg-preview.png',
   },
   effects: {
     // tapPower に応じて切り替え
@@ -2730,3 +2730,4 @@ async function loadRanking() {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
 }
+
