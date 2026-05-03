@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mokuzu-v1';
+const CACHE_NAME = 'mokuzu-v2';
 const ASSETS = [
   '/mokuzu-games/',
   '/mokuzu-games/index.html',
