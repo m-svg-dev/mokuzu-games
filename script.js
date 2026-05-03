@@ -19,6 +19,18 @@ function computeChecksum(str) {
 
 const UPDATE_LOG = [
   {
+    id: 'v1.7',
+    date: '2026/05/03',
+    title: '📲 アプリとしてインストール対応 & バグ修正',
+    items: [
+      '📲 PWA対応 — このゲームをアプリとしてホーム画面に追加できます！ダウンロード不要・完全無料！',
+      '📱 iOSの場合：Safariでこのページを開く → 下の共有ボタン（□↑）→「ホーム画面に追加」→「追加」',
+      '🤖 Androidの場合：Chromeでこのページを開く → 右上の︙→「アプリをインストール」または「ホーム画面に追加」→「追加」',
+      '✨ アドレスバーが消えて全画面で遊べます！',
+      '🐛 転生後にランキングスコアが0になるバグを修正（全転生の累計藻を合算するよう変更）',
+    ],
+  },
+  {
     id: 'v1.6',
     date: '2026/05/03',
     title: '🏆 実績システム追加',
@@ -2618,7 +2630,9 @@ function initFirebase() {
     btn.disabled = true;
     btn.textContent = '送信中...';
     try {
-      await saveScore(gameState.totalMoku ?? 0, gameState.prestigeLevel ?? 0);
+      const historyTotal = (gameState.prestigeHistory ?? []).reduce((sum, e) => sum + (e.totalMoku ?? 0), 0);
+      const lifetimeTotal = historyTotal + (gameState.totalMoku ?? 0);
+      await saveScore(lifetimeTotal, gameState.prestigeLevel ?? 0);
       btn.textContent = '✅ 登録しました！';
       await loadRanking();
     } catch {

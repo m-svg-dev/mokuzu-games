@@ -48,6 +48,7 @@ button,
   background: #0c1e34;
   border-bottom: 2px solid #1a4a30;
   padding: 6px 14px;
+  padding-top: calc(6px + env(safe-area-inset-top));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -70,6 +71,8 @@ button,
 .tab-panel {
   display: none;
   padding: 58px 14px 92px;
+  padding-top: calc(58px + env(safe-area-inset-top));
+  padding-bottom: calc(92px + env(safe-area-inset-bottom));
   min-height: 100vh;
 }
 
@@ -1886,6 +1889,7 @@ button,
   background: #0c1e34;
   border-top: 2px solid #1a4a30;
   z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 #tab-nav-inner {
