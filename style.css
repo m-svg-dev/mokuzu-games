@@ -2268,6 +2268,13 @@ button,
   margin: 2px 0;
 }
 
+.settings-version-label {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #2a6a44;
+  padding: 4px 0 2px;
+}
+
 .settings-section-label {
   font-size: 0.8rem;
   font-weight: bold;
