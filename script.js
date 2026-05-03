@@ -2136,6 +2136,8 @@ function doPrestige() {
   updateDisplay();
   updateEventDisplay();
   updatePrestigeBar();
+  renderPetEggShop();
+  renderPetSection();
 }
 
 function buyPrestigeSkill(skillId) {
