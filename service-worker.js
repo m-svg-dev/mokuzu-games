@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mokuzu-v2';
+const CACHE_NAME = 'mokuzu-v3';
 const ASSETS = [
   '/mokuzu-games/',
   '/mokuzu-games/index.html',
@@ -25,6 +25,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+    fetch(e.request, { cache: 'no-cache' }).catch(() => caches.match(e.request))
   );
 });

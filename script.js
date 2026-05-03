@@ -2690,5 +2690,5 @@ async function loadRanking() {
 
 // ========== Service Worker 登録 ==========
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/mokuzu-games/service-worker.js').catch(() => {});
+  navigator.serviceWorker.register('/mokuzu-games/service-worker.js', { updateViaCache: 'none' }).catch(() => {});
 }
