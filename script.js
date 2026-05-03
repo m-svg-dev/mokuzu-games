@@ -2195,7 +2195,6 @@ function initTabs() {
 function init() {
   loadGame();
   checkOfflineEarnings();
-  checkDailyOnStartup();
 
   // 初回起動 or 旧セーブ：待機中なら次のイベントを先行決定
   if (!gameState.nextEventId && !gameState.activeEvent) {
@@ -2377,6 +2376,8 @@ function initFirebase() {
         saveGame();
       }
 
+      checkDailyOnStartup();
+
       // クラウドセーブとローカルを比較
       try {
         const cloudJson = await loadGameData();
@@ -2408,6 +2409,7 @@ function initFirebase() {
       rankingPrompt.classList.remove('hidden');
       rankingUserBar.classList.add('hidden');
       if (scoreNote) scoreNote.classList.add('hidden');
+      checkDailyOnStartup();
     }
     loadRanking();
   });
