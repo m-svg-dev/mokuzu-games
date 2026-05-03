@@ -1748,8 +1748,22 @@ function renderItemList() {
   if (!container.dataset.initialized) {
     container.className = 'item-list';
     for (const item of ITEMS) {
+      const src       = IMAGE_CONFIG.items[item.id];
+      const iconStyle = src
+        ? `background-image:url('${src}');background-size:contain;background-position:center;background-repeat:no-repeat;font-size:0;`
+        : '';
       const btn = document.createElement('button');
       btn.id = `item-btn-${item.id}`;
+      btn.innerHTML = `
+        <div class="item-icon" style="${iconStyle}">${iconStyle ? '' : item.icon}</div>
+        <div class="item-info">
+          <div class="item-name">${item.name}</div>
+          <div class="item-desc">${item.desc}</div>
+        </div>
+        <div class="item-right">
+          <div class="item-cost"></div>
+        </div>
+      `;
       btn.addEventListener('click', () => buyItem(item.id));
       container.appendChild(btn);
     }
@@ -1757,14 +1771,11 @@ function renderItemList() {
   }
 
   for (const item of ITEMS) {
-    const bought    = (gameState.purchasedItems ?? []).includes(item.id);
-    const equipped  = (gameState.equippedItems  ?? []).includes(item.id);
-    const canBuy    = !bought && gameState.moku >= item.cost;
-    const btn       = document.getElementById(`item-btn-${item.id}`);
-    const src       = IMAGE_CONFIG.items[item.id];
-    const iconStyle = src
-      ? `background-image:url('${src}');background-size:contain;background-position:center;background-repeat:no-repeat;font-size:0;`
-      : '';
+    const bought   = (gameState.purchasedItems ?? []).includes(item.id);
+    const equipped = (gameState.equippedItems  ?? []).includes(item.id);
+    const canBuy   = !bought && gameState.moku >= item.cost;
+    const btn      = document.getElementById(`item-btn-${item.id}`);
+    if (!btn) continue;
 
     let statusText, extraClass;
     if (!bought) {
@@ -1778,17 +1789,11 @@ function renderItemList() {
       extraClass = ' item-unequipped';
     }
 
-    btn.className = `item-btn${extraClass}`;
-    btn.innerHTML = `
-      <div class="item-icon" style="${iconStyle}">${iconStyle ? '' : item.icon}</div>
-      <div class="item-info">
-        <div class="item-name">${item.name}</div>
-        <div class="item-desc">${item.desc}</div>
-      </div>
-      <div class="item-right">
-        <div class="item-cost">${statusText}</div>
-      </div>
-    `;
+    const newClass = `item-btn${extraClass}`;
+    if (btn.className !== newClass) btn.className = newClass;
+
+    const costEl = btn.querySelector('.item-cost');
+    if (costEl && costEl.textContent !== statusText) costEl.textContent = statusText;
   }
 }
 
