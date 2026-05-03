@@ -8,6 +8,7 @@
 html {
   overscroll-behavior: none;
   touch-action: manipulation;
+  scrollbar-gutter: stable;
 }
 
 body {
