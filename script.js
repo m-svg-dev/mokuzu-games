@@ -270,9 +270,11 @@ const FACILITIES = [
 // ========== ペットシステム ==========
 
 const PET_TYPES = [
-  { id: 'green',  name: '緑の精霊',  icon: '🌿', row: 0, buyCost: { type: 'coins',  amount: 30 }, effectType: 'tap',  effectDesc: 'タップ倍率アップ' },
-  { id: 'pink',   name: '桜の精霊',  icon: '🌸', row: 1, buyCost: { type: 'stones', amount: 20 }, effectType: 'mps',  effectDesc: 'MPS倍率アップ'   },
-  { id: 'purple', name: '月の精霊',  icon: '🌙', row: 2, buyCost: { type: 'stones', amount: 50 }, effectType: 'coin', effectDesc: 'デイリー藻コイン獲得アップ' },
+  { id: 'green',     name: '緑の精霊',     icon: '🌿', row: 0, buyCost: { type: 'coins',  amount: 30         }, effectType: 'tap',  effectDesc: 'タップ倍率アップ' },
+  { id: 'pink',      name: '桜の精霊',     icon: '🌸', row: 1, buyCost: { type: 'stones', amount: 20         }, effectType: 'mps',  effectDesc: 'MPS倍率アップ'   },
+  { id: 'purple',    name: '月の精霊',     icon: '🌙', row: 2, buyCost: { type: 'stones', amount: 50         }, effectType: 'coin', effectDesc: 'デイリー藻コイン獲得アップ' },
+  { id: 'cat_pink',  name: 'ピンクにゃんこ', icon: '🐱', row: 3, buyCost: { type: 'moku',   amount: 10_000_000 }, effectType: 'tap',  effectDesc: 'タップ倍率アップ' },
+  { id: 'cat_white', name: 'しろにゃんこ',  icon: '🐈', row: 4, buyCost: { type: 'moku',   amount: 10_000_000 }, effectType: 'mps',  effectDesc: 'MPS倍率アップ'   },
 ];
 
 const PET_STAGES = [
@@ -1465,6 +1467,9 @@ function buyEgg(typeId) {
   if (type.buyCost.type === 'coins') {
     if ((gameState.mokuCoins ?? 0) < type.buyCost.amount) return;
     gameState.mokuCoins -= type.buyCost.amount;
+  } else if (type.buyCost.type === 'moku') {
+    if ((gameState.moku ?? 0) < type.buyCost.amount) return;
+    gameState.moku -= type.buyCost.amount;
   } else {
     if ((gameState.prestigeStones ?? 0) < type.buyCost.amount) return;
     gameState.prestigeStones -= type.buyCost.amount;
@@ -1666,10 +1671,14 @@ function renderPetEggShop() {
     const isActive = active === type.id;
     const canAfford = type.buyCost.type === 'coins'
       ? (gameState.mokuCoins ?? 0) >= type.buyCost.amount
-      : (gameState.prestigeStones ?? 0) >= type.buyCost.amount;
+      : type.buyCost.type === 'moku'
+        ? (gameState.moku ?? 0) >= type.buyCost.amount
+        : (gameState.prestigeStones ?? 0) >= type.buyCost.amount;
     const costLabel = type.buyCost.type === 'coins'
       ? `<img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン"> ${type.buyCost.amount} コイン`
-      : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt="転生石"> ${type.buyCost.amount} 転生石`;
+      : type.buyCost.type === 'moku'
+        ? `🌿 ${fmt(type.buyCost.amount)} 藻`
+        : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt="転生石"> ${type.buyCost.amount} 転生石`;
 
     let btnLabel, btnClass, btnDisabled;
     if (!isOwned) {
