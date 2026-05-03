@@ -2672,3 +2672,9 @@ async function loadRanking() {
     if (btn) { btn.disabled = false; btn.textContent = '🔄 更新'; }
   }
 }
+
+
+// ========== Service Worker 登録 ==========
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/mokuzu-games/service-worker.js').catch(() => {});
+}

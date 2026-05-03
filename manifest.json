@@ -1,0 +1,19 @@
+{
+  "name": "藻屑社長クリッカー",
+  "short_name": "藻屑社長",
+  "description": "藻を増やして社長を目指す無料の放置クリッカーゲーム",
+  "start_url": "/mokuzu-games/",
+  "display": "standalone",
+  "background_color": "#071420",
+  "theme_color": "#0c1e34",
+  "lang": "ja",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/tabs/Achievenmements.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
