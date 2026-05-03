@@ -394,7 +394,9 @@ const DEFAULT_STATE = {
   registrationBonusClaimed: false, // 登録ボーナス受取済みか
   ownedPets:            {},     // { typeId: { stageIndex, conditionMetAt } }
   activePetType:        null,   // 現在アクティブなペットのtypeId
-  lastReadUpdateId:     null,   // 最後に既読にした更新ID
+  lastReadUpdateId:     null,
+  tapCount:             0,
+  achievements:         {},
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -598,6 +600,8 @@ function updateDisplay() {
   updateCoinDisplay();
   updateActiveEffectsBar();
   updateSoundBtn();
+  checkAchievements();
+  renderAchievementList();
 }
 
 const PRESTIGE_THRESHOLD = 10_000_000;
@@ -706,7 +710,8 @@ function onTap(e) {
   const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult * petTapMult * (isCritical ? critMult : 1);
 
   gameState.moku      += gained;
-  gameState.totalMoku += gameState.tapPower; // ボーナス倍率は totalMoku に含めない
+  gameState.totalMoku += gameState.tapPower;
+  gameState.tapCount   = (gameState.tapCount ?? 0) + 1;
 
   gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 2);
 
@@ -1926,6 +1931,101 @@ function renderSkinCollection() {
   if (btn10) btn10.disabled = stones < 450;
 }
 
+// ========== 実績システム ==========
+
+const BADGE_SIZE = 56;
+const SHEET_COLS = 6;
+const SHEET_ROWS = 6;
+
+function badgePos(col, row) {
+  const x = (col / (SHEET_COLS - 1) * 100).toFixed(2);
+  const y = (row / (SHEET_ROWS - 1) * 100).toFixed(2);
+  return `${x}% ${y}%`;
+}
+
+const ACHIEVEMENTS = [
+  // 藻収集
+  { id: 'moku_1k',    name: '藻の芽吹き',    desc: '累計1,000藻を獲得',      badge: [1,0], reward: { coins: 1  }, check: gs => (gs.totalMoku ?? 0) >= 1_000 },
+  { id: 'moku_100k',  name: '藻コレクター',  desc: '累計10万藻を獲得',       badge: [2,0], reward: { coins: 2  }, check: gs => (gs.totalMoku ?? 0) >= 100_000 },
+  { id: 'moku_10m',   name: '藻長者',        desc: '累計1,000万藻を獲得',    badge: [3,0], reward: { coins: 5  }, check: gs => (gs.totalMoku ?? 0) >= 10_000_000 },
+  { id: 'moku_1b',    name: '伝説の藻王',    desc: '累計10億藻を獲得',       badge: [4,1], reward: { stones: 5 }, check: gs => (gs.totalMoku ?? 0) >= 1_000_000_000 },
+  // タップ
+  { id: 'tap_100',    name: '連打入門',      desc: '100回タップ',            badge: [0,0], reward: { coins: 1  }, check: gs => (gs.tapCount ?? 0) >= 100 },
+  { id: 'tap_1000',   name: '連打マン',      desc: '1,000回タップ',          badge: [0,4], reward: { coins: 2  }, check: gs => (gs.tapCount ?? 0) >= 1_000 },
+  { id: 'tap_10000',  name: '連打王',        desc: '10,000回タップ',         badge: [4,2], reward: { coins: 5  }, check: gs => (gs.tapCount ?? 0) >= 10_000 },
+  // 転生
+  { id: 'prestige_1', name: '初転生',        desc: '初めて転生する',         badge: [3,5], reward: { coins: 5  }, check: gs => (gs.prestigeLevel ?? 0) >= 1 },
+  { id: 'prestige_3', name: '転生者',        desc: '3回転生する',            badge: [3,1], reward: { coins: 10 }, check: gs => (gs.prestigeLevel ?? 0) >= 3 },
+  { id: 'prestige_5', name: '転生マスター',  desc: '5回転生する',            badge: [5,1], reward: { stones: 10 }, check: gs => (gs.prestigeLevel ?? 0) >= 5 },
+  // 社員・施設
+  { id: 'employee_1', name: '初雇用',        desc: '社員を初めて雇う',       badge: [3,3], reward: { coins: 1  }, check: gs => Object.values(gs.employees ?? {}).some(n => n > 0) },
+  { id: 'facility_1', name: '施設オーナー',  desc: '施設を初めて建設',       badge: [3,4], reward: { coins: 2  }, check: gs => Object.values(gs.facilities ?? {}).some(n => n > 0) },
+  // ガチャ・ペット
+  { id: 'gacha_1',    name: 'ガチャデビュー', desc: '初めてガチャを引く',    badge: [4,0], reward: { coins: 2  }, check: gs => (gs.ownedSkins ?? []).length > 1 },
+  { id: 'pet_1',      name: 'ペットオーナー', desc: '初めてペットを購入',    badge: [4,4], reward: { coins: 2  }, check: gs => Object.keys(gs.ownedPets ?? {}).length > 0 },
+  // アイテム
+  { id: 'item_royal', name: '社長の証',      desc: 'ロイヤルハートを購入',   badge: [0,3], reward: { coins: 3  }, check: gs => (gs.purchasedItems ?? []).includes('royalheart') },
+  { id: 'item_mo',    name: '藻屑界の頂点',  desc: '藻ロイヤルハートを購入', badge: [1,4], reward: { stones: 3 }, check: gs => (gs.purchasedItems ?? []).includes('mo_royalheart') },
+];
+
+let _achievementQueue = [];
+
+function checkAchievements() {
+  ACHIEVEMENTS.forEach(a => {
+    if (gameState.achievements?.[a.id]) return;
+    if (!a.check(gameState)) return;
+    gameState.achievements = { ...gameState.achievements, [a.id]: Date.now() };
+    if (a.reward.coins)  gameState.mokuCoins      = (gameState.mokuCoins ?? 0)      + a.reward.coins;
+    if (a.reward.stones) gameState.prestigeStones = (gameState.prestigeStones ?? 0) + a.reward.stones;
+    _achievementQueue.push(a);
+    showNextAchievementPopup();
+  });
+}
+
+let _popupShowing = false;
+function showNextAchievementPopup() {
+  if (_popupShowing || _achievementQueue.length === 0) return;
+  const a = _achievementQueue.shift();
+  _popupShowing = true;
+  const pop = document.getElementById('achievement-popup');
+  if (!pop) { _popupShowing = false; return; }
+  const [col, row] = a.badge;
+  pop.querySelector('.ach-pop-badge').style.backgroundPosition = badgePos(col, row);
+  pop.querySelector('.ach-pop-name').textContent = a.name;
+  pop.querySelector('.ach-pop-desc').textContent = a.desc;
+  const rewardStr = a.reward.coins ? `+${a.reward.coins} コイン` : `+${a.reward.stones} 転生石`;
+  pop.querySelector('.ach-pop-reward').textContent = rewardStr;
+  pop.classList.add('show');
+  setTimeout(() => {
+    pop.classList.remove('show');
+    setTimeout(() => { _popupShowing = false; showNextAchievementPopup(); }, 400);
+  }, 3000);
+}
+
+function renderAchievementList() {
+  const container = document.getElementById('achievement-list');
+  if (!container) return;
+  const unlocked = gameState.achievements ?? {};
+  const total    = ACHIEVEMENTS.length;
+  const count    = Object.keys(unlocked).length;
+  document.getElementById('achievement-count').textContent = `${count} / ${total}`;
+  container.innerHTML = ACHIEVEMENTS.map(a => {
+    const done = !!unlocked[a.id];
+    const [col, row] = a.badge;
+    const pos = badgePos(col, row);
+    const rewardStr = a.reward.coins ? `🪙 +${a.reward.coins}` : `✨ +${a.reward.stones}`;
+    return `
+      <div class="ach-card ${done ? 'ach-done' : 'ach-locked'}">
+        <div class="ach-badge" style="background-position:${pos}"></div>
+        <div class="ach-info">
+          <div class="ach-name">${done ? a.name : '???'}</div>
+          <div class="ach-desc">${done ? a.desc : '未達成'}</div>
+        </div>
+        <div class="ach-reward">${done ? rewardStr : '🔒'}</div>
+      </div>`;
+  }).join('');
+}
+
 // ========== 転生（プレステージ） ==========
 
 function doPrestige() {
@@ -1958,6 +2058,8 @@ function doPrestige() {
     consumables:     gameState.consumables,
     activeEffects:   gameState.activeEffects,
     hasRegistered:   gameState.hasRegistered,
+    tapCount:        gameState.tapCount,
+    achievements:    gameState.achievements,
   };
 
   gameState = structuredClone(DEFAULT_STATE);

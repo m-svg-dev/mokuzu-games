@@ -333,6 +333,14 @@
 
   </div>
 
+  <!-- ⑦ 実績画面 -->
+  <div id="tab-achievement" class="tab-panel">
+    <h2 class="panel-title">🏆 実績</h2>
+    <p class="section-note">実績達成でコイン・転生石がもらえます</p>
+    <p id="achievement-count" class="ach-count">0 / 0</p>
+    <div id="achievement-list"></div>
+  </div>
+
   <!-- タブナビゲーション（画面下部固定） -->
   <nav id="tab-nav">
     <div id="tab-nav-inner">
@@ -343,6 +351,7 @@
       <button class="tab-btn" data-tab="prestige"><img src="assets/tabs/tab_prestige.png" alt="転生"></button>
       <button class="tab-btn" data-tab="pet"><img src="assets/tabs/tab_pet.png" alt="ペット"></button>
       <button class="tab-btn" data-tab="ranking"><img src="assets/tabs/tab_ranking.png" alt="ランキング"></button>
+      <button class="tab-btn" data-tab="achievement"><span class="tab-emoji-icon">🏆</span></button>
     </div>
   </nav>
 
@@ -376,6 +385,19 @@
   </div>
 
   </div><!-- /#app -->
+
+  <!-- 実績達成ポップアップ -->
+  <div id="achievement-popup">
+    <div class="ach-pop-inner">
+      <div class="ach-pop-badge"></div>
+      <div class="ach-pop-text">
+        <div class="ach-pop-label">🏆 実績達成！</div>
+        <div class="ach-pop-name"></div>
+        <div class="ach-pop-desc"></div>
+        <div class="ach-pop-reward"></div>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="script.js"></script>
 </body>
