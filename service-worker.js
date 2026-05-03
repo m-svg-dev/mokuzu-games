@@ -1,30 +1,12 @@
-const CACHE_NAME = 'mokuzu-v3';
-const ASSETS = [
-  '/mokuzu-games/',
-  '/mokuzu-games/index.html',
-  '/mokuzu-games/style.css',
-  '/mokuzu-games/script.js',
-  '/mokuzu-games/manifest.json',
-];
-
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-  );
-  self.skipWaiting();
-});
+// キャッシュを全削除してSWを自己解除→ページをリロード
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    fetch(e.request, { cache: 'no-cache' }).catch(() => caches.match(e.request))
+    caches.keys()
+      .then(keys => Promise.all(keys.map(k => caches.delete(k))))
+      .then(() => self.registration.unregister())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then(clients => clients.forEach(c => c.navigate(c.url)))
   );
 });

@@ -2688,7 +2688,8 @@ async function loadRanking() {
 }
 
 
-// ========== Service Worker 登録 ==========
+// ========== Service Worker 解除 ==========
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/mokuzu-games/service-worker.js', { updateViaCache: 'none' }).catch(() => {});
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
 }
