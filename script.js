@@ -2305,7 +2305,7 @@ function loadGame() {
   if (storedCs && computeChecksum(raw) !== storedCs) {
     localStorage.removeItem(SAVE_KEY);
     localStorage.removeItem(CHECKSUM_KEY);
-    alert('🚨 不正はダメだぜ！！\n0から頑張りな！！！');
+    alert('⚠️ セーブデータが破損していたためリセットしました。\n別のブラウザやアプリで開くとデータが壊れることがあります。\nクラウドセーブをご利用の方はログインすると復元できます。');
     return;
   }
 
