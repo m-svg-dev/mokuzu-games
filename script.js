@@ -2161,6 +2161,8 @@ function doPrestige() {
     hasRegistered:   gameState.hasRegistered,
     tapCount:        gameState.tapCount,
     achievements:    gameState.achievements,
+    ownedPets:       gameState.ownedPets,
+    activePetType:   gameState.activePetType,
   };
 
   gameState = structuredClone(DEFAULT_STATE);
