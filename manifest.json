@@ -4,14 +4,14 @@
   "description": "藻を増やして社長を目指す無料の放置クリッカーゲーム",
   "start_url": "/mokuzu-games/",
   "display": "standalone",
-  "background_color": "#071420",
-  "theme_color": "#0c1e34",
+  "background_color": "#0a1f14",
+  "theme_color": "#0a1f14",
   "lang": "ja",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "assets/tabs/Achievenmements.png",
-      "sizes": "1254x1254",
+      "src": "assets/icon/icon.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
