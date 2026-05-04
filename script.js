@@ -2562,6 +2562,14 @@ function saveGameCloud() {
   const json = localStorage.getItem(SAVE_KEY);
   if (!json || !currentUser()) return;
   if (json === _lastCloudSave) return;
+  // 空の状態でクラウドを上書きしない（復元ダイアログ中の競合防止）
+  try {
+    const s = JSON.parse(json);
+    const isEmpty = (s.moku ?? 0) === 0
+      && Object.keys(s.employees ?? {}).length === 0
+      && (s.tapCount ?? 0) === 0;
+    if (isEmpty) return;
+  } catch (_) { return; }
   _lastCloudSave = json;
   saveGameData(json).catch(() => {});
 }
