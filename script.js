@@ -964,15 +964,21 @@ function gameLoop() {
     if (gameState.eventCooldown <= 0) triggerRandomEvent();
   }
 
-  // ペット進化タイマー完了検知（待機中→完了の瞬間のみ再描画）
+  // ペット進化タイマー完了検知 & 60秒未満の秒数カウントダウン更新
   for (const [typeId, pet] of Object.entries(gameState.ownedPets ?? {})) {
     if (!pet.conditionMetAt) { _petWaitingSet.delete(typeId); continue; }
     const stages = getPetStages(typeId);
     const nextStage = stages[(pet.stageIndex ?? 0) + 1];
     if (!nextStage) continue;
-    const isReady = nowMs - pet.conditionMetAt >= nextStage.waitHours * 3_600_000;
-    if (!isReady) { _petWaitingSet.add(typeId); }
-    else if (_petWaitingSet.has(typeId)) {
+    const remaining = nextStage.waitHours * 3_600_000 - (nowMs - pet.conditionMetAt);
+    const isReady = remaining <= 0;
+    if (!isReady) {
+      _petWaitingSet.add(typeId);
+      if (remaining < 60_000) {
+        const el = document.getElementById(`pet-countdown-${typeId}`);
+        if (el) el.textContent = `⏳ 進化準備中... あと${Math.ceil(remaining / 1000)}秒`;
+      }
+    } else if (_petWaitingSet.has(typeId)) {
       _petWaitingSet.delete(typeId);
       renderPetSection();
     }
@@ -1907,7 +1913,7 @@ function buildPetSlotHtml(typeId, slot) {
         const timeLabel = remaining < 3_600_000
           ? `${Math.ceil(remaining / 60_000)}分`
           : `${Math.ceil(remaining / 3_600_000)}時間`;
-        evolveHtml = `<p class="pet-evolve-waiting">⏳ 進化準備中... あと約${timeLabel}</p>`;
+        evolveHtml = `<p class="pet-evolve-waiting" id="pet-countdown-${typeId}">⏳ 進化準備中... あと約${timeLabel}</p>`;
       }
     } else {
       const prestigeOk = !cond.prestigeMin || (gameState.prestigeLevel ?? 0) >= cond.prestigeMin;
