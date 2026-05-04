@@ -2730,6 +2730,7 @@ function initFirebase() {
           updateDisplay();
           renderPetEggShop();
           renderPetSection();
+          renderPetZukan();
           alert(`🎁 管理者から補填が届いています！\n${rewards.map(r => r.desc ?? '').filter(Boolean).join('\n')}`);
         }
       } catch (e) {
