@@ -1,6 +1,6 @@
 // ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.1';
+const CURRENT_VERSION = '2.3';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
