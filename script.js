@@ -1,6 +1,6 @@
 // ========== 定数定義 ==========
 
-const CURRENT_VERSION = '1.8';
+const CURRENT_VERSION = '1.9';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v1.9',
+    date: '2026/05/04',
+    title: '🐛 重大バグ修正 & 🎁 クーポンコード機能追加',
+    items: [
+      '🐛 【重要】転生後にペットが消えるバグを修正しました！ご迷惑をおかけして申し訳ありませんでした🙇',
+      '🎁 クーポンコード機能を追加！設定画面から入力するとアイテムがもらえます',
+      '📣 バグ補填クーポンを順次配布予定です。XのDMまたは告知をご確認ください',
+    ],
+  },
   {
     id: 'v1.8',
     date: '2026/05/04',
