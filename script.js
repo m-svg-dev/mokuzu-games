@@ -3030,6 +3030,11 @@ function initFirebase() {
         const name = document.getElementById('auth-name').value.trim();
         if (!name) { errorEl.textContent = 'プレイヤー名を入力してください'; return; }
         await registerUser(name, email, password);
+        // onAuthChanged は updateProfile より先に発火するので登録後に名前を手動更新
+        const nameEl2 = document.getElementById('user-name-display');
+        const rankEl2 = document.getElementById('ranking-user-name');
+        if (nameEl2) nameEl2.textContent = name;
+        if (rankEl2) rankEl2.textContent = `👋 ${name}`;
       } else {
         await loginUser(email, password);
       }
