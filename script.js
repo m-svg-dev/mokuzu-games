@@ -2878,7 +2878,36 @@ function initFirebase() {
       if (nameEl) nameEl.textContent = user.displayName ?? '名無し';
       if (rankingUserName) rankingUserName.textContent = `👋 ${user.displayName ?? '名無し'}`;
 
-      // 登録ボーナス付与
+      // ① クラウドセーブを先に確認（登録ボーナスより前に行う）
+      // ※ 登録ボーナスで saveGame() すると lastSaved が更新されてクラウドより新しく見えてしまい
+      //   クラウドデータが上書き消去されるバグを防ぐため、必ずクラウド比較を先に行う
+      try {
+        const cloudJson = await loadGameData();
+        if (cloudJson) {
+          const cloudState = JSON.parse(cloudJson);
+          const localSaved = gameState.lastSaved ?? 0;
+          const cloudSaved = cloudState.lastSaved ?? 0;
+          if (cloudSaved > localSaved) {
+            const d = new Date(cloudSaved);
+            const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+            if (confirm(`☁️ クラウドにセーブデータが見つかりました！\n保存日時: ${dateStr}\n\nクラウドのデータを引き継ぎますか？`)) {
+              Object.assign(gameState, cloudState);
+              recalcTapPower();
+              recalcMPS();
+              saveGame();
+              location.reload();
+              return;
+            }
+          } else {
+            // ローカルが新しければクラウドを自動更新
+            saveGameData(JSON.stringify(gameState)).catch(() => {});
+          }
+        }
+      } catch (e) {
+        console.warn('[mokuzu] クラウドセーブの読み込みに失敗', e);
+      }
+
+      // ② 登録ボーナス付与（クラウド比較の後）
       if (!gameState.registrationBonusClaimed) {
         gameState.registrationBonusClaimed = true;
         const isPrestiged = (gameState.prestigeLevel ?? 0) >= 1;
@@ -2906,32 +2935,6 @@ function initFirebase() {
       }
 
       checkDailyOnStartup();
-
-      // クラウドセーブとローカルを比較
-      try {
-        const cloudJson = await loadGameData();
-        if (cloudJson) {
-          const cloudState = JSON.parse(cloudJson);
-          const localSaved = gameState.lastSaved ?? 0;
-          const cloudSaved = cloudState.lastSaved ?? 0;
-          if (cloudSaved > localSaved) {
-            const d = new Date(cloudSaved);
-            const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-            if (confirm(`☁️ クラウドにセーブデータが見つかりました！\n保存日時: ${dateStr}\n\nクラウドのデータを引き継ぎますか？`)) {
-              Object.assign(gameState, cloudState);
-              recalcTapPower();
-              recalcMPS();
-              saveGame();
-              location.reload();
-            }
-          } else {
-            // ローカルが新しければクラウドを自動更新
-            saveGameData(JSON.stringify(gameState)).catch(() => {});
-          }
-        }
-      } catch (e) {
-        console.warn('[mokuzu] クラウドセーブの読み込みに失敗', e);
-      }
 
       // pendingRewardsを確認・適用
       try {
