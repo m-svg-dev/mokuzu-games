@@ -2344,14 +2344,7 @@ function loadGame() {
   const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) return;
 
-  // 改ざん検知
-  const storedCs = localStorage.getItem(CHECKSUM_KEY);
-  if (storedCs && computeChecksum(raw) !== storedCs) {
-    localStorage.removeItem(SAVE_KEY);
-    localStorage.removeItem(CHECKSUM_KEY);
-    alert('⚠️ セーブデータが破損していたためリセットしました。\n別のブラウザやアプリで開くとデータが壊れることがあります。\nクラウドセーブをご利用の方はログインすると復元できます。');
-    return;
-  }
+  // チェックサム不一致は無視してそのままロード（誤検知でデータを消さない）
 
   let saved;
   try {
