@@ -156,6 +156,31 @@
         <p id="menhera-toggle-note" class="section-note"></p>
 
         <hr class="settings-divider">
+        <p class="settings-section-label">📖 用語集</p>
+        <div class="glossary-list">
+          <div class="glossary-item">
+            <span class="glossary-term">MPS</span>
+            <span class="glossary-desc">Moku Per Second（毎秒藻）。1秒間に自動で獲得できる藻の量。社員・施設を増やすと上がる。</span>
+          </div>
+          <div class="glossary-item">
+            <span class="glossary-term">転生石</span>
+            <span class="glossary-desc">転生時に獲得できる石。転生スキルの強化・ガチャ・ペット購入に使う。使うほど永続的に強くなれる！</span>
+          </div>
+          <div class="glossary-item">
+            <span class="glossary-term">藻コイン</span>
+            <span class="glossary-desc">デイリーログインなどで獲得できるコイン。レアペットや特殊アイテムと交換できる。</span>
+          </div>
+          <div class="glossary-item">
+            <span class="glossary-term">覚醒</span>
+            <span class="glossary-desc">ゲージを溜めると発動する強化状態。発動中はタップ・MPS が大幅アップ。</span>
+          </div>
+          <div class="glossary-item">
+            <span class="glossary-term">転生</span>
+            <span class="glossary-desc">藻・社員・施設をリセットして転生石を獲得する。繰り返すほど強くなれる。</span>
+          </div>
+        </div>
+
+        <hr class="settings-divider">
         <p class="settings-version-label">バージョン 2.1</p>
       </div>
     </div>
@@ -321,6 +346,10 @@
     <h2 class="panel-title" style="margin-top:16px">🎰 スキンガチャ</h2>
     <div id="gacha-area">
       <p id="gacha-pity-info">次のR以上まで：<span id="gacha-pity-count">10</span>回</p>
+      <div id="gacha-ticket-row" class="hidden">
+        🎟️ 無料チケット <span id="gacha-ticket-count">0</span>枚
+        <button id="gacha-btn-free" class="gacha-btn gacha-btn-free">無料で引く</button>
+      </div>
       <div id="gacha-btns">
         <button id="gacha-btn-1" class="gacha-btn">1回引く<br><span>50石</span></button>
         <button id="gacha-btn-10" class="gacha-btn">10連<br><span>450石</span></button>

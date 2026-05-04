@@ -66,6 +66,27 @@ button,
   font-size: 0.9rem;
   color: #78bb99;
 }
+.glossary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+.glossary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.glossary-term {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #3dff7a;
+}
+.glossary-desc {
+  font-size: 0.75rem;
+  color: #aaa;
+  line-height: 1.4;
+}
 
 /* ========== Tab panels ========== */
 .tab-panel {
@@ -914,6 +935,27 @@ button,
 .gacha-btn span { font-size: 0.75rem; color: #aa66dd; }
 .gacha-btn:active { opacity: 0.7; }
 .gacha-btn:disabled { opacity: 0.3; cursor: default; }
+
+#gacha-ticket-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1a2a10;
+  border: 1px solid #3dff7a55;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #3dff7a;
+}
+.gacha-btn-free {
+  flex: none;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  background: linear-gradient(135deg, #1a5a30, #0a3a1a);
+  border-color: #3dff7a;
+  margin-left: auto;
+}
 
 /* スキンコレクション */
 #skin-collection {

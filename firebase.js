@@ -15,6 +15,7 @@ import {
   setDoc,
   getDoc,
   updateDoc,
+  arrayUnion,
   collection,
   query,
   orderBy,
@@ -134,13 +135,23 @@ export async function redeemPersonalCoupon(code) {
   try {
     const ref  = doc(db, 'coupons', code);
     const snap = await getDoc(ref);
-    if (!snap.exists())        return { error: 'invalid' };
+    if (!snap.exists()) return { error: 'invalid' };
 
     const data = snap.data();
-    if (data.used)             return { error: 'used' };
-    if (data.uid !== user.uid) return { error: 'invalid' };
+    const isGlobal = !data.uid; // uid なし = 全員用クーポン
 
-    await updateDoc(ref, { used: true });
+    if (isGlobal) {
+      // 全員用：usedBy 配列で使用済みチェック
+      const usedBy = data.usedBy ?? [];
+      if (usedBy.includes(user.uid)) return { error: 'used' };
+      await updateDoc(ref, { usedBy: arrayUnion(user.uid) });
+    } else {
+      // 個人用：従来のロジック
+      if (data.used)             return { error: 'used' };
+      if (data.uid !== user.uid) return { error: 'invalid' };
+      await updateDoc(ref, { used: true });
+    }
+
     return { reward: data.reward, amount: data.amount, desc: data.desc };
   } catch (e) {
     console.error('[coupon]', e);

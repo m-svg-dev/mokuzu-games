@@ -20,6 +20,16 @@ function computeChecksum(str) {
 
 const UPDATE_LOG = [
   {
+    id: 'v2.2',
+    date: '2026/05/04',
+    title: '🎀 新SSRスキン4体追加 & 不具合修正',
+    items: [
+      '🎀 新SSRスキン「もくきちゃん」「もみずちゃん」「もぴんくちゃん」「もまじょちゃん」をガチャに追加！',
+      '🐛 無料ガチャチケットを持っているのにガチャが引けない不具合を修正しました！ご迷惑をおかけして申し訳ありませんでした🙇',
+      '🎁 お詫びとして無料ガチャチケット10枚クーポンを配布中！設定のクーポンコード欄に「SKIN0504」と入力すると受け取れます',
+    ],
+  },
+  {
     id: 'v2.1',
     date: '2026/05/04',
     title: '💔 メンヘラモード追加 & おかえり調整',
@@ -169,6 +179,10 @@ const IMAGE_CONFIG = {
       awakened: 'assets/characters/suit_awakened.png',
       silver:   'assets/suits/suit_silver.png',
       white:    'assets/suits/suit_white.png',
+      moku_ki:  'assets/characters/moku_ki.png',
+      mo_mizu:  'assets/characters/mo_mizu.png',
+      mo_pink:  'assets/characters/mo_pink.png',
+      mo_majyo: 'assets/characters/mo_majyo.png',
     },
   },
   employees: {
@@ -225,6 +239,7 @@ const IMAGE_CONFIG = {
 };
 
 const SUIT_COVER_FIT = new Set(['silver', 'white']); // 正方形画像はcoverで表示
+const SUIT_TOP_FIT   = new Set(['moku_ki', 'mo_mizu', 'mo_pink', 'mo_majyo']); // 正方形・上寄せ表示
 
 function applyCharacterSprite(suit) {
   let effectiveSuit = suit;
@@ -236,7 +251,13 @@ function applyCharacterSprite(suit) {
   const sprite = document.getElementById('character-sprite');
   if (sprite) {
     sprite.src = src;
-    sprite.style.objectFit = SUIT_COVER_FIT.has(effectiveSuit) ? 'cover' : 'contain';
+    if (SUIT_TOP_FIT.has(effectiveSuit)) {
+      sprite.style.objectFit = 'contain';
+      sprite.style.objectPosition = 'top center';
+    } else {
+      sprite.style.objectFit = SUIT_COVER_FIT.has(effectiveSuit) ? 'cover' : 'contain';
+      sprite.style.objectPosition = 'center';
+    }
   }
 }
 
@@ -422,6 +443,10 @@ const GACHA_SKINS = [
   { id: 'skin_rainbow', name: 'レインボースーツ', rarity: 'SSR', suit: 'rainbow', prob: 0.01  },
   { id: 'skin_silver',  name: 'シルバースーツ',   rarity: 'SSR', suit: 'silver',  prob: 0.01  },
   { id: 'skin_white',   name: 'ホワイトスーツ',   rarity: 'SSR', suit: 'white',   prob: 0.01  },
+  { id: 'skin_moku_ki', name: 'もくきちゃん',     rarity: 'SSR', suit: 'moku_ki', prob: 0.01  },
+  { id: 'skin_mo_mizu', name: 'もみずちゃん',     rarity: 'SSR', suit: 'mo_mizu', prob: 0.01  },
+  { id: 'skin_mo_pink', name: 'もぴんくちゃん',   rarity: 'SSR', suit: 'mo_pink', prob: 0.01  },
+  { id: 'skin_mo_majyo',name: 'もまじょちゃん',   rarity: 'SSR', suit: 'mo_majyo',prob: 0.01  },
 ];
 
 const RARITY_COLOR  = { N: '#888888', R: '#4499ff', SR: '#ffd700', SSR: '#ff44ff' };
@@ -1289,7 +1314,7 @@ function useConsumable(itemId) {
     gameState.moku      += gained;
     gameState.totalMoku += gained;
   } else if (item.effect === 'gacha') {
-    doGachaPull(1);
+    doGachaPull(1, true);
   }
 
   playSound('buy');
@@ -2052,10 +2077,12 @@ function pullOnce(pitied = false) {
   return pool[pool.length - 1];
 }
 
-function doGachaPull(count = 1) {
-  const cost = count === 1 ? 50 : 450;
-  if ((gameState.prestigeStones ?? 0) < cost) return;
-  gameState.prestigeStones -= cost;
+function doGachaPull(count = 1, free = false) {
+  if (!free) {
+    const cost = count === 1 ? 50 : 450;
+    if ((gameState.prestigeStones ?? 0) < cost) return;
+    gameState.prestigeStones -= cost;
+  }
 
   const results = [];
   for (let i = 0; i < count; i++) {
@@ -2136,6 +2163,12 @@ function renderSkinCollection() {
   const btn10 = document.getElementById('gacha-btn-10');
   if (btn1)  btn1.disabled  = stones < 50;
   if (btn10) btn10.disabled = stones < 450;
+
+  const tickets    = (gameState.consumables ?? {})['gacha_coin'] ?? 0;
+  const ticketRow  = document.getElementById('gacha-ticket-row');
+  const ticketEl   = document.getElementById('gacha-ticket-count');
+  if (ticketRow) ticketRow.classList.toggle('hidden', tickets === 0);
+  if (ticketEl)  ticketEl.textContent = tickets;
 }
 
 // ========== 実績システム ==========
@@ -2657,8 +2690,14 @@ function init() {
     document.getElementById('regbonus-modal').classList.add('hidden');
   });
 
-  document.getElementById('gacha-btn-1') .addEventListener('click', () => doGachaPull(1));
-  document.getElementById('gacha-btn-10').addEventListener('click', () => doGachaPull(10));
+  document.getElementById('gacha-btn-1')   .addEventListener('click', () => doGachaPull(1));
+  document.getElementById('gacha-btn-10')  .addEventListener('click', () => doGachaPull(10));
+  document.getElementById('gacha-btn-free').addEventListener('click', () => {
+    const tickets = (gameState.consumables ?? {})['gacha_coin'] ?? 0;
+    if (tickets <= 0) return;
+    gameState.consumables['gacha_coin'] = tickets - 1;
+    doGachaPull(1, true);
+  });
   document.getElementById('gacha-result-close').addEventListener('click', () => {
     document.getElementById('gacha-result-modal').classList.add('hidden');
   });
@@ -2798,6 +2837,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // デバッグ用（コンソールからアクセス可能にする）
 window._gs = () => gameState;
 window._save = saveGame;
+
+// インラインonclickから呼ばれる関数をグローバルに公開
+window.equipSkin = equipSkin;
 
 // ========== Firebase 連携 ==========
 
