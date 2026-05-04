@@ -3241,7 +3241,14 @@ async function loadRanking() {
       return;
     }
     const me = currentUser();
-    list.innerHTML = combined.map(r => {
+    const header = `
+      <div class="ranking-row ranking-header-row">
+        <span class="ranking-rank"></span>
+        <span class="ranking-name">名前</span>
+        <span class="ranking-score">全転生累計獲得藻</span>
+        <span class="ranking-prestige">転生回数</span>
+      </div>`;
+    list.innerHTML = header + combined.map(r => {
       const medal     = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : `${r.rank}.`;
       const isMe      = me && r.name === me.displayName;
       const highlight = isMe ? ' ranking-me' : '';
@@ -3250,7 +3257,7 @@ async function loadRanking() {
           <span class="ranking-rank">${medal}</span>
           <span class="ranking-name">${r.name}</span>
           <span class="ranking-score">${fmt(r.totalMoku)} 藻</span>
-          <span class="ranking-prestige">転生${r.prestigeLevel ?? 0}回</span>
+          <span class="ranking-prestige">${r.prestigeLevel ?? 0}回</span>
         </div>
       `;
     }).join('');

@@ -1329,6 +1329,14 @@ button,
   font-size: 0.82rem;
 }
 
+.ranking-header-row {
+  background: transparent;
+  border-color: transparent;
+  font-size: 0.7rem;
+  color: #6a9a7a;
+  padding: 2px 12px;
+}
+
 .ranking-row.ranking-me {
   border-color: #3dff7a;
   background: #0a2a1e;
