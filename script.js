@@ -1795,7 +1795,7 @@ function renderPetEggShop() {
 
 function buildPetSlotHtml(typeId, slot) {
   const pet = typeId ? (gameState.ownedPets ?? {})[typeId] : null;
-  if (!pet) return `<p class="section-note">ショップでペットを選択してスロット${slot}に装備しよう！</p>`;
+  if (!pet) return `<p class="section-note">下のショップからペットを選んでスロット${slot}に装備しよう！</p>`;
 
   const type      = PET_TYPES.find(t => t.id === typeId);
   const stages    = getPetStages(typeId);
@@ -1855,9 +1855,10 @@ function renderPetSection() {
   const typeId  = gameState.activePetType;
   const typeId2 = gameState.activePetType2;
 
+  const hasAnyPet = Object.keys(gameState.ownedPets ?? {}).length > 0;
   const slot1Html = (gameState.ownedPets ?? {})[typeId]
     ? buildPetSlotHtml(typeId, 1)
-    : '<p class="section-note">下のショップから卵を購入してペットを育てよう！</p>';
+    : `<p class="section-note">${hasAnyPet ? '下のショップからペットを選んで装備しよう！' : '下のショップから卵を購入してペットを育てよう！'}</p>`;
 
   let slot2Html;
   if (!gameState.petSlot2Unlocked) {
