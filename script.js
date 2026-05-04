@@ -1642,6 +1642,15 @@ function tryEvolvePet(slot = 1) {
   showEvolveModal(typeId, pet.stageIndex);
 }
 
+function setPetDisplayStage(typeId, stageIndex) {
+  const pet = (gameState.ownedPets ?? {})[typeId];
+  if (!pet) return;
+  if (stageIndex < 0 || stageIndex > (pet.stageIndex ?? 0)) return;
+  pet.displayStageIndex = stageIndex;
+  saveGame();
+  renderPetSection();
+}
+
 function unlockPetSlot2() {
   const PRESTIGE_REQ = 5;
   const MOKU_COST    = 500_000_000;
@@ -1900,15 +1909,27 @@ function buildPetSlotHtml(typeId, slot) {
     evolveHtml = '<p class="pet-evolve-cond">👑 最終進化形態です</p>';
   }
 
+  const displayIdx = pet.displayStageIndex ?? pet.stageIndex;
+  let skinSelectorHtml = '';
+  if (pet.stageIndex > 0) {
+    const thumbs = stages.slice(0, pet.stageIndex + 1).map((s, i) => `
+      <div class="pet-skin-thumb${i === displayIdx ? ' active' : ''}"
+           style="${getPetSpriteStyle(typeId, i)}"
+           data-type="${typeId}" data-idx="${i}" title="${s.name}"></div>
+    `).join('');
+    skinSelectorHtml = `<div class="pet-skin-selector"><span class="pet-skin-label">見た目</span>${thumbs}</div>`;
+  }
+
   return `
     <div class="pet-card">
-      <div class="pet-sprite" style="${getPetSpriteStyle(typeId, pet.stageIndex)}"></div>
+      <div class="pet-sprite" style="${getPetSpriteStyle(typeId, displayIdx)}"></div>
       <div class="pet-info">
         <div class="pet-name">${type.icon} ${type.name}</div>
         <div class="pet-stage-badge">${stage.name}</div>
         <div class="pet-effect-label">${effectLabel} × ${mult}</div>
       </div>
     </div>
+    ${skinSelectorHtml}
     <div class="pet-evolve-section">${evolveHtml}</div>
   `;
 }
@@ -1954,6 +1975,10 @@ function renderPetSection() {
   [1, 2].forEach(slot => {
     const btn = document.getElementById(`pet-evolve-btn-${slot}`);
     if (btn && !btn.disabled) btn.addEventListener('click', () => tryEvolvePet(slot));
+  });
+
+  container.querySelectorAll('.pet-skin-thumb').forEach(el => {
+    el.addEventListener('click', () => setPetDisplayStage(el.dataset.type, Number(el.dataset.idx)));
   });
 
   const unlockBtn = document.getElementById('pet-unlock-slot2-btn');
