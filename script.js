@@ -304,7 +304,7 @@ const MOKU_MILESTONES = [
 // レベルnに到達するために必要な累計藻（線形補間）
 function mokuForLevel(n) {
   if (n <= 1) return 0;
-  if (n >= 200) return 50_000_000 + (n - 200) * 2_000_000;
+  if (n >= 200) return 50_000_000 + (n - 200) * 2_500_000;
   for (let i = 1; i < MOKU_MILESTONES.length; i++) {
     const [l1, m1] = MOKU_MILESTONES[i - 1];
     const [l2, m2] = MOKU_MILESTONES[i];
@@ -318,9 +318,9 @@ function mokuForLevel(n) {
 
 // 累計藻から現在レベルを算出
 function calcLevelFromMoku(totalMoku) {
-  if (totalMoku >= 50_000_000) return 200;
+  if (totalMoku >= 300_000_000) return 300;
   let level = 1;
-  for (let n = 2; n <= 200; n++) {
+  for (let n = 2; n <= 300; n++) {
     if (mokuForLevel(n) <= totalMoku) level = n;
     else break;
   }
@@ -724,11 +724,11 @@ function updateDisplay() {
   // XPバー
   const xpCurrent = gameState.totalMoku - mokuForLevel(lv);
   const xpNeeded  = mokuForLevel(lv + 1) - mokuForLevel(lv);
-  const xpPct     = lv >= 200 ? 100 : Math.min(100, Math.floor(xpCurrent / xpNeeded * 100));
+  const xpPct     = lv >= 300 ? 100 : Math.min(100, Math.floor(xpCurrent / xpNeeded * 100));
   const xpBar  = document.getElementById('xp-bar');
   const xpText = document.getElementById('xp-text');
   if (xpBar)  xpBar.style.width = `${xpPct}%`;
-  if (xpText) xpText.textContent = lv >= 200 ? 'MAX' : `${fmt(xpCurrent)} / ${fmt(xpNeeded)}`;
+  if (xpText) xpText.textContent = lv >= 300 ? 'MAX' : `${fmt(xpCurrent)} / ${fmt(xpNeeded)}`;
 
   // ステータスパネル更新
   const totalEmployees = Object.values(gameState.employees).reduce((s, n) => s + n, 0);
@@ -820,18 +820,23 @@ function updateGoalPanel() {
     { level: 50,  suit: '赤',         emoji: '🟥' },
     { level: 100, suit: '金',         emoji: '🌟' },
     { level: 200, suit: 'レインボー', emoji: '🌈' },
+    { level: 300, suit: 'MAX',        emoji: '👑' },
   ];
 
   const next = SUIT_GOALS.find(g => lv < g.level);
   if (!next) {
-    labelEl.textContent   = '🌈 全スーツ解放済み！';
+    labelEl.textContent   = '👑 Lv.MAX 達成！';
     remEl.textContent     = '';
     return;
   }
 
   const needed = mokuForLevel(next.level) - gameState.totalMoku;
-  labelEl.textContent = `🎯 Lv${next.level}で${next.emoji}${next.suit}スーツ解放！`;
-  remEl.textContent   = `あと ${fmt(Math.max(0, needed))} 藻`;
+  if (next.level === 300) {
+    labelEl.textContent = `🎯 Lv300 MAX 達成まで！`;
+  } else {
+    labelEl.textContent = `🎯 Lv${next.level}で${next.emoji}${next.suit}スーツ解放！`;
+  }
+  remEl.textContent = `あと ${fmt(Math.max(0, needed))} 藻`;
 }
 
 function updateSoundBtn() {
