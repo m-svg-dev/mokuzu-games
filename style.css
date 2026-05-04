@@ -2461,6 +2461,48 @@ button,
 .pet-evolve-btn.disabled { opacity: 0.4; cursor: not-allowed; }
 .pet-evolve-btn:not(.disabled):active { background: #2a6a3a; }
 
+/* ペット2スロット */
+.pet-slot-block {
+  border: 1px solid #1e3a28;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: #0a1a10;
+}
+.pet-slot-label {
+  font-size: 0.75rem;
+  color: #3dff7a;
+  font-weight: bold;
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+.pet-slot2-lock {
+  text-align: center;
+  padding: 4px 0;
+}
+.pet-unlock-slot2-btn {
+  background: #1a3a50;
+  border: 1px solid #3aadff;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 4px;
+}
+.pet-unlock-slot2-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+.pet-unlock-slot2-btn:not(.disabled):active { background: #2a5a70; }
+.pet-slot-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pet-slot-btns .pet-egg-btn {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
 @keyframes pulse-green {
   0%, 100% { box-shadow: 0 0 0 0 #3dff7a44; }
   50%       { box-shadow: 0 0 0 6px #3dff7a00; }

@@ -328,17 +328,20 @@ function getPetSpriteStyle(typeId, stageIndex) {
 }
 
 function getPetMultiplier() {
-  const typeId = gameState.activePetType;
-  if (!typeId) return { tap: 1, mps: 1, coin: 1 };
-  const pet  = (gameState.ownedPets ?? {})[typeId];
-  if (!pet) return { tap: 1, mps: 1, coin: 1 };
-  const mult = getPetStages(typeId)[pet.stageIndex ?? 0]?.mult ?? 1;
-  const type = PET_TYPES.find(t => t.id === typeId);
-  return {
-    tap:  type?.effectType === 'tap'  ? mult : 1,
-    mps:  type?.effectType === 'mps'  ? mult : 1,
-    coin: type?.effectType === 'coin' ? mult : 1,
-  };
+  const slots = [gameState.activePetType];
+  if (gameState.petSlot2Unlocked && gameState.activePetType2) slots.push(gameState.activePetType2);
+  let tap = 1, mps = 1, coin = 1;
+  for (const typeId of slots) {
+    if (!typeId) continue;
+    const pet = (gameState.ownedPets ?? {})[typeId];
+    if (!pet) continue;
+    const mult = getPetStages(typeId)[pet.stageIndex ?? 0]?.mult ?? 1;
+    const type = PET_TYPES.find(t => t.id === typeId);
+    if (type?.effectType === 'tap')  tap  *= mult;
+    if (type?.effectType === 'mps')  mps  *= mult;
+    if (type?.effectType === 'coin') coin *= mult;
+  }
+  return { tap, mps, coin };
 }
 
 // ネタアイテム・装飾アイテム（一度きりの購入）
@@ -468,7 +471,9 @@ const DEFAULT_STATE = {
   hasRegistered:        false,  // 一度でもログインしたか
   registrationBonusClaimed: false, // 登録ボーナス受取済みか
   ownedPets:            {},     // { typeId: { stageIndex, conditionMetAt } }
-  activePetType:        null,   // 現在アクティブなペットのtypeId
+  activePetType:        null,   // スロット1のペットtypeId
+  activePetType2:       null,   // スロット2のペットtypeId
+  petSlot2Unlocked:     false,  // スロット2解放済みか
   lastReadUpdateId:     null,
   tapCount:             0,
   achievements:         {},
@@ -1520,17 +1525,21 @@ function buyEgg(typeId) {
   updateDisplay();
 }
 
-function switchPet(typeId) {
+function switchPet(typeId, slot = 1) {
   if (!(gameState.ownedPets ?? {})[typeId]) return;
-  gameState.activePetType = typeId;
+  if (slot === 2) {
+    gameState.activePetType2 = typeId;
+  } else {
+    gameState.activePetType = typeId;
+  }
   saveGame();
   renderPetEggShop();
   renderPetSection();
   updateDisplay();
 }
 
-function tryEvolvePet() {
-  const typeId = gameState.activePetType;
+function tryEvolvePet(slot = 1) {
+  const typeId = slot === 2 ? gameState.activePetType2 : gameState.activePetType;
   if (!typeId) return;
   const pet = (gameState.ownedPets ?? {})[typeId];
   const petStages = getPetStages(typeId);
@@ -1566,6 +1575,24 @@ function tryEvolvePet() {
   renderPetZukan();
   updateDisplay();
   showEvolveModal(typeId, pet.stageIndex);
+}
+
+function unlockPetSlot2() {
+  const PRESTIGE_REQ = 5;
+  const MOKU_COST    = 500_000_000;
+  if ((gameState.prestigeLevel ?? 0) < PRESTIGE_REQ) {
+    alert(`転生を${PRESTIGE_REQ}回以上行う必要があります！`); return;
+  }
+  if ((gameState.moku ?? 0) < MOKU_COST) {
+    alert(`藻が足りません！（必要: ${fmt(MOKU_COST)}）`); return;
+  }
+  gameState.moku -= MOKU_COST;
+  gameState.petSlot2Unlocked = true;
+  saveGame();
+  updateDisplay();
+  renderPetSection();
+  renderPetEggShop();
+  alert('🎉 ペットスロット2が解放されました！2体同時に効果が発動します！');
 }
 
 // ========== お知らせ ==========
@@ -1700,13 +1727,16 @@ function renderPetZukan() {
 function renderPetEggShop() {
   const container = document.getElementById('pet-egg-shop');
   if (!container) return;
-  const owned  = gameState.ownedPets ?? {};
-  const active = gameState.activePetType;
+  const owned   = gameState.ownedPets ?? {};
+  const active  = gameState.activePetType;
+  const active2 = gameState.activePetType2;
+  const slot2   = gameState.petSlot2Unlocked;
   container.innerHTML = '';
 
   for (const type of PET_TYPES) {
     const isOwned  = !!owned[type.id];
-    const isActive = active === type.id;
+    const isActive1 = active  === type.id;
+    const isActive2 = active2 === type.id;
     const canAfford = type.buyCost.type === 'coins'
       ? (gameState.mokuCoins ?? 0) >= type.buyCost.amount
       : type.buyCost.type === 'moku'
@@ -1718,26 +1748,28 @@ function renderPetEggShop() {
         ? `🌿 ${fmt(type.buyCost.amount)} 藻`
         : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt="転生石"> ${type.buyCost.amount} 転生石`;
 
-    let btnLabel, btnClass, btnDisabled;
-    if (!isOwned) {
-      btnLabel   = '購入';
-      btnClass   = canAfford ? '' : ' disabled';
-      btnDisabled = !canAfford;
-    } else if (isActive) {
-      btnLabel   = '✅ 育成中';
-      btnClass   = ' active';
-      btnDisabled = true;
-    } else {
-      btnLabel   = '切り替え';
-      btnClass   = '';
-      btnDisabled = false;
-    }
-
     const stageIndex = isOwned ? (owned[type.id].stageIndex ?? 0) : 0;
     const stageName  = isOwned ? getPetStages(type.id)[stageIndex].name : '未入手';
 
+    let btnHtml;
+    if (!isOwned) {
+      const dis = !canAfford ? ' disabled' : '';
+      btnHtml = `<button class="pet-egg-btn${dis}" ${dis ? 'disabled' : ''} data-action="buy">購入</button>`;
+    } else if (slot2) {
+      const s1Class = isActive1 ? ' active' : '';
+      const s2Class = isActive2 ? ' active' : '';
+      btnHtml = `
+        <div class="pet-slot-btns">
+          <button class="pet-egg-btn${s1Class}" ${isActive1 ? 'disabled' : ''} data-action="slot1">${isActive1 ? '✅ S1' : 'S1'}</button>
+          <button class="pet-egg-btn${s2Class}" ${isActive2 ? 'disabled' : ''} data-action="slot2">${isActive2 ? '✅ S2' : 'S2'}</button>
+        </div>`;
+    } else {
+      const s1Class = isActive1 ? ' active' : '';
+      btnHtml = `<button class="pet-egg-btn${s1Class}" ${isActive1 ? 'disabled' : ''} data-action="slot1">${isActive1 ? '✅ 育成中' : '切り替え'}</button>`;
+    }
+
     const card = document.createElement('div');
-    card.className = `pet-egg-card${isActive ? ' is-active' : ''}`;
+    card.className = `pet-egg-card${isActive1 || isActive2 ? ' is-active' : ''}`;
     card.innerHTML = `
       <div class="pet-egg-sprite" style="${getPetSpriteStyle(type.id, stageIndex)}"></div>
       <div class="pet-egg-info">
@@ -1745,27 +1777,23 @@ function renderPetEggShop() {
         <div class="pet-egg-effect">${type.effectDesc}</div>
         <div class="pet-egg-cost">${isOwned ? `現在: ${stageName}` : costLabel}</div>
       </div>
-      <button class="pet-egg-btn${btnClass}" ${btnDisabled ? 'disabled' : ''}>${btnLabel}</button>
+      ${btnHtml}
     `;
-    if (!btnDisabled) {
-      card.querySelector('.pet-egg-btn').addEventListener('click', () =>
-        isOwned ? switchPet(type.id) : buyEgg(type.id)
-      );
-    }
+    card.querySelectorAll('button[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        if (action === 'buy')   buyEgg(type.id);
+        if (action === 'slot1') switchPet(type.id, 1);
+        if (action === 'slot2') switchPet(type.id, 2);
+      });
+    });
     container.appendChild(card);
   }
 }
 
-function renderPetSection() {
-  const container = document.getElementById('pet-section');
-  if (!container) return;
-  const typeId = gameState.activePetType;
-  const pet    = typeId ? (gameState.ownedPets ?? {})[typeId] : null;
-
-  if (!pet) {
-    container.innerHTML = '<p class="section-note">下のペット卵ショップから卵を購入してペットを育てよう！</p>';
-    return;
-  }
+function buildPetSlotHtml(typeId, slot) {
+  const pet = typeId ? (gameState.ownedPets ?? {})[typeId] : null;
+  if (!pet) return `<p class="section-note">ショップでペットを選択してスロット${slot}に装備しよう！</p>`;
 
   const type      = PET_TYPES.find(t => t.id === typeId);
   const stages    = getPetStages(typeId);
@@ -1784,7 +1812,7 @@ function renderPetSection() {
       if (remaining <= 0) {
         evolveHtml = `
           <p class="pet-evolve-ready">✨ 進化の準備完了！</p>
-          <button class="pet-evolve-btn ready" id="pet-evolve-btn">👑 進化！</button>`;
+          <button class="pet-evolve-btn ready" id="pet-evolve-btn-${slot}" data-slot="${slot}">👑 進化！</button>`;
       } else {
         const hours = Math.ceil(remaining / 3_600_000);
         evolveHtml = `<p class="pet-evolve-waiting">⏳ 進化準備中... あと約${hours}時間</p>`;
@@ -1798,7 +1826,7 @@ function renderPetSection() {
       condText += ` → ${nextStage.waitHours}時間待機後に進化`;
       evolveHtml = `
         <p class="pet-evolve-cond">${condText}</p>
-        <button class="pet-evolve-btn${canEvolve ? '' : ' disabled'}" id="pet-evolve-btn" ${canEvolve ? '' : 'disabled'}>
+        <button class="pet-evolve-btn${canEvolve ? '' : ' disabled'}" id="pet-evolve-btn-${slot}" data-slot="${slot}" ${canEvolve ? '' : 'disabled'}>
           🌱 進化準備する
         </button>`;
     }
@@ -1806,7 +1834,7 @@ function renderPetSection() {
     evolveHtml = '<p class="pet-evolve-cond">👑 最終進化形態です</p>';
   }
 
-  container.innerHTML = `
+  return `
     <div class="pet-card">
       <div class="pet-sprite" style="${getPetSpriteStyle(typeId, pet.stageIndex)}"></div>
       <div class="pet-info">
@@ -1817,9 +1845,52 @@ function renderPetSection() {
     </div>
     <div class="pet-evolve-section">${evolveHtml}</div>
   `;
+}
 
-  const btn = document.getElementById('pet-evolve-btn');
-  if (btn && !btn.disabled) btn.addEventListener('click', tryEvolvePet);
+function renderPetSection() {
+  const container = document.getElementById('pet-section');
+  if (!container) return;
+  const typeId  = gameState.activePetType;
+  const typeId2 = gameState.activePetType2;
+
+  const slot1Html = (gameState.ownedPets ?? {})[typeId]
+    ? buildPetSlotHtml(typeId, 1)
+    : '<p class="section-note">下のショップから卵を購入してペットを育てよう！</p>';
+
+  let slot2Html;
+  if (!gameState.petSlot2Unlocked) {
+    const prestige = gameState.prestigeLevel ?? 0;
+    const canUnlock = prestige >= 5;
+    slot2Html = `
+      <div class="pet-slot2-lock">
+        <p class="section-note">🔒 スロット2（転生5回 + 🌿500M藻で解放）</p>
+        <p class="section-note" style="font-size:11px">2体同時に効果発動！</p>
+        <button class="pet-unlock-slot2-btn${canUnlock ? '' : ' disabled'}" id="pet-unlock-slot2-btn" ${canUnlock ? '' : 'disabled'}>
+          ${canUnlock ? '🔓 スロット2を解放する（🌿500M藻）' : `🔒 転生${5 - prestige}回後に解放可能`}
+        </button>
+      </div>`;
+  } else {
+    slot2Html = buildPetSlotHtml(typeId2, 2);
+  }
+
+  container.innerHTML = `
+    <div class="pet-slot-block">
+      <div class="pet-slot-label">スロット1</div>
+      ${slot1Html}
+    </div>
+    <div class="pet-slot-block">
+      <div class="pet-slot-label">スロット2</div>
+      ${slot2Html}
+    </div>
+  `;
+
+  [1, 2].forEach(slot => {
+    const btn = document.getElementById(`pet-evolve-btn-${slot}`);
+    if (btn && !btn.disabled) btn.addEventListener('click', () => tryEvolvePet(slot));
+  });
+
+  const unlockBtn = document.getElementById('pet-unlock-slot2-btn');
+  if (unlockBtn && !unlockBtn.disabled) unlockBtn.addEventListener('click', unlockPetSlot2);
 }
 
 function renderItemList() {
@@ -2174,6 +2245,8 @@ function doPrestige() {
     achievements:    gameState.achievements,
     ownedPets:                gameState.ownedPets,
     activePetType:            gameState.activePetType,
+    activePetType2:           gameState.activePetType2,
+    petSlot2Unlocked:         gameState.petSlot2Unlocked,
     soundEnabled:             gameState.soundEnabled,
     registrationBonusClaimed: gameState.registrationBonusClaimed,
     lastReadUpdateId:         gameState.lastReadUpdateId,
