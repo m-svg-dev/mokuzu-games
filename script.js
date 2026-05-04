@@ -713,7 +713,13 @@ function updateDisplay() {
   if (suit !== gameState.suit) updateSuit(suit);
 
   const levelEl = document.getElementById('level-display');
-  if (levelEl) levelEl.textContent = `Lv.${lv}　${SUIT_LABELS[suit]}スーツ`;
+  if (levelEl) {
+    const equippedSkin = gameState.equippedSkin
+      ? GACHA_SKINS.find(s => s.id === gameState.equippedSkin)
+      : null;
+    const suitLabel = equippedSkin ? equippedSkin.name : `${SUIT_LABELS[suit]}スーツ`;
+    levelEl.textContent = `Lv.${lv}　${suitLabel}`;
+  }
 
   // XPバー
   const xpCurrent = gameState.totalMoku - mokuForLevel(lv);
