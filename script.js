@@ -1528,8 +1528,10 @@ function buyEgg(typeId) {
 function switchPet(typeId, slot = 1) {
   if (!(gameState.ownedPets ?? {})[typeId]) return;
   if (slot === 2) {
+    if (gameState.activePetType === typeId) { alert('スロット1に装備中のペットは選べません！'); return; }
     gameState.activePetType2 = typeId;
   } else {
+    if (gameState.activePetType2 === typeId) { alert('スロット2に装備中のペットは選べません！'); return; }
     gameState.activePetType = typeId;
   }
   saveGame();
@@ -1756,12 +1758,14 @@ function renderPetEggShop() {
       const dis = !canAfford ? ' disabled' : '';
       btnHtml = `<button class="pet-egg-btn${dis}" ${dis ? 'disabled' : ''} data-action="buy">購入</button>`;
     } else if (slot2) {
-      const s1Class = isActive1 ? ' active' : '';
-      const s2Class = isActive2 ? ' active' : '';
+      const s1Dis = isActive1 || isActive2;
+      const s2Dis = isActive2 || isActive1;
+      const s1Class = isActive1 ? ' active' : (isActive2 ? ' disabled' : '');
+      const s2Class = isActive2 ? ' active' : (isActive1 ? ' disabled' : '');
       btnHtml = `
         <div class="pet-slot-btns">
-          <button class="pet-egg-btn${s1Class}" ${isActive1 ? 'disabled' : ''} data-action="slot1">${isActive1 ? '✅ S1' : 'S1'}</button>
-          <button class="pet-egg-btn${s2Class}" ${isActive2 ? 'disabled' : ''} data-action="slot2">${isActive2 ? '✅ S2' : 'S2'}</button>
+          <button class="pet-egg-btn${s1Class}" ${s1Dis ? 'disabled' : ''} data-action="slot1">${isActive1 ? '✅ S1' : 'S1'}</button>
+          <button class="pet-egg-btn${s2Class}" ${s2Dis ? 'disabled' : ''} data-action="slot2">${isActive2 ? '✅ S2' : 'S2'}</button>
         </div>`;
     } else {
       const s1Class = isActive1 ? ' active' : '';
