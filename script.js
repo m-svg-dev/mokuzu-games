@@ -2546,29 +2546,44 @@ async function redeemCoupon(code) {
     return;
   }
 
-  let coupons;
+  // ① まずキャンペーンコード（coupons.json）を確認
+  let coupon = null;
   try {
-    const res = await fetch(`coupons.json?t=${Date.now()}`);
-    coupons = await res.json();
-  } catch (_) {
-    alert('通信エラーが発生しました。時間をおいて再試行してください。');
+    const res  = await fetch(`coupons.json?t=${Date.now()}`);
+    const list = await res.json();
+    coupon = list[trimmed] ?? null;
+  } catch (_) {}
+
+  if (coupon) {
+    applyReward(coupon, trimmed);
     return;
   }
 
-  const coupon = coupons[trimmed];
-  if (!coupon) {
+  // ② 見つからなければ個人補填コード（Firestore）を確認
+  const result = await redeemPersonalCoupon(trimmed);
+  if (result.error === 'login_required') {
+    alert('個人補填コードの使用にはログインが必要です。\n設定からログインしてください。');
+    return;
+  }
+  if (result.error === 'used') {
+    alert('このコードはすでに使用済みです。');
+    return;
+  }
+  if (result.error === 'invalid') {
     alert('無効なコードです。');
     return;
   }
 
-  if (coupon.reward === 'coins')  gameState.mokuCoins     = (gameState.mokuCoins     ?? 0) + coupon.amount;
-  if (coupon.reward === 'stones') gameState.prestigeStones = (gameState.prestigeStones ?? 0) + coupon.amount;
-  if (coupon.reward === 'moku')   gameState.moku           = (gameState.moku           ?? 0) + coupon.amount;
+  applyReward(result, trimmed);
+}
 
-  gameState.usedCoupons = [...used, trimmed];
+function applyReward(coupon, code) {
+  if (coupon.reward === 'coins')  gameState.mokuCoins      = (gameState.mokuCoins      ?? 0) + coupon.amount;
+  if (coupon.reward === 'stones') gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + coupon.amount;
+  if (coupon.reward === 'moku')   gameState.moku            = (gameState.moku           ?? 0) + coupon.amount;
+  gameState.usedCoupons = [...(gameState.usedCoupons ?? []), code];
   saveGame();
   updateDisplay();
-
   alert(`🎁 ${coupon.desc}\n報酬を受け取りました！`);
 }
 
@@ -2602,6 +2617,7 @@ import {
   onAuthChanged, currentUser,
   saveScore, fetchRanking, changeDisplayName,
   saveGameData, loadGameData,
+  redeemPersonalCoupon,
 } from './firebase.js';
 
 let _authMode = 'login'; // 'login' | 'register'

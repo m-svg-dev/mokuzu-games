@@ -14,6 +14,7 @@ import {
   doc,
   setDoc,
   getDoc,
+  updateDoc,
   collection,
   query,
   orderBy,
@@ -104,6 +105,24 @@ export async function loadGameData() {
   const snap = await getDoc(doc(db, 'users', user.uid));
   if (!snap.exists()) return null;
   return snap.data().saveData ?? null;
+}
+
+// ========== 個人補填クーポン ==========
+
+export async function redeemPersonalCoupon(code) {
+  const user = auth.currentUser;
+  if (!user) return { error: 'login_required' };
+
+  const ref  = doc(db, 'coupons', code);
+  const snap = await getDoc(ref);
+  if (!snap.exists())       return { error: 'invalid' };
+
+  const data = snap.data();
+  if (data.used)            return { error: 'used' };
+  if (data.uid !== user.uid) return { error: 'invalid' };
+
+  await updateDoc(ref, { used: true });
+  return { reward: data.reward, amount: data.amount, desc: data.desc };
 }
 
 // ========== ランキング取得（総獲得藻 上位20件） ==========
