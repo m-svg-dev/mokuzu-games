@@ -2393,8 +2393,9 @@ function checkOfflineEarnings() {
 
   const now        = Date.now();
   const elapsedSec = Math.floor((now - gameState.lastSaved) / 1000);
-  const MIN_SEC    = 60;
-  const MAX_SEC    = 28800; // 8時間
+  const MIN_SEC        = 60;
+  const MODAL_MIN_SEC  = 1800; // 30分以上でモーダル表示
+  const MAX_SEC        = 28800; // 8時間
 
   if (elapsedSec < MIN_SEC) return;
 
@@ -2405,6 +2406,8 @@ function checkOfflineEarnings() {
 
   gameState.moku      += earned;
   gameState.totalMoku += earned;
+
+  if (elapsedSec < MODAL_MIN_SEC) return;
 
   const hours   = Math.floor(elapsedSec / 3600);
   const minutes = Math.floor((elapsedSec % 3600) / 60);
