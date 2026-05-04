@@ -1904,8 +1904,10 @@ function buildPetSlotHtml(typeId, slot) {
           <p class="pet-evolve-ready">✨ 進化の準備完了！</p>
           <button class="pet-evolve-btn ready" id="pet-evolve-btn-${slot}" data-slot="${slot}">👑 進化！</button>`;
       } else {
-        const hours = Math.ceil(remaining / 3_600_000);
-        evolveHtml = `<p class="pet-evolve-waiting">⏳ 進化準備中... あと約${hours}時間</p>`;
+        const timeLabel = remaining < 3_600_000
+          ? `${Math.ceil(remaining / 60_000)}分`
+          : `${Math.ceil(remaining / 3_600_000)}時間`;
+        evolveHtml = `<p class="pet-evolve-waiting">⏳ 進化準備中... あと約${timeLabel}</p>`;
       }
     } else {
       const prestigeOk = !cond.prestigeMin || (gameState.prestigeLevel ?? 0) >= cond.prestigeMin;
