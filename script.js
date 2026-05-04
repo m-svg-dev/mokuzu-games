@@ -2629,6 +2629,7 @@ import {
   saveScore, fetchRanking, changeDisplayName,
   saveGameData, loadGameData,
   redeemPersonalCoupon,
+  claimPendingRewards,
 } from './firebase.js';
 
 let _authMode = 'login'; // 'login' | 'register'
@@ -2705,6 +2706,34 @@ function initFirebase() {
         }
       } catch (e) {
         console.warn('[mokuzu] クラウドセーブの読み込みに失敗', e);
+      }
+
+      // pendingRewardsを確認・適用
+      try {
+        const rewards = await claimPendingRewards();
+        if (rewards.length > 0) {
+          for (const reward of rewards) {
+            if (reward.type === 'coins')  gameState.mokuCoins      = (gameState.mokuCoins      ?? 0) + reward.amount;
+            if (reward.type === 'stones') gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + reward.amount;
+            if (reward.type === 'moku')   gameState.moku            = (gameState.moku           ?? 0) + reward.amount;
+            if (reward.type === 'pet' && reward.id) {
+              if (!gameState.ownedPets) gameState.ownedPets = {};
+              const current  = gameState.ownedPets[reward.id];
+              const newStage = reward.stageIndex ?? 0;
+              if (!current || current.stageIndex < newStage) {
+                gameState.ownedPets[reward.id] = { stageIndex: newStage, conditionMetAt: null };
+                if (!gameState.activePetType) gameState.activePetType = reward.id;
+              }
+            }
+          }
+          saveGame();
+          updateDisplay();
+          renderPetEggShop();
+          renderPetSection();
+          alert(`🎁 管理者から補填が届いています！\n${rewards.map(r => r.desc ?? '').filter(Boolean).join('\n')}`);
+        }
+      } catch (e) {
+        console.warn('[mokuzu] pendingRewards の取得に失敗', e);
       }
     } else {
       authSec.classList.remove('hidden');

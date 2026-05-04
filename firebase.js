@@ -107,6 +107,24 @@ export async function loadGameData() {
   return snap.data().saveData ?? null;
 }
 
+// ========== 管理者補填（pendingRewards） ==========
+
+export async function claimPendingRewards() {
+  const user = auth.currentUser;
+  if (!user) return [];
+  try {
+    const ref  = doc(db, 'users', user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return [];
+    const rewards = snap.data().pendingRewards ?? [];
+    if (rewards.length === 0) return [];
+    await updateDoc(ref, { pendingRewards: [] });
+    return rewards;
+  } catch (_) {
+    return [];
+  }
+}
+
 // ========== 個人補填クーポン ==========
 
 export async function redeemPersonalCoupon(code) {
