@@ -840,7 +840,7 @@ function updateSuit(suit) {
 let tapLocked = false;
 
 function onTap(e) {
-  e.preventDefault();
+  if (e.cancelable) e.preventDefault();
   if (tapLocked) return;
   tapLocked = true;
   setTimeout(() => { tapLocked = false; }, 50);
