@@ -2344,7 +2344,11 @@ function loadGame() {
   const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) return;
 
-  // チェックサム不一致は無視してそのままロード（誤検知でデータを消さない）
+  // チェックサム不一致はデータを消さず警告のみ表示
+  const storedCs = localStorage.getItem(CHECKSUM_KEY);
+  if (storedCs && computeChecksum(raw) !== storedCs) {
+    alert('⚠️ セーブデータに異常が検出されました。\n会員登録をしていないとデータが消える可能性があります。\n設定からぜひ会員登録をお願いします！');
+  }
 
   let saved;
   try {
