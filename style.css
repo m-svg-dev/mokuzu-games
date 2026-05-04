@@ -2295,6 +2295,34 @@ button,
 }
 #coupon-btn:active { background: #2a8a4a; }
 
+#menhera-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0 2px;
+}
+.menhera-btn {
+  background: #1a3a28;
+  border: 1px solid #3dff7a;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 4px 14px;
+  cursor: pointer;
+}
+.menhera-btn.on {
+  background: #7a1a2a;
+  border-color: #ff6a8a;
+  color: #ff6a8a;
+}
+.menhera-btn.locked {
+  background: #1a1a1a;
+  border-color: #444;
+  color: #666;
+  cursor: not-allowed;
+  font-size: 0.72rem;
+}
+
 .settings-version-label {
   text-align: center;
   font-size: 0.75rem;

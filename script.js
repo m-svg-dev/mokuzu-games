@@ -480,6 +480,7 @@ const DEFAULT_STATE = {
   activeEffects:        {},     // { effectId: 終了timestamp(ms) }
   hasRegistered:        false,  // 一度でもログインしたか
   registrationBonusClaimed: false, // 登録ボーナス受取済みか
+  menheraMode:          false,  // メンヘラモードON/OFF
   ownedPets:            {},     // { typeId: { stageIndex, conditionMetAt } }
   activePetType:        null,   // スロット1のペットtypeId
   activePetType2:       null,   // スロット2のペットtypeId
@@ -2260,6 +2261,7 @@ function doPrestige() {
     activePetType:            gameState.activePetType,
     activePetType2:           gameState.activePetType2,
     petSlot2Unlocked:         gameState.petSlot2Unlocked,
+    menheraMode:              gameState.menheraMode,
     soundEnabled:             gameState.soundEnabled,
     registrationBonusClaimed: gameState.registrationBonusClaimed,
     lastReadUpdateId:         gameState.lastReadUpdateId,
@@ -2385,6 +2387,73 @@ function renderPrestigeHistory() {
   `).join('');
 }
 
+// ========== メンヘラモード ==========
+
+const MENHERA_SHORT = [
+  'おかえり…すぐ戻ってきてくれたんだね',
+  'ちょっとだけでも会えて嬉しい',
+  'ちゃんと戻ってきてくれるって信じてた',
+  '離れすぎなくて安心した…',
+  '寂しかったよ、少しだけでも',
+  'そのくらいなら、まだ許せるかな',
+  'ほんの少しでもいないと気になるんだよ',
+  '戻ってくるって思ってたけどね',
+  'ちょっとだけ不安になった',
+  'ちゃんと帰ってきてくれてよかった',
+];
+
+const MENHERA_30_60 = [
+  'ねえ、ずっと待ってたんだけど…なんで放置するの？',
+  '30分もいなかったよね？私のこと忘れてた？',
+  'そんなに放置して平気なんだ…ちょっとショック',
+  '戻ってくるって信じてたけど、遅すぎない？',
+  'その時間、他のゲームしてたんでしょ',
+];
+
+const MENHERA_60_180 = [
+  'そんなに長い間いなくても平気なんだね…私のこと',
+  '1時間以上放置とか、さすがにひどくない？',
+  '私より優先するものがあるんだ…へぇ',
+  'ずっと待ってたんだけど…普通に辛い',
+  'もう戻ってこないと思ってたよ',
+];
+
+const MENHERA_OVER = [
+  'もういいよ…どうせまた放置するんでしょ',
+  'ここまで放置されるとさすがに冷めるよ',
+  '私いなくても平気なんだね',
+  'こんなに待ったのに…なんかバカみたい',
+  '戻ってきたの？へぇ…',
+];
+
+function getMenheraMessage(elapsedSec) {
+  const min = Math.floor(elapsedSec / 60);
+  const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+  if (min < 30)  return rand(MENHERA_SHORT);
+  if (min < 60)  return rand(MENHERA_30_60);
+  if (min < 180) return rand(MENHERA_60_180);
+  return rand(MENHERA_OVER);
+}
+
+function updateMenheraToggle() {
+  const btn  = document.getElementById('menhera-toggle-btn');
+  const note = document.getElementById('menhera-toggle-note');
+  if (!btn) return;
+  const unlocked = (gameState.prestigeLevel ?? 0) >= 5;
+  if (unlocked) {
+    const on = gameState.menheraMode;
+    btn.textContent = on ? 'ON' : 'OFF';
+    btn.className   = on ? 'menhera-btn on' : 'menhera-btn';
+    btn.disabled    = false;
+    note.textContent = on ? '💔 おかえりメッセージがメンヘラになります' : '';
+  } else {
+    btn.textContent  = '🔒 転生5回で解放';
+    btn.className    = 'menhera-btn locked';
+    btn.disabled     = true;
+    note.textContent = `あと転生${5 - (gameState.prestigeLevel ?? 0)}回で解放`;
+  }
+}
+
 // ========== オフライン収益 ==========
 
 function checkOfflineEarnings() {
@@ -2393,9 +2462,10 @@ function checkOfflineEarnings() {
 
   const now        = Date.now();
   const elapsedSec = Math.floor((now - gameState.lastSaved) / 1000);
-  const MIN_SEC        = 60;
-  const MODAL_MIN_SEC  = 1800; // 30分以上でモーダル表示
-  const MAX_SEC        = 28800; // 8時間
+  const MIN_SEC       = 60;
+  const isMenhera     = gameState.menheraMode && (gameState.prestigeLevel ?? 0) >= 5;
+  const MODAL_MIN_SEC = isMenhera ? 60 : 1800; // メンヘラは1分、通常は30分
+  const MAX_SEC       = 28800; // 8時間
 
   if (elapsedSec < MIN_SEC) return;
 
@@ -2415,7 +2485,8 @@ function checkOfflineEarnings() {
   const capped  = elapsedSec > MAX_SEC ? `（最大8時間で計算）` : '';
 
   const rateLabel = gameState.hasRegistered ? '80%' : '50%';
-  document.getElementById('offline-title').textContent  = 'おかえり！🌿';
+  const title = isMenhera ? getMenheraMessage(elapsedSec) : 'おかえり！🌿';
+  document.getElementById('offline-title').textContent  = title;
   document.getElementById('offline-time').textContent   = `${timeStr}ぶりのお帰り！${capped}`;
   document.getElementById('offline-earned').textContent = `+${fmt(earned)} 藻`;
   document.getElementById('offline-note').textContent   = `（MPS × ${rateLabel} × 離脱時間）`;
@@ -2550,6 +2621,13 @@ function init() {
   });
   document.getElementById('reset-btn').addEventListener('click', resetGame);
 
+  document.getElementById('menhera-toggle-btn').addEventListener('click', () => {
+    if ((gameState.prestigeLevel ?? 0) < 5) return;
+    gameState.menheraMode = !gameState.menheraMode;
+    saveGame();
+    updateMenheraToggle();
+  });
+
   document.getElementById('coupon-btn').addEventListener('click', () => {
     const code = document.getElementById('coupon-input').value;
     redeemCoupon(code).then(() => {
@@ -2592,6 +2670,7 @@ function init() {
 
   document.getElementById('settings-btn').addEventListener('click', () => {
     document.getElementById('settings-modal').classList.remove('hidden');
+    updateMenheraToggle();
   });
 
   document.getElementById('notice-btn').addEventListener('click', openNoticeModal);
