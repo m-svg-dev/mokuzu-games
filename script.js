@@ -2806,12 +2806,17 @@ async function redeemCoupon(code) {
 }
 
 function applyReward(coupon, code) {
-  if (coupon.reward === 'coins')  gameState.mokuCoins      = (gameState.mokuCoins      ?? 0) + coupon.amount;
-  if (coupon.reward === 'stones') gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + coupon.amount;
-  if (coupon.reward === 'moku')   gameState.moku            = (gameState.moku           ?? 0) + coupon.amount;
+  if (coupon.reward === 'coins')     gameState.mokuCoins      = (gameState.mokuCoins      ?? 0) + coupon.amount;
+  if (coupon.reward === 'stones')    gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + coupon.amount;
+  if (coupon.reward === 'moku')      gameState.moku            = (gameState.moku           ?? 0) + coupon.amount;
+  if (coupon.reward === 'gacha_coin') {
+    gameState.consumables = gameState.consumables ?? {};
+    gameState.consumables['gacha_coin'] = (gameState.consumables['gacha_coin'] ?? 0) + coupon.amount;
+  }
   gameState.usedCoupons = [...(gameState.usedCoupons ?? []), code];
   saveGame();
   updateDisplay();
+  renderSkinCollection();
   alert(`🎁 ${coupon.desc}\n報酬を受け取りました！`);
 }
 
