@@ -1,6 +1,6 @@
 // ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.0';
+const CURRENT_VERSION = '2.1';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.1',
+    date: '2026/05/04',
+    title: '💔 メンヘラモード追加 & おかえり調整',
+    items: [
+      '💔 転生5回でメンヘラモードが解放！設定からON/OFFできます',
+      '💔 メンヘラモードON中はちょっとした離席でもおかえりメッセージが届きます',
+      '🐛 おかえりモーダルが1分放置でも出ていた問題を修正（通常は30分以上で表示）',
+    ],
+  },
   {
     id: 'v2.0',
     date: '2026/05/04',
