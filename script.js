@@ -195,6 +195,8 @@ const IMAGE_CONFIG = {
       mo_mizu:  'assets/characters/mo_mizu.png',
       mo_pink:  'assets/characters/mo_pink.png',
       mo_majyo: 'assets/characters/mo_majyo.png',
+      puikyua_ki: 'assets/characters/puikyua_kiiro_.png',
+      puikyua_pk: 'assets/characters/puikyua_pink_.png',
     },
   },
   employees: {
@@ -251,7 +253,7 @@ const IMAGE_CONFIG = {
 };
 
 const SUIT_COVER_FIT = new Set(['silver', 'white']); // 正方形画像はcoverで表示
-const SUIT_TOP_FIT   = new Set(['moku_ki', 'mo_mizu', 'mo_pink', 'mo_majyo']); // 正方形・上寄せ表示
+const SUIT_TOP_FIT   = new Set(['moku_ki', 'mo_mizu', 'mo_pink', 'mo_majyo', 'puikyua_ki', 'puikyua_pk']); // 正方形・上寄せ表示
 
 function applyCharacterSprite(suit) {
   let effectiveSuit = suit;
@@ -458,7 +460,9 @@ const GACHA_SKINS = [
   { id: 'skin_moku_ki', name: 'もくきちゃん',     rarity: 'SSR', suit: 'moku_ki', prob: 0.01  },
   { id: 'skin_mo_mizu', name: 'もみずちゃん',     rarity: 'SSR', suit: 'mo_mizu', prob: 0.01  },
   { id: 'skin_mo_pink', name: 'もぴんくちゃん',   rarity: 'SSR', suit: 'mo_pink', prob: 0.01  },
-  { id: 'skin_mo_majyo',name: 'もまじょちゃん',   rarity: 'SSR', suit: 'mo_majyo',prob: 0.01  },
+  { id: 'skin_mo_majyo',   name: 'もまじょちゃん',       rarity: 'SSR', suit: 'mo_majyo',   prob: 0.01  },
+  { id: 'skin_puikyua_ki', name: 'ぷいきゅあきいろちゃん', rarity: 'SSR', suit: 'puikyua_ki', prob: 0.01  },
+  { id: 'skin_puikyua_pk', name: 'ぷいきゅあぴんくちゃん', rarity: 'SSR', suit: 'puikyua_pk', prob: 0.01  },
 ];
 
 const RARITY_COLOR  = { N: '#888888', R: '#4499ff', SR: '#ffd700', SSR: '#ff44ff' };
