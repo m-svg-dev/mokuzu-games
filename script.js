@@ -1,6 +1,6 @@
 // ========== 定数定義 ==========
 
-const CURRENT_VERSION = '1.9';
+const CURRENT_VERSION = '2.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.0',
+    date: '2026/05/04',
+    title: '🐾 ペットスロット2解放機能追加',
+    items: [
+      '🐾 転生5回 + 藻500Mでペットスロット2が解放！2体同時に効果が発動します',
+      '🎁 管理者からの個別補填システムを追加（ペット・コイン・石などを直接届けられます）',
+      '🐛 ペット図鑑が補填後に即反映されないバグを修正',
+    ],
+  },
   {
     id: 'v1.9',
     date: '2026/05/04',
