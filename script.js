@@ -1528,11 +1528,11 @@ function buyEgg(typeId) {
 function switchPet(typeId, slot = 1) {
   if (!(gameState.ownedPets ?? {})[typeId]) return;
   if (slot === 2) {
-    if (gameState.activePetType === typeId) gameState.activePetType = null;
-    gameState.activePetType2 = typeId;
+    if (gameState.activePetType2 === typeId) { gameState.activePetType2 = null; }
+    else { if (gameState.activePetType === typeId) gameState.activePetType = null; gameState.activePetType2 = typeId; }
   } else {
-    if (gameState.activePetType2 === typeId) gameState.activePetType2 = null;
-    gameState.activePetType = typeId;
+    if (gameState.activePetType === typeId) { gameState.activePetType = null; }
+    else { if (gameState.activePetType2 === typeId) gameState.activePetType2 = null; gameState.activePetType = typeId; }
   }
   saveGame();
   renderPetEggShop();
@@ -1762,8 +1762,8 @@ function renderPetEggShop() {
       const s2Class = isActive2 ? ' active' : '';
       btnHtml = `
         <div class="pet-slot-btns">
-          <button class="pet-egg-btn${s1Class}" ${isActive1 ? 'disabled' : ''} data-action="slot1">${isActive1 ? '✅ S1' : 'S1'}</button>
-          <button class="pet-egg-btn${s2Class}" ${isActive2 ? 'disabled' : ''} data-action="slot2">${isActive2 ? '✅ S2' : 'S2'}</button>
+          <button class="pet-egg-btn${s1Class}" data-action="slot1">${isActive1 ? '✅ S1' : 'S1'}</button>
+          <button class="pet-egg-btn${s2Class}" data-action="slot2">${isActive2 ? '✅ S2' : 'S2'}</button>
         </div>`;
     } else {
       const s1Class = isActive1 ? ' active' : '';
