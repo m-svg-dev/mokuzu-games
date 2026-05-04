@@ -566,6 +566,7 @@ function calcLevel(totalMoku) {
 let _audioCtx = null;
 let _lastCloudSave = null;
 let _minCloudTotalMoku = 0;
+const _petWaitingSet = new Set(); // 進化待機中のペット追跡（タイマー完了検知用）
 
 function getAudioCtx() {
   if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -961,6 +962,20 @@ function gameLoop() {
   if (!gameState.activeEvent) {
     gameState.eventCooldown -= 1;
     if (gameState.eventCooldown <= 0) triggerRandomEvent();
+  }
+
+  // ペット進化タイマー完了検知（待機中→完了の瞬間のみ再描画）
+  for (const [typeId, pet] of Object.entries(gameState.ownedPets ?? {})) {
+    if (!pet.conditionMetAt) { _petWaitingSet.delete(typeId); continue; }
+    const stages = getPetStages(typeId);
+    const nextStage = stages[(pet.stageIndex ?? 0) + 1];
+    if (!nextStage) continue;
+    const isReady = nowMs - pet.conditionMetAt >= nextStage.waitHours * 3_600_000;
+    if (!isReady) { _petWaitingSet.add(typeId); }
+    else if (_petWaitingSet.has(typeId)) {
+      _petWaitingSet.delete(typeId);
+      renderPetSection();
+    }
   }
 
   updateDisplay();
