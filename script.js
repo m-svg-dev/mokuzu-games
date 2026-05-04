@@ -2900,7 +2900,13 @@ function initFirebase() {
             }
           } else {
             // ローカルが新しければクラウドを自動更新
-            saveGameData(JSON.stringify(gameState)).catch(() => {});
+            // ただしローカルが空状態（moku=0 かつ従業員なし）の場合は上書きしない
+            const localIsEmpty = (gameState.moku ?? 0) === 0
+              && Object.keys(gameState.employees ?? {}).length === 0
+              && (gameState.tapCount ?? 0) === 0;
+            if (!localIsEmpty) {
+              saveGameData(JSON.stringify(gameState)).catch(() => {});
+            }
           }
         }
       } catch (e) {
