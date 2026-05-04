@@ -796,6 +796,16 @@ function updateGoalPanel() {
   const remEl   = document.getElementById('goal-remaining');
   if (!labelEl || !remEl) return;
 
+  if (gameState.equippedSkin) {
+    const skin = GACHA_SKINS.find(s => s.id === gameState.equippedSkin);
+    if (skin) {
+      const rarityColor = RARITY_COLOR[skin.rarity];
+      labelEl.innerHTML = `<span style="color:${rarityColor};font-weight:bold">${skin.rarity}</span> ${skin.name} 装備中`;
+      remEl.textContent = '';
+      return;
+    }
+  }
+
   const lv = calcLevelFromMoku(gameState.totalMoku);
 
   const SUIT_GOALS = [
@@ -830,7 +840,11 @@ function updateSoundBtn() {
 function updateSuit(suit) {
   gameState.suit = suit;
   const el = document.getElementById('character-img');
-  el.className = `suit-${suit}`;
+  const equippedSkin = gameState.equippedSkin
+    ? GACHA_SKINS.find(s => s.id === gameState.equippedSkin)
+    : null;
+  const borderSuit = equippedSkin?.rarity === 'SSR' ? 'rainbow' : suit;
+  el.className = `suit-${borderSuit}`;
   if (gameState.isAwakened) el.classList.add('awakened');
   applyCharacterSprite(suit);
 }
@@ -2197,7 +2211,7 @@ function showGachaResult(results) {
 function equipSkin(skinId) {
   if (!(gameState.ownedSkins ?? []).includes(skinId)) return;
   gameState.equippedSkin = gameState.equippedSkin === skinId ? null : skinId;
-  applyCharacterSprite(gameState.suit);
+  updateSuit(gameState.suit);
   updateDisplay();
 }
 
