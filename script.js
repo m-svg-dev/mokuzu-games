@@ -1685,6 +1685,7 @@ function openNoticeModal() {
     card.className = `notice-card${isUnread ? ' unread' : ''}`;
     card.innerHTML = `
       <div class="notice-card-header">
+        <span class="notice-version">${entry.id}</span>
         <span class="notice-date">${entry.date}</span>
         ${isUnread ? '<span class="notice-new-badge">NEW</span>' : ''}
       </div>
@@ -2612,6 +2613,7 @@ function initTabs() {
       btn.classList.add('active');
       btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       if (tabId === 'ranking') loadRanking();
+      if (tabId === 'pet') { renderPetSection(); renderPetEggShop(); }
     });
   });
 

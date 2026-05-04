@@ -2225,6 +2225,7 @@ button,
   gap: 8px;
   margin-bottom: 4px;
 }
+.notice-version { font-size: 0.75rem; color: #ffd700; font-weight: bold; margin-right: 6px; }
 .notice-date { font-size: 0.75rem; color: #8ab; }
 .notice-new-badge {
   background: #3dff7a;
