@@ -462,6 +462,7 @@ const DEFAULT_STATE = {
   lastReadUpdateId:     null,
   tapCount:             0,
   achievements:         {},
+  usedCoupons:          [],
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -2166,6 +2167,7 @@ function doPrestige() {
     soundEnabled:             gameState.soundEnabled,
     registrationBonusClaimed: gameState.registrationBonusClaimed,
     lastReadUpdateId:         gameState.lastReadUpdateId,
+    usedCoupons:              gameState.usedCoupons,
   };
 
   gameState = structuredClone(DEFAULT_STATE);
@@ -2452,6 +2454,13 @@ function init() {
   });
   document.getElementById('reset-btn').addEventListener('click', resetGame);
 
+  document.getElementById('coupon-btn').addEventListener('click', () => {
+    const code = document.getElementById('coupon-input').value;
+    redeemCoupon(code).then(() => {
+      document.getElementById('coupon-input').value = '';
+    });
+  });
+
   document.getElementById('offline-ok').addEventListener('click', () => {
     document.getElementById('offline-modal').classList.add('hidden');
   });
@@ -2524,6 +2533,44 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ========== クーポンコード ==========
+
+async function redeemCoupon(code) {
+  const trimmed = code.trim().toUpperCase();
+  if (!trimmed) return;
+
+  const used = gameState.usedCoupons ?? [];
+  if (used.includes(trimmed)) {
+    alert('このコードはすでに使用済みです。');
+    return;
+  }
+
+  let coupons;
+  try {
+    const res = await fetch(`coupons.json?t=${Date.now()}`);
+    coupons = await res.json();
+  } catch (_) {
+    alert('通信エラーが発生しました。時間をおいて再試行してください。');
+    return;
+  }
+
+  const coupon = coupons[trimmed];
+  if (!coupon) {
+    alert('無効なコードです。');
+    return;
+  }
+
+  if (coupon.reward === 'coins')  gameState.mokuCoins     = (gameState.mokuCoins     ?? 0) + coupon.amount;
+  if (coupon.reward === 'stones') gameState.prestigeStones = (gameState.prestigeStones ?? 0) + coupon.amount;
+  if (coupon.reward === 'moku')   gameState.moku           = (gameState.moku           ?? 0) + coupon.amount;
+
+  gameState.usedCoupons = [...used, trimmed];
+  saveGame();
+  updateDisplay();
+
+  alert(`🎁 ${coupon.desc}\n報酬を受け取りました！`);
+}
 
 // ========== バージョンポーリング ==========
 

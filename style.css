@@ -2268,6 +2268,33 @@ button,
   margin: 2px 0;
 }
 
+#coupon-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+#coupon-input {
+  flex: 1;
+  background: #0a1f14;
+  border: 1px solid #2a6a44;
+  border-radius: 8px;
+  color: #d8eedd;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+#coupon-btn {
+  background: #1a6a3a;
+  color: #d8eedd;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#coupon-btn:active { background: #2a8a4a; }
+
 .settings-version-label {
   text-align: center;
   font-size: 0.75rem;
