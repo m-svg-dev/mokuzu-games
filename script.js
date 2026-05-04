@@ -2419,6 +2419,7 @@ function doPrestige() {
 
   gameState = structuredClone(DEFAULT_STATE);
   Object.assign(gameState, keep);
+  _minCloudTotalMoku = 0; // 転生でtotalMokuがリセットされるのでクラウド保存ブロックを解除
   updateSuit('black');
   recalcTapPower();
   recalcMPS();
