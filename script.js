@@ -2576,6 +2576,10 @@ async function redeemCoupon(code) {
     alert('このコードはすでに使用済みです。');
     return;
   }
+  if (result.error === 'network') {
+    alert('通信エラーが発生しました。時間をおいて再試行してください。');
+    return;
+  }
   if (result.error === 'invalid') {
     alert('無効なコードです。');
     return;

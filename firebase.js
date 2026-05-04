@@ -113,16 +113,21 @@ export async function redeemPersonalCoupon(code) {
   const user = auth.currentUser;
   if (!user) return { error: 'login_required' };
 
-  const ref  = doc(db, 'coupons', code);
-  const snap = await getDoc(ref);
-  if (!snap.exists())       return { error: 'invalid' };
+  try {
+    const ref  = doc(db, 'coupons', code);
+    const snap = await getDoc(ref);
+    if (!snap.exists())        return { error: 'invalid' };
 
-  const data = snap.data();
-  if (data.used)            return { error: 'used' };
-  if (data.uid !== user.uid) return { error: 'invalid' };
+    const data = snap.data();
+    if (data.used)             return { error: 'used' };
+    if (data.uid !== user.uid) return { error: 'invalid' };
 
-  await updateDoc(ref, { used: true });
-  return { reward: data.reward, amount: data.amount, desc: data.desc };
+    await updateDoc(ref, { used: true });
+    return { reward: data.reward, amount: data.amount, desc: data.desc };
+  } catch (e) {
+    console.error('[coupon]', e);
+    return { error: 'network' };
+  }
 }
 
 // ========== ランキング取得（総獲得藻 上位20件） ==========
