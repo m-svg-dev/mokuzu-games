@@ -561,6 +561,7 @@ function calcLevel(totalMoku) {
 
 let _audioCtx = null;
 let _lastCloudSave = null;
+let _minCloudTotalMoku = 0;
 
 function getAudioCtx() {
   if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -2562,13 +2563,15 @@ function saveGameCloud() {
   const json = localStorage.getItem(SAVE_KEY);
   if (!json || !currentUser()) return;
   if (json === _lastCloudSave) return;
-  // 空の状態でクラウドを上書きしない（復元ダイアログ中の競合防止）
+  // 空の状態・クラウドより進捗が低い状態でクラウドを上書きしない
   try {
     const s = JSON.parse(json);
     const isEmpty = (s.moku ?? 0) === 0
       && Object.keys(s.employees ?? {}).length === 0
       && (s.tapCount ?? 0) === 0;
     if (isEmpty) return;
+    const localTotalMoku = s.totalMoku ?? 0;
+    if (localTotalMoku < _minCloudTotalMoku) return;
   } catch (_) { return; }
   _lastCloudSave = json;
   saveGameData(json).catch(() => {});
@@ -2909,7 +2912,15 @@ function initFirebase() {
           const cloudState = JSON.parse(cloudJson);
           const localSaved = gameState.lastSaved ?? 0;
           const cloudSaved = cloudState.lastSaved ?? 0;
-          if (cloudSaved > localSaved) {
+          const localTotalMoku = gameState.totalMoku ?? 0;
+          const cloudTotalMoku = cloudState.totalMoku ?? 0;
+          // クラウドのtotalMokuを記録（saveGameCloudで低品質上書き防止に使用）
+          _minCloudTotalMoku = cloudTotalMoku;
+          // タイムスタンプ比較に加え、totalMokuがクラウドより低い場合もクラウドを優先
+          // （totalMokuは累計値で減らないため、低いほうが明らかに古い/壊れた状態）
+          const cloudIsNewer = cloudSaved > localSaved;
+          const cloudHasMoreProgress = cloudTotalMoku > localTotalMoku;
+          if (cloudIsNewer || cloudHasMoreProgress) {
             const d = new Date(cloudSaved);
             const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
             if (confirm(`☁️ クラウドにセーブデータが見つかりました！\n保存日時: ${dateStr}\n\nクラウドのデータを引き継ぎますか？`)) {
