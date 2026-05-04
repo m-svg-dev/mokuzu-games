@@ -2961,9 +2961,13 @@ function initFirebase() {
         const rewards = await claimPendingRewards();
         if (rewards.length > 0) {
           for (const reward of rewards) {
-            if (reward.type === 'coins')  gameState.mokuCoins      = (gameState.mokuCoins      ?? 0) + reward.amount;
-            if (reward.type === 'stones') gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + reward.amount;
-            if (reward.type === 'moku')   gameState.moku            = (gameState.moku           ?? 0) + reward.amount;
+            if (reward.type === 'coins')      gameState.mokuCoins      = (gameState.mokuCoins      ?? 0) + reward.amount;
+            if (reward.type === 'stones')     gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + reward.amount;
+            if (reward.type === 'moku')       gameState.moku            = (gameState.moku           ?? 0) + reward.amount;
+            if (reward.type === 'gacha_coin') {
+              gameState.consumables = gameState.consumables ?? {};
+              gameState.consumables['gacha_coin'] = (gameState.consumables['gacha_coin'] ?? 0) + reward.amount;
+            }
             if (reward.type === 'pet' && reward.id) {
               if (!gameState.ownedPets) gameState.ownedPets = {};
               const current  = gameState.ownedPets[reward.id];
