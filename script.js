@@ -680,7 +680,7 @@ function getPrestigeBonus(type) {
 function recalcTapPower() {
   let power = 1;
   for (const u of UPGRADES) {
-    power += u.tapBonus * (gameState.upgrades[u.id] ?? 0);
+    if (u.tapBonus) power += u.tapBonus * (gameState.upgrades[u.id] ?? 0);
   }
   for (const f of FACILITIES) {
     if (f.tapBonus) power += f.tapBonus * (gameState.facilities[f.id] ?? 0);
