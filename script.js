@@ -2926,7 +2926,12 @@ function init() {
   setInterval(saveGameCloud, 300_000);  // クラウドオートセーブ（5分ごと・変化時のみ）
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') { saveGame(); saveGameCloud(); }
+    if (document.visibilityState === 'hidden') {
+      saveGame();
+      saveGameCloud();
+    } else {
+      checkOfflineEarnings();
+    }
   });
 }
 
