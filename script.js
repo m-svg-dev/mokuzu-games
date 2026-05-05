@@ -3037,10 +3037,13 @@ async function checkForUpdate() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('update-banner-btn')?.addEventListener('click', () => location.reload(true));
+  document.getElementById('update-banner-btn')?.addEventListener('click', () => {
+    saveGame();
+    location.href = location.pathname + '?_cb=' + Date.now();
+  });
   const vLabel = document.getElementById('settings-version-label') ?? document.querySelector('.settings-version-label');
   if (vLabel) vLabel.textContent = `バージョン ${CURRENT_VERSION}`;
-  setTimeout(checkForUpdate, 10_000);
+  setTimeout(checkForUpdate, 3_000);
   setInterval(checkForUpdate, 5 * 60 * 1000);
 });
 
