@@ -413,7 +413,7 @@ button,
   background: #1a6a3a;
   color: #d8eedd;
   text-align: center;
-  padding: 10px 16px;
+  padding: max(10px, env(safe-area-inset-top)) 16px 10px;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
