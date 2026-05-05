@@ -895,7 +895,7 @@ function onTap(e) {
   const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult * petTapMult * (isCritical ? critMult : 1);
 
   gameState.moku      += gained;
-  gameState.totalMoku += gameState.tapPower;
+  gameState.totalMoku += gained;
   gameState.tapCount   = (gameState.tapCount ?? 0) + 1;
 
   gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 2);
@@ -984,7 +984,7 @@ function gameLoop() {
   const gained       = gameState.mokuPerSecond * awakenMult * eventMult * mpsBoostMult * petMpsMult;
 
   gameState.moku      += gained;
-  gameState.totalMoku += gameState.mokuPerSecond; // ボーナス倍率は含めない
+  gameState.totalMoku += gained;
 
   // 覚醒タイマー
   if (gameState.isAwakened) {
@@ -1354,7 +1354,7 @@ function startAutoClicker() {
     const tapBoostMult = isEffectActive('tap_boost') ? 10 : 1;
     const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult;
     gameState.moku      += gained;
-    gameState.totalMoku += gameState.tapPower;
+    gameState.totalMoku += gained;
     gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 1);
 
     const fakeE = getCharacterCenter();
