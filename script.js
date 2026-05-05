@@ -1,6 +1,6 @@
 // ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.4';
+const CURRENT_VERSION = '2.5';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,19 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.5',
+    date: '2026/05/05',
+    title: '⚔️ 強化システム拡張 & バグ修正',
+    items: [
+      '⚔️ 強化に「クリティカル率強化」「クリティカル倍率強化」「MPS強化 I〜IV」を追加！',
+      '🐛 名前変更後にランキングへスコアを登録すると旧名前で登録されるバグを修正しました',
+      '🐛 転生後にクラウドセーブが正常に動作しないバグを修正しました',
+      '🐛 お帰りボーナス・デイリーコインがクラウドに反映されないことがあるバグを修正しました',
+      '🐛 累計獲得藻がクリティカルや倍率強化の値を反映していなかったバグを修正しました',
+      '🐛 転生条件の必要藻が毎回100Mで変わらないバグを修正しました（段階的に増加するよう変更）',
+    ],
+  },
   {
     id: 'v2.4',
     date: '2026/05/05',
@@ -426,12 +439,18 @@ const ITEMS = [
   { id: 'trophy_rainbow', name: 'レインボートロフィー',   icon: '🏆', desc: '藻屑界の伝説。この先に何がある？',   cost:      8_000_000_000, overlayPos: 'trophy'    },
 ];
 
-// 購入ごとに tapBonus が加算される（baseCost * costMult^購入回数 で価格上昇）
+// 購入ごとに tapBonus/critRateBonus/critMultBonus/mpsBonus が加算される
 const UPGRADES = [
-  { id: 'tap1', name: 'タップ強化 I',   icon: '💪', desc: 'タップ +1',   baseCost: 8,     costMult: 2.0, tapBonus: 1,   maxCount: 10 },
-  { id: 'tap2', name: 'タップ強化 II',  icon: '💪', desc: 'タップ +5',   baseCost: 60,    costMult: 2.0, tapBonus: 5,   maxCount: 10 },
-  { id: 'tap3', name: 'タップ強化 III', icon: '💪', desc: 'タップ +25',  baseCost: 500,   costMult: 2.0, tapBonus: 25,  maxCount: 10 },
-  { id: 'tap4', name: 'タップ強化 IV',  icon: '💪', desc: 'タップ +100', baseCost: 5_000, costMult: 2.0, tapBonus: 100, maxCount: 10 },
+  { id: 'tap1',   name: 'タップ強化 I',        icon: '💪', desc: 'タップ +1',             baseCost: 8,       costMult: 2.0, tapBonus: 1,             maxCount: 10 },
+  { id: 'tap2',   name: 'タップ強化 II',       icon: '💪', desc: 'タップ +5',             baseCost: 60,      costMult: 2.0, tapBonus: 5,             maxCount: 10 },
+  { id: 'tap3',   name: 'タップ強化 III',      icon: '💪', desc: 'タップ +25',            baseCost: 500,     costMult: 2.0, tapBonus: 25,            maxCount: 10 },
+  { id: 'tap4',   name: 'タップ強化 IV',       icon: '💪', desc: 'タップ +100',           baseCost: 5_000,   costMult: 2.0, tapBonus: 100,           maxCount: 10 },
+  { id: 'critR',  name: 'クリティカル率強化',  icon: '🎯', desc: 'クリティカル率 +2%',   baseCost: 300,     costMult: 3.0, critRateBonus: 0.02,     maxCount: 5  },
+  { id: 'critM',  name: 'クリティカル倍率強化',icon: '⚡', desc: 'クリティカル倍率 +0.5', baseCost: 1_000,   costMult: 3.0, critMultBonus: 0.5,      maxCount: 5  },
+  { id: 'mps1',   name: 'MPS強化 I',           icon: '🌊', desc: 'MPS +2',                baseCost: 500,     costMult: 2.0, mpsBonus: 2,             maxCount: 10 },
+  { id: 'mps2',   name: 'MPS強化 II',          icon: '🌊', desc: 'MPS +10',               baseCost: 4_000,   costMult: 2.0, mpsBonus: 10,            maxCount: 10 },
+  { id: 'mps3',   name: 'MPS強化 III',         icon: '🌊', desc: 'MPS +50',               baseCost: 30_000,  costMult: 2.0, mpsBonus: 50,            maxCount: 10 },
+  { id: 'mps4',   name: 'MPS強化 IV',          icon: '🌊', desc: 'MPS +200',              baseCost: 250_000, costMult: 2.0, mpsBonus: 200,           maxCount: 10 },
 ];
 
 // 所持数に応じて MPS が増加（baseCost * 1.15^所持数 で価格上昇）
@@ -677,6 +696,9 @@ function recalcMPS() {
   for (const f of FACILITIES) {
     if (f.mpsBonus) mps += f.mpsBonus * (gameState.facilities[f.id] ?? 0);
   }
+  for (const u of UPGRADES) {
+    if (u.mpsBonus) mps += u.mpsBonus * (gameState.upgrades[u.id] ?? 0);
+  }
   gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult');
 }
 
@@ -910,8 +932,10 @@ function onTap(e) {
   const eventMult    = gameState.eventTapMult ?? 1;
   const tapBoostMult = isEffectActive('tap_boost') ? 10 : 1;
   const petTapMult   = getPetMultiplier().tap;
-  const critRate     = 0.05 + getPrestigeBonus('critRate');
-  const critMult     = 3    + getPrestigeBonus('critMult');
+  const upgradeCritRate = UPGRADES.reduce((s, u) => s + (u.critRateBonus ?? 0) * (gameState.upgrades[u.id] ?? 0), 0);
+  const upgradeCritMult = UPGRADES.reduce((s, u) => s + (u.critMultBonus ?? 0) * (gameState.upgrades[u.id] ?? 0), 0);
+  const critRate     = 0.05 + getPrestigeBonus('critRate') + upgradeCritRate;
+  const critMult     = 3    + getPrestigeBonus('critMult') + upgradeCritMult;
   const isCritical   = Math.random() < critRate;
   const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult * petTapMult * (isCritical ? critMult : 1);
 
@@ -1081,6 +1105,7 @@ function buyUpgrade(upgradeId) {
   gameState.moku -= cost;
   gameState.upgrades[u.id] = count + 1;
   recalcTapPower();
+  recalcMPS();
   playSound('buy');
   updateDisplay();
 }
@@ -3224,6 +3249,9 @@ function initFirebase() {
       input.value = '';
       msgEl.textContent = '✅ 名前を変更しました！';
       msgEl.style.color = '#3dff7a';
+      const historyTotal = (gameState.prestigeHistory ?? []).reduce((sum, e) => sum + (e.totalMoku ?? 0), 0);
+      const lifetimeTotal = historyTotal + (gameState.totalMoku ?? 0);
+      await saveScore(lifetimeTotal, gameState.prestigeLevel ?? 0);
       await loadRanking();
     } catch {
       msgEl.textContent = '❌ 変更に失敗しました';
