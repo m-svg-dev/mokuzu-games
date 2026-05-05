@@ -3097,7 +3097,13 @@ function initFirebase() {
             const d = new Date(cloudSaved);
             const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
             if (confirm(`☁️ クラウドにセーブデータが見つかりました！\n保存日時: ${dateStr}\n\nクラウドのデータを引き継ぎますか？`)) {
+              // ownedSkins / usedCoupons はローカルとクラウドを合わせて引き継ぐ
+              // （クラウドより新しいローカルで取得したスキンが上書き消去されるバグを防止）
+              const mergedSkins   = [...new Set([...(cloudState.ownedSkins  ?? []), ...(gameState.ownedSkins  ?? [])])];
+              const mergedCoupons = [...new Set([...(cloudState.usedCoupons ?? []), ...(gameState.usedCoupons ?? [])])];
               Object.assign(gameState, cloudState);
+              gameState.ownedSkins  = mergedSkins;
+              gameState.usedCoupons = mergedCoupons;
               recalcTapPower();
               recalcMPS();
               // lastSaved を更新せずに保存（リロード後のオフライン収益計算のため）
