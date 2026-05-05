@@ -680,26 +680,34 @@ function getPrestigeBonus(type) {
 function recalcTapPower() {
   let power = 1;
   for (const u of UPGRADES) {
-    if (u.tapBonus) power += u.tapBonus * (gameState.upgrades[u.id] ?? 0);
+    power += (u.tapBonus ?? 0) * (gameState.upgrades[u.id] ?? 0);
   }
   for (const f of FACILITIES) {
-    if (f.tapBonus) power += f.tapBonus * (gameState.facilities[f.id] ?? 0);
+    power += (f.tapBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
   }
   gameState.tapPower = power * getPrestigeBonus('tapMult');
+  if (!Number.isFinite(gameState.tapPower)) {
+    console.error('[mokuzu] recalcTapPower: NaN/Infinityを検出。tapPower=1にフォールバック');
+    gameState.tapPower = 1;
+  }
 }
 
 function recalcMPS() {
   let mps = 0;
   for (const emp of EMPLOYEES) {
-    mps += emp.mpsBonus * (gameState.employees[emp.id] ?? 0);
+    mps += (emp.mpsBonus ?? 0) * (gameState.employees[emp.id] ?? 0);
   }
   for (const f of FACILITIES) {
-    if (f.mpsBonus) mps += f.mpsBonus * (gameState.facilities[f.id] ?? 0);
+    mps += (f.mpsBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
   }
   for (const u of UPGRADES) {
-    if (u.mpsBonus) mps += u.mpsBonus * (gameState.upgrades[u.id] ?? 0);
+    mps += (u.mpsBonus ?? 0) * (gameState.upgrades[u.id] ?? 0);
   }
   gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult');
+  if (!Number.isFinite(gameState.mokuPerSecond)) {
+    console.error('[mokuzu] recalcMPS: NaN/Infinityを検出。mokuPerSecond=0にフォールバック');
+    gameState.mokuPerSecond = 0;
+  }
 }
 
 // ========== 表示更新 ==========
