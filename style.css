@@ -393,6 +393,11 @@ button,
   to   { box-shadow: 0 0 20px #00ff88cc; }
 }
 
+@keyframes ofuse-pulse {
+  0%, 100% { box-shadow: 0 0 8px #2ecc7140; }
+  50%       { box-shadow: 0 0 22px #2ecc71aa; }
+}
+
 .ofuse-btn {
   display: block;
   text-align: center;
@@ -405,10 +410,18 @@ button,
   font-weight: bold;
   margin: 8px 16px 4px;
   letter-spacing: 0.03em;
-  opacity: 0.9;
+  animation: ofuse-pulse 2s ease-in-out infinite;
   transition: opacity 0.2s;
 }
-.ofuse-btn:hover { opacity: 1; }
+.ofuse-btn:hover { opacity: 0.9; }
+
+.ofuse-sub {
+  text-align: center;
+  font-size: 0.7rem;
+  color: #4a8a66;
+  margin: 0 16px 4px;
+  line-height: 1.4;
+}
 
 #awaken-timer {
   text-align: center;
@@ -1841,6 +1854,60 @@ button,
   border: 1px solid #0099cc;
 }
 
+/* ========== 転生完了トースト ========== */
+#prestige-toast {
+  position: fixed;
+  bottom: 110px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  width: calc(min(440px, 100vw) - 32px);
+  background: linear-gradient(135deg, #0e2a1e, #1a4a30);
+  border: 1px solid #3dff7a66;
+  border-radius: 14px;
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity 0.35s, transform 0.35s;
+  pointer-events: none;
+}
+#prestige-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+#prestige-toast-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+#prestige-toast-msg {
+  flex: 1;
+  font-size: 0.82rem;
+  color: #d8eedd;
+  line-height: 1.4;
+}
+#prestige-toast-link {
+  color: #3dff7a;
+  font-size: 0.78rem;
+  font-weight: bold;
+  white-space: nowrap;
+  text-decoration: none;
+  background: #0e3a24;
+  border: 1px solid #3dff7a;
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+#prestige-toast-link:hover { background: #1a5a34; }
+#prestige-toast-close {
+  background: none;
+  border: none;
+  color: #78bb99;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+
 /* ========== 実績システム ========== */
 
 .tab-emoji-icon {
@@ -2081,6 +2148,17 @@ button,
 
   .sidebar-share-btn:hover {
     background: #1a3a2e;
+  }
+
+  .sidebar-ofuse-btn {
+    background: linear-gradient(135deg, #1a6a3a, #2ecc71);
+    color: #fff !important;
+    border-color: #2ecc71;
+    font-weight: bold;
+    animation: ofuse-pulse 2s ease-in-out infinite;
+  }
+  .sidebar-ofuse-btn:hover {
+    background: linear-gradient(135deg, #2a7a4a, #3ddb81);
   }
 }
 
