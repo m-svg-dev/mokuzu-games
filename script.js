@@ -1155,6 +1155,7 @@ function buyFacility(facilityId) {
 
 function pickRandomEvent() {
   const pool = EVENTS.filter(e => (gameState.unlockedEvents ?? []).includes(e.id));
+  if (pool.length === 0) return null;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
