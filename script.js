@@ -503,7 +503,8 @@ const PRESTIGE_SKILLS = [
   { id: 'pCritR',  name: 'クリティカル率UP',   desc: '恒久クリティカル率 +5%',    costs: [30, 80, 200],          type: 'critRate',   value: 0.05, maxLevel: 3 },
   { id: 'pCritM',  name: 'クリティカル倍率UP', desc: '恒久クリティカル倍率 +1倍', costs: [50, 150, 400],         type: 'critMult',   value: 1,    maxLevel: 3 },
   { id: 'pAwaken', name: '覚醒強化',            desc: '覚醒効果 ×2（5倍→10倍）',   costs: [300],                  type: 'awakenMult', value: 2,    maxLevel: 1 },
-  { id: 'pStone',  name: '転生加速',            desc: '転生石獲得量 ×2',            costs: [500],                  type: 'stoneMult',  value: 2,    maxLevel: 1 },
+  { id: 'pStone',    name: '転生加速',      desc: '転生石獲得量 ×2',          costs: [500],                                                    type: 'stoneMult', value: 2,   maxLevel: 1 },
+  { id: 'pStoneCap', name: '転生石上限UP', desc: '転生石獲得上限 +500（現在上限: {cap}石）', costs: [250,250,250,250,250,250,250,250,250,250], type: 'stoneCap',  value: 500, maxLevel: 10 },
 ];
 
 // ========== 初期状態 ==========
@@ -770,12 +771,32 @@ function updateDisplay() {
   renderAchievementList();
 }
 
-const PRESTIGE_THRESHOLD = 10_000_000;
+const PRESTIGE_THRESHOLDS = [
+  10_000_000,   // 1回目
+  15_000_000,   // 2回目
+  25_000_000,   // 3回目
+  50_000_000,   // 4回目
+  100_000_000,  // 5回目
+  200_000_000,  // 6回目
+  400_000_000,  // 7回目
+  800_000_000,  // 8回目
+];
+const PRESTIGE_THRESHOLD_CAP = 1_600_000_000; // 9回目以降固定
+
+function getPrestigeThreshold() {
+  const lv = gameState.prestigeLevel ?? 0;
+  return lv < PRESTIGE_THRESHOLDS.length ? PRESTIGE_THRESHOLDS[lv] : PRESTIGE_THRESHOLD_CAP;
+}
+
+function getPrestigeStoneCap() {
+  return 1000 + (gameState.prestigeSkills?.pStoneCap ?? 0) * 500;
+}
 
 function updatePrestigeBar() {
   const total   = gameState.totalMoku ?? 0;
-  const pct     = Math.min(100, Math.floor(total / PRESTIGE_THRESHOLD * 100));
-  const ready   = total >= PRESTIGE_THRESHOLD;
+  const threshold = getPrestigeThreshold();
+  const pct     = Math.min(100, Math.floor(total / threshold * 100));
+  const ready   = total >= threshold;
 
   const bar     = document.getElementById('prestige-bar');
   const gauge   = document.getElementById('prestige-gauge-bar');
@@ -807,7 +828,7 @@ function updatePrestigeBar() {
   } else {
     bar.classList.remove('prestige-ready');
     labelEl.textContent = '✨ 転生まで';
-    remEl.textContent   = `あと ${fmt(PRESTIGE_THRESHOLD - total)} 藻`;
+    remEl.textContent   = `あと ${fmt(threshold - total)} 藻`;
     if (stonePreview) stonePreview.classList.add('hidden');
   }
 }
@@ -2376,9 +2397,16 @@ function renderAchievementList() {
 // ========== 転生（プレステージ） ==========
 
 function doPrestige() {
-  if ((gameState.totalMoku ?? 0) < PRESTIGE_THRESHOLD) return;
-  const stonesEarned = Math.floor(gameState.totalMoku / 1_000_000) * getPrestigeBonus('stoneMult');
-  if (!confirm(`転生しますか？\n\n獲得: 転生石 +${stonesEarned}個\n\n藻・強化・社員・施設・イベント解放がリセットされます。\nアイテムとスキルは引き継がれます。`)) return;
+  if ((gameState.totalMoku ?? 0) < getPrestigeThreshold()) return;
+  const stonesEarned = Math.min(
+    Math.floor(gameState.totalMoku / 1_000_000) * getPrestigeBonus('stoneMult'),
+    getPrestigeStoneCap()
+  );
+  const nextThreshold = (() => {
+    const nextLv = (gameState.prestigeLevel ?? 0) + 1;
+    return nextLv < PRESTIGE_THRESHOLDS.length ? PRESTIGE_THRESHOLDS[nextLv] : PRESTIGE_THRESHOLD_CAP;
+  })();
+  if (!confirm(`転生しますか？\n\n獲得: 転生石 +${stonesEarned}個\n次の転生条件: ${fmt(nextThreshold)}藻\n\n藻・強化・社員・施設・イベント解放がリセットされます。\nアイテムとスキルは引き継がれます。`)) return;
 
   const now   = new Date();
   const entry = {
@@ -2480,7 +2508,7 @@ function renderPrestigeSkillList() {
       <div class="item-icon">✨</div>
       <div class="item-info">
         <div class="item-name">${s.name}</div>
-        <div class="item-desc">${s.desc}</div>
+        <div class="item-desc">${s.id === 'pStoneCap' ? s.desc.replace('{cap}', getPrestigeStoneCap()) : s.desc}</div>
         <div class="item-count-bar">${dots}</div>
       </div>
       <div class="item-right">
@@ -2500,11 +2528,13 @@ function updatePrestigeTab() {
   const exampleEl = document.getElementById('stone-guide-example');
   if (exampleEl) {
     const total      = gameState.totalMoku ?? 0;
-    const stones     = Math.floor(total / 1_000_000) * getPrestigeBonus('stoneMult');
+    const rawStones  = Math.floor(total / 1_000_000) * getPrestigeBonus('stoneMult');
+    const stones     = Math.min(rawStones, getPrestigeStoneCap());
     const multiplier = getPrestigeBonus('stoneMult');
+    const capNote    = rawStones > getPrestigeStoneCap() ? `（上限${getPrestigeStoneCap()}石）` : '';
     const multStr    = multiplier > 1 ? `（転生加速×${multiplier}）` : '';
     exampleEl.textContent = total > 0
-      ? `例: 現在 ${fmt(total)}藻 → 転生すると ${stones}石 獲得${multStr}`
+      ? `例: 現在 ${fmt(total)}藻 → 転生すると ${stones}石 獲得${multStr}${capNote}`
       : '藻を貯めて転生してみよう！';
   }
   renderSkinCollection();
