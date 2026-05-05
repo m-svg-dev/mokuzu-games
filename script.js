@@ -1437,6 +1437,7 @@ function claimDailyCoins() {
   gameState.lastDailyLogin = Date.now();
   const coins = getDailyCoins();
   gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coins;
+  saveGame();
   document.getElementById('daily-modal-body').textContent = `🪙 藻コイン ×${coins} を受け取りました！`;
   playSound('buy');
   updateDisplay();
