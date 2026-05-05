@@ -81,6 +81,7 @@ export async function changeDisplayName(newName) {
 export async function saveScore(totalMoku, prestigeLevel) {
   const user = auth.currentUser;
   if (!user) return;
+  if (!Number.isFinite(totalMoku) || !Number.isFinite(prestigeLevel)) return;
   await setDoc(doc(db, 'users', user.uid), {
     name:          user.displayName ?? '名無し',
     totalMoku,

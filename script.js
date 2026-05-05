@@ -2853,11 +2853,13 @@ function init() {
     updateMenheraToggle();
   });
 
-  document.getElementById('coupon-btn').addEventListener('click', () => {
+  document.getElementById('coupon-btn').addEventListener('click', async () => {
+    const btn  = document.getElementById('coupon-btn');
     const code = document.getElementById('coupon-input').value;
-    redeemCoupon(code).then(() => {
-      document.getElementById('coupon-input').value = '';
-    });
+    btn.disabled = true;
+    await redeemCoupon(code);
+    document.getElementById('coupon-input').value = '';
+    btn.disabled = false;
   });
 
   document.getElementById('offline-ok').addEventListener('click', () => {
