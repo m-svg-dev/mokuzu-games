@@ -860,6 +860,7 @@ function updatePrestigeBar() {
     labelEl.textContent = '✨ 転生まで';
     remEl.textContent   = `あと ${fmt(threshold - total)} 藻`;
     if (stonePreview) stonePreview.classList.add('hidden');
+    document.getElementById('prestige-do-btn')?.remove();
   }
 }
 
