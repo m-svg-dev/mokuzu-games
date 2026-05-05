@@ -3022,7 +3022,10 @@ function initFirebase() {
               Object.assign(gameState, cloudState);
               recalcTapPower();
               recalcMPS();
-              saveGame();
+              // lastSaved を更新せずに保存（リロード後のオフライン収益計算のため）
+              const json = JSON.stringify(gameState);
+              localStorage.setItem(SAVE_KEY, json);
+              localStorage.setItem(CHECKSUM_KEY, computeChecksum(json));
               location.reload();
               return;
             }
