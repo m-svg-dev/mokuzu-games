@@ -1,5 +1,6 @@
 param(
-  [Parameter(Mandatory)][string]$Version
+  [Parameter(Mandatory)][string]$Version,
+  [switch]$Push
 )
 
 function ReplaceInFile($path, $pattern, $replacement) {
@@ -13,7 +14,12 @@ ReplaceInFile "index.html"   'v=[\d.]+'                          "v=$Version"
 ReplaceInFile "index.html"   'バージョン [\d.]+'                 "バージョン $Version"
 [System.IO.File]::WriteAllText("version.json", "{`"version`":`"$Version`"}`n", [System.Text.Encoding]::UTF8)
 
-Write-Host "✅ バージョンを $Version に更新しました" -ForegroundColor Green
-Write-Host "   script.js   CURRENT_VERSION = '$Version'"
-Write-Host "   index.html  ?v=$Version / バージョン $Version"
-Write-Host "   version.json  version: $Version"
+git add script.js index.html version.json
+git commit -m "Bump version to $Version"
+
+if ($Push) {
+  git push
+  Write-Host "pushed!" -ForegroundColor Cyan
+}
+
+Write-Host "v$Version" -ForegroundColor Green
