@@ -27,7 +27,7 @@
   <meta name="apple-mobile-web-app-title" content="藻屑社長">
   <link rel="apple-touch-icon" href="assets/icon/icon.png">
   <link rel="icon" href="assets/icon/icon.png" type="image/png">
-  <link rel="stylesheet" href="style.css?v=2.5.4">
+  <link rel="stylesheet" href="style.css?v=2.5.5">
 </head>
 <body>
 
@@ -59,6 +59,11 @@
         <li>ログインするとデイリーボーナスが+5コインに</li>
         <li>ペットを育てて恒久ボーナスをゲット</li>
       </ul>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">☕ 開発を応援する</div>
+      <p class="sidebar-text">個人開発のゲームです。楽しんでもらえてたら社長を推してね！</p>
+      <a class="sidebar-share-btn sidebar-ofuse-btn" href="https://ofuse.me/mokuzu" target="_blank" rel="noopener">💸 社長に投資する</a>
     </div>
     <div class="sidebar-footer">
       無料ブラウザゲーム<br>インストール不要
@@ -181,8 +186,9 @@
         </div>
 
         <hr class="settings-divider">
-        <a class="ofuse-btn" href="https://ofuse.me/mokuzu" target="_blank" rel="noopener">☕ 開発を応援する</a>
-        <p class="settings-version-label" id="settings-version-label">バージョン 2.5.2</p>
+        <a class="ofuse-btn" href="https://ofuse.me/mokuzu" target="_blank" rel="noopener">💸 社長に投資する</a>
+        <p class="ofuse-sub">個人開発です。応援が次の更新の燃料になります🌿</p>
+        <p class="settings-version-label" id="settings-version-label">バージョン 2.5.4</p>
       </div>
     </div>
   </div>
@@ -515,6 +521,15 @@
     </div>
   </aside>
 
+  <!-- 転生完了トースト -->
+  <div id="prestige-toast" class="hidden">
+    <div id="prestige-toast-inner">
+      <div id="prestige-toast-msg"></div>
+      <a id="prestige-toast-link" href="https://ofuse.me/mokuzu" target="_blank" rel="noopener">💸 社長に投資する →</a>
+      <button id="prestige-toast-close">✕</button>
+    </div>
+  </div>
+
   <!-- 実績達成ポップアップ -->
   <div id="achievement-popup">
     <div class="ach-pop-inner">
@@ -528,6 +543,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=2.5.4"></script>
+  <script type="module" src="script.js?v=2.5.5"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.5.4';
+const CURRENT_VERSION = '2.5.5';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -2519,6 +2519,22 @@ function doPrestige() {
   updatePrestigeBar();
   renderPetEggShop();
   renderPetSection();
+  showPrestigeCongrats(gameState.prestigeLevel);
+}
+
+function showPrestigeCongrats(level) {
+  const toast = document.getElementById('prestige-toast');
+  const msg   = document.getElementById('prestige-toast-msg');
+  if (!toast || !msg) return;
+  msg.textContent = `🌿 転生 Lv.${level} おめでとう！楽しんでもらえてたら社長を推してね`;
+  toast.classList.remove('hidden');
+  requestAnimationFrame(() => toast.classList.add('show'));
+  const close = () => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.classList.add('hidden'), 350);
+  };
+  document.getElementById('prestige-toast-close').onclick = close;
+  setTimeout(close, 8000);
 }
 
 function buyPrestigeSkill(skillId) {
