@@ -1162,13 +1162,18 @@ function triggerRandomEvent() {
   const ev = gameState.nextEventId
     ? (EVENTS.find(e => e.id === gameState.nextEventId) ?? pickRandomEvent())
     : pickRandomEvent();
+  if (!ev) return;
   gameState.activeEvent  = { id: ev.id, timer: ev.duration };
   gameState.nextEventId  = null;
 
   if (ev.type === 'tap_mult')   gameState.eventTapMult = ev.value;
   if (ev.type === 'mps_mult')   gameState.eventMpsMult = ev.value;
   if (ev.type === 'all_mult')   { gameState.eventTapMult = ev.value; gameState.eventMpsMult = ev.value; }
-  if (ev.type === 'moku_bonus') gameState.moku += gameState.moku * ev.value;
+  if (ev.type === 'moku_bonus') {
+    const bonus = gameState.moku * ev.value;
+    gameState.moku      += bonus;
+    gameState.totalMoku += bonus;
+  }
 }
 
 function endEvent() {
@@ -1510,6 +1515,7 @@ function exchangeStonesForCoins() {
   if ((gameState.prestigeStones ?? 0) < COINS_PER_STONE) return;
   gameState.prestigeStones -= COINS_PER_STONE;
   gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 1;
+  saveGame();
   playSound('buy');
   updateDisplay();
 }
@@ -2731,7 +2737,7 @@ function saveGameCloud() {
     if (localTotalMoku < _minCloudTotalMoku) return;
   } catch (_) { return; }
   _lastCloudSave = json;
-  saveGameData(json).catch(() => {});
+  saveGameData(json).catch(e => { console.warn('[mokuzu] クラウド保存失敗:', e); });
 }
 
 function loadGame() {
