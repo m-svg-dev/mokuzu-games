@@ -393,6 +393,23 @@ button,
   to   { box-shadow: 0 0 20px #00ff88cc; }
 }
 
+.ofuse-btn {
+  display: block;
+  text-align: center;
+  background: linear-gradient(135deg, #1a6a3a, #2ecc71);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 20px;
+  padding: 10px 0;
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin: 8px 16px 4px;
+  letter-spacing: 0.03em;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+.ofuse-btn:hover { opacity: 1; }
+
 #awaken-timer {
   text-align: center;
   color: #00ffcc;
