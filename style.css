@@ -213,6 +213,17 @@ button,
   100% { border-color: #ff2222; }
 }
 
+.suit-ur {
+  animation: ur-border 1.8s ease-in-out infinite;
+  box-shadow: 0 0 60px #ff660099;
+}
+
+@keyframes ur-border {
+  0%   { border-color: #ff6600; box-shadow: 0 0 60px #ff660099; }
+  50%  { border-color: #ffe066; box-shadow: 0 0 80px #ffe066cc; }
+  100% { border-color: #ff6600; box-shadow: 0 0 60px #ff660099; }
+}
+
 .tapped {
   transform: scale(0.86) !important;
 }
@@ -987,6 +998,40 @@ button,
   margin-left: auto;
 }
 
+/* ガチャ排出率 */
+.gacha-rates {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: #88aaaa;
+}
+.gacha-rates summary {
+  cursor: pointer;
+  color: #66ccaa;
+  padding: 4px 0;
+}
+.gacha-rates-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+}
+.gacha-rates-table th,
+.gacha-rates-table td {
+  padding: 4px 6px;
+  border: 1px solid #1e3a2a;
+  text-align: center;
+}
+.gacha-rates-table th { background: #0a1f14; color: #66ccaa; }
+.rarity-n   { color: #888888; font-weight: bold; }
+.rarity-r   { color: #4499ff; font-weight: bold; }
+.rarity-sr  { color: #ffd700; font-weight: bold; }
+.rarity-ssr { color: #ff44ff; font-weight: bold; }
+.rarity-ur  { color: #ff6600; font-weight: bold; }
+.gacha-rates-note {
+  margin-top: 6px;
+  line-height: 1.6;
+  color: #557766;
+}
+
 /* スキンコレクション */
 #skin-collection {
   display: grid;
@@ -1026,7 +1071,13 @@ button,
 .skin-card-name {
   font-size: 0.68rem;
   color: #d8eedd;
-  margin: 4px 0 6px;
+  margin: 4px 0 2px;
+}
+
+.skin-card-op {
+  font-size: 0.62rem;
+  font-weight: bold;
+  margin-bottom: 4px;
 }
 
 .skin-equip-btn {

@@ -20,6 +20,18 @@ function computeChecksum(str) {
 
 const UPDATE_LOG = [
   {
+    id: 'v2.6.0',
+    date: '2026/05/06',
+    title: '🌟 URスキン追加 & スキン効果システム実装！',
+    items: [
+      '🌟 新レアリティ「UR」追加！星屑のルシエル・黒星のノクシアが登場（排出率約0.1%）',
+      '⚡ SR以上のスキンに装備効果（OP）を追加！SR: ×1.3 / SSR: ×1.5 / UR: タップ&MPS ×2.0',
+      '📊 ガチャ排出率をスキンごとに個別表示するよう変更',
+      '⚖️ SSR排出率を約3%に調整（以前は約8%）',
+      '🐾 ペット購入後に図鑑へ即時反映されないバグを修正',
+    ],
+  },
+  {
     id: 'v2.5.5',
     date: '2026/05/05',
     title: '☕ 社長への投資機能を追加！',
@@ -252,8 +264,10 @@ const IMAGE_CONFIG = {
       mo_mizu:  'assets/characters/mo_mizu.png',
       mo_pink:  'assets/characters/mo_pink.png',
       mo_majyo: 'assets/characters/mo_majyo.png',
-      puikyua_ki: 'assets/characters/puikyua_kiiro_.png',
-      puikyua_pk: 'assets/characters/puikyua_pink_.png',
+      puikyua_ki:  'assets/characters/puikyua_kiiro_.png',
+      puikyua_pk:  'assets/characters/puikyua_pink_.png',
+      ur_rushieru: 'assets/characters/ur_rushieru.png',
+      ur_nokushia: 'assets/characters/ur_nokushia.png',
     },
   },
   employees: {
@@ -310,7 +324,7 @@ const IMAGE_CONFIG = {
 };
 
 const SUIT_COVER_FIT = new Set(['silver', 'white']); // 正方形画像はcoverで表示
-const SUIT_TOP_FIT   = new Set(['moku_ki', 'mo_mizu', 'mo_pink', 'mo_majyo', 'puikyua_ki', 'puikyua_pk']); // 正方形・上寄せ表示
+const SUIT_TOP_FIT   = new Set(['moku_ki', 'mo_mizu', 'mo_pink', 'mo_majyo', 'puikyua_ki', 'puikyua_pk', 'ur_rushieru', 'ur_nokushia']); // 正方形・上寄せ表示
 
 function applyCharacterSprite(suit) {
   let effectiveSuit = suit;
@@ -512,24 +526,26 @@ const EVENTS = [
 
 // ガチャスキン一覧（既存スーツを流用）
 const GACHA_SKINS = [
-  { id: 'skin_black',   name: '黒スーツ',         rarity: 'N',   suit: 'black',   prob: 0.60  },
-  { id: 'skin_blue',    name: '青スーツ',         rarity: 'R',   suit: 'blue',    prob: 0.125 },
-  { id: 'skin_green',   name: '緑スーツ',         rarity: 'R',   suit: 'green',   prob: 0.125 },
-  { id: 'skin_red',     name: '赤スーツ',         rarity: 'SR',  suit: 'red',     prob: 0.06  },
-  { id: 'skin_gold',    name: '金スーツ',         rarity: 'SR',  suit: 'gold',    prob: 0.06  },
-  { id: 'skin_rainbow', name: 'レインボースーツ', rarity: 'SSR', suit: 'rainbow', prob: 0.01  },
-  { id: 'skin_silver',  name: 'シルバースーツ',   rarity: 'SSR', suit: 'silver',  prob: 0.01  },
-  { id: 'skin_white',   name: 'ホワイトスーツ',   rarity: 'SSR', suit: 'white',   prob: 0.01  },
-  { id: 'skin_moku_ki', name: 'もくきちゃん',     rarity: 'SSR', suit: 'moku_ki', prob: 0.01  },
-  { id: 'skin_mo_mizu', name: 'もみずちゃん',     rarity: 'SSR', suit: 'mo_mizu', prob: 0.01  },
-  { id: 'skin_mo_pink', name: 'もぴんくちゃん',   rarity: 'SSR', suit: 'mo_pink', prob: 0.01  },
-  { id: 'skin_mo_majyo',   name: 'もまじょちゃん',       rarity: 'SSR', suit: 'mo_majyo',   prob: 0.01  },
-  { id: 'skin_puikyua_ki', name: 'ぷいきゅあきいろちゃん', rarity: 'SSR', suit: 'puikyua_ki', prob: 0.01  },
-  { id: 'skin_puikyua_pk', name: 'ぷいきゅあぴんくちゃん', rarity: 'SSR', suit: 'puikyua_pk', prob: 0.01  },
+  { id: 'skin_black',   name: '黒スーツ',         rarity: 'N',   suit: 'black',       prob: 0.60  },
+  { id: 'skin_blue',    name: '青スーツ',         rarity: 'R',   suit: 'blue',        prob: 0.125 },
+  { id: 'skin_green',   name: '緑スーツ',         rarity: 'R',   suit: 'green',       prob: 0.125 },
+  { id: 'skin_red',     name: '赤スーツ',         rarity: 'SR',  suit: 'red',         prob: 0.06,  op: { tap: 1.3 } },
+  { id: 'skin_gold',    name: '金スーツ',         rarity: 'SR',  suit: 'gold',        prob: 0.06,  op: { mps: 1.3 } },
+  { id: 'skin_rainbow', name: 'レインボースーツ', rarity: 'SSR', suit: 'rainbow',     prob: 0.0033, op: { tap: 1.5 } },
+  { id: 'skin_silver',  name: 'シルバースーツ',   rarity: 'SSR', suit: 'silver',      prob: 0.0033, op: { mps: 1.5 } },
+  { id: 'skin_white',   name: 'ホワイトスーツ',   rarity: 'SSR', suit: 'white',       prob: 0.0033, op: { tap: 1.5 } },
+  { id: 'skin_moku_ki', name: 'もくきちゃん',     rarity: 'SSR', suit: 'moku_ki',     prob: 0.0033, op: { mps: 1.5 } },
+  { id: 'skin_mo_mizu', name: 'もみずちゃん',     rarity: 'SSR', suit: 'mo_mizu',     prob: 0.0033, op: { tap: 1.5 } },
+  { id: 'skin_mo_pink', name: 'もぴんくちゃん',   rarity: 'SSR', suit: 'mo_pink',     prob: 0.0033, op: { mps: 1.5 } },
+  { id: 'skin_mo_majyo',   name: 'もまじょちゃん',         rarity: 'SSR', suit: 'mo_majyo',    prob: 0.0033, op: { tap: 1.5 } },
+  { id: 'skin_puikyua_ki', name: 'ぷいきゅあきいろちゃん', rarity: 'SSR', suit: 'puikyua_ki',  prob: 0.0033, op: { mps: 1.5 } },
+  { id: 'skin_puikyua_pk', name: 'ぷいきゅあぴんくちゃん', rarity: 'SSR', suit: 'puikyua_pk',  prob: 0.0033, op: { tap: 1.5 } },
+  { id: 'skin_ur_rushieru', name: '星屑のルシエル', rarity: 'UR', suit: 'ur_rushieru', prob: 0.001, op: { tap: 2.0, mps: 2.0 } },
+  { id: 'skin_ur_nokushia', name: '黒星のノクシア', rarity: 'UR', suit: 'ur_nokushia', prob: 0.001, op: { tap: 2.0, mps: 2.0 } },
 ];
 
-const RARITY_COLOR  = { N: '#888888', R: '#4499ff', SR: '#ffd700', SSR: '#ff44ff' };
-const RARITY_DUPE_STONES = { N: 1, R: 5, SR: 15, SSR: 50 };
+const RARITY_COLOR       = { N: '#888888', R: '#4499ff', SR: '#ffd700', SSR: '#ff44ff', UR: '#ff6600' };
+const RARITY_DUPE_STONES = { N: 1, R: 5, SR: 15, SSR: 50, UR: 100 };
 
 // ========== 消費アイテム ==========
 
@@ -706,6 +722,19 @@ function getPrestigeBonus(type) {
   return bonus;
 }
 
+function getSkinOp() {
+  const skin = gameState.equippedSkin ? GACHA_SKINS.find(s => s.id === gameState.equippedSkin) : null;
+  return skin?.op ?? {};
+}
+
+function formatSkinOp(op) {
+  if (!op) return '';
+  if (op.tap && op.mps) return `タップ&MPS ×${op.tap}`;
+  if (op.tap) return `タップ ×${op.tap}`;
+  if (op.mps) return `MPS ×${op.mps}`;
+  return '';
+}
+
 function recalcTapPower() {
   let power = 1;
   for (const u of UPGRADES) {
@@ -714,7 +743,8 @@ function recalcTapPower() {
   for (const f of FACILITIES) {
     power += (f.tapBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
   }
-  gameState.tapPower = power * getPrestigeBonus('tapMult');
+  const skinOp = getSkinOp();
+  gameState.tapPower = power * getPrestigeBonus('tapMult') * (skinOp.tap ?? 1);
   if (!Number.isFinite(gameState.tapPower)) {
     console.error('[mokuzu] recalcTapPower: NaN/Infinityを検出。tapPower=1にフォールバック');
     gameState.tapPower = 1;
@@ -732,7 +762,8 @@ function recalcMPS() {
   for (const u of UPGRADES) {
     mps += (u.mpsBonus ?? 0) * (gameState.upgrades[u.id] ?? 0);
   }
-  gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult');
+  const skinOp = getSkinOp();
+  gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult') * (skinOp.mps ?? 1);
   if (!Number.isFinite(gameState.mokuPerSecond)) {
     console.error('[mokuzu] recalcMPS: NaN/Infinityを検出。mokuPerSecond=0にフォールバック');
     gameState.mokuPerSecond = 0;
@@ -902,7 +933,8 @@ function updateGoalPanel() {
     const skin = GACHA_SKINS.find(s => s.id === gameState.equippedSkin);
     if (skin) {
       const rarityColor = RARITY_COLOR[skin.rarity];
-      labelEl.innerHTML = `<span style="color:${rarityColor};font-weight:bold">${skin.rarity}</span> ${skin.name} 装備中`;
+      const opStr = skin.op ? ` [${formatSkinOp(skin.op)}]` : '';
+      labelEl.innerHTML = `<span style="color:${rarityColor};font-weight:bold">${skin.rarity}</span> ${skin.name}${opStr} 装備中`;
       remEl.textContent = '';
       return;
     }
@@ -950,7 +982,7 @@ function updateSuit(suit) {
   const equippedSkin = gameState.equippedSkin
     ? GACHA_SKINS.find(s => s.id === gameState.equippedSkin)
     : null;
-  const borderSuit = equippedSkin?.rarity === 'SSR' ? 'rainbow' : suit;
+  const borderSuit = equippedSkin?.rarity === 'UR' ? 'ur' : equippedSkin?.rarity === 'SSR' ? 'rainbow' : suit;
   el.className = `suit-${borderSuit}`;
   if (gameState.isAwakened) el.classList.add('awakened');
   applyCharacterSprite(suit);
@@ -1738,6 +1770,7 @@ function buyEgg(typeId) {
   saveGame();
   renderPetEggShop();
   renderPetSection();
+  renderPetZukan();
   updateDisplay();
 }
 
@@ -2329,8 +2362,32 @@ function showGachaResult(results) {
 function equipSkin(skinId) {
   if (!(gameState.ownedSkins ?? []).includes(skinId)) return;
   gameState.equippedSkin = gameState.equippedSkin === skinId ? null : skinId;
+  recalcTapPower();
+  recalcMPS();
   updateSuit(gameState.suit);
   updateDisplay();
+}
+
+function renderGachaRates() {
+  const container = document.getElementById('gacha-rates-table-container');
+  if (!container) return;
+  const total = GACHA_SKINS.reduce((s, x) => s + x.prob, 0);
+  const rows = GACHA_SKINS.map(skin => {
+    const pct  = (skin.prob / total * 100).toFixed(2);
+    const color = RARITY_COLOR[skin.rarity] ?? '#888';
+    const op   = skin.op ? formatSkinOp(skin.op) : '—';
+    return `<tr>
+      <td style="color:${color};font-weight:bold">${skin.rarity}</td>
+      <td>${skin.name}</td>
+      <td>${pct}%</td>
+      <td>${op}</td>
+    </tr>`;
+  }).join('');
+  container.innerHTML = `
+    <table class="gacha-rates-table">
+      <tr><th>レア</th><th>スキン名</th><th>排出率</th><th>効果</th></tr>
+      ${rows}
+    </table>`;
 }
 
 function renderSkinCollection() {
@@ -2348,6 +2405,7 @@ function renderSkinCollection() {
         <div class="skin-card-rarity" style="background:${owned ? color : '#333'}">${skin.rarity}</div>
         <img class="skin-card-img" src="${src}" alt="${skin.name}">
         <div class="skin-card-name">${skin.name}</div>
+        ${skin.op ? `<div class="skin-card-op" style="color:${color}">${formatSkinOp(skin.op)}</div>` : ''}
         ${owned
           ? `<button class="skin-equip-btn${equipped ? ' equipped' : ''}" onclick="equipSkin('${skin.id}')">${equipped ? '装着中' : '装着'}</button>`
           : '<div class="skin-card-locked">未入手</div>'}
@@ -2624,6 +2682,7 @@ function updatePrestigeTab() {
       : '藻を貯めて転生してみよう！';
   }
   renderSkinCollection();
+  renderGachaRates();
   renderPrestigeSkillList();
   renderPrestigeHistory();
 }
@@ -2899,6 +2958,15 @@ function init() {
   });
   document.getElementById('reset-btn').addEventListener('click', resetGame);
 
+  if (localStorage.getItem('mzk_debug') === '1') {
+    document.getElementById('debug-section').classList.remove('hidden');
+    document.getElementById('debug-add-stones').addEventListener('click', () => {
+      gameState.prestigeStones = (gameState.prestigeStones ?? 0) + 10000;
+      saveGame();
+      updateDisplay();
+    });
+  }
+
   document.getElementById('menhera-toggle-btn').addEventListener('click', () => {
     if ((gameState.prestigeLevel ?? 0) < 5) return;
     gameState.menheraMode = !gameState.menheraMode;
@@ -3050,7 +3118,7 @@ async function redeemCoupon(code) {
 function applyReward(coupon, code) {
   if (coupon.reward === 'coins')     gameState.mokuCoins      = (gameState.mokuCoins      ?? 0) + coupon.amount;
   if (coupon.reward === 'stones')    gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + coupon.amount;
-  if (coupon.reward === 'moku')      gameState.moku            = (gameState.moku           ?? 0) + coupon.amount;
+  if (coupon.reward === 'moku')      { gameState.moku = (gameState.moku ?? 0) + coupon.amount; gameState.totalMoku = (gameState.totalMoku ?? 0) + coupon.amount; }
   if (coupon.reward === 'gacha_coin') {
     gameState.consumables = gameState.consumables ?? {};
     gameState.consumables['gacha_coin'] = (gameState.consumables['gacha_coin'] ?? 0) + coupon.amount;
@@ -3213,7 +3281,7 @@ function initFirebase() {
           for (const reward of rewards) {
             if (reward.type === 'coins')      gameState.mokuCoins      = (gameState.mokuCoins      ?? 0) + reward.amount;
             if (reward.type === 'stones')     gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + reward.amount;
-            if (reward.type === 'moku')       gameState.moku            = (gameState.moku           ?? 0) + reward.amount;
+            if (reward.type === 'moku')       { gameState.moku = (gameState.moku ?? 0) + reward.amount; gameState.totalMoku = (gameState.totalMoku ?? 0) + reward.amount; }
             if (reward.type === 'gacha_coin') {
               gameState.consumables = gameState.consumables ?? {};
               gameState.consumables['gacha_coin'] = (gameState.consumables['gacha_coin'] ?? 0) + reward.amount;
