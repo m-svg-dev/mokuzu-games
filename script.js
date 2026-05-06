@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.6.0';
+const CURRENT_VERSION = '2.6.1';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,17 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.6.1',
+    date: '2026/05/06',
+    title: '⚡ 覚醒システム強化 & バランス調整',
+    items: [
+      '⏱️ 覚醒時間を30秒→10秒に短縮。強化で最大35秒まで延長可能に！',
+      '🔋 覚醒ゲージの蓄積速度を調整。強化「覚醒ゲージ強化」（最大7段）で加速できます',
+      '🌿 転生スキルツリーに上位スキルを追加（転生20/25/30回で解放）',
+      '🛠️ 単位表記を拡張（T / Qa / Qi / Sx）',
+    ],
+  },
   {
     id: 'v2.6.0',
     date: '2026/05/06',
@@ -493,7 +504,9 @@ const UPGRADES = [
   { id: 'mps1',   name: 'MPS強化 I',           icon: '🌊', desc: 'MPS +2',                baseCost: 500,     costMult: 2.0, mpsBonus: 2,             maxCount: 10 },
   { id: 'mps2',   name: 'MPS強化 II',          icon: '🌊', desc: 'MPS +10',               baseCost: 4_000,   costMult: 2.0, mpsBonus: 10,            maxCount: 10 },
   { id: 'mps3',   name: 'MPS強化 III',         icon: '🌊', desc: 'MPS +50',               baseCost: 30_000,  costMult: 2.0, mpsBonus: 50,            maxCount: 10 },
-  { id: 'mps4',   name: 'MPS強化 IV',          icon: '🌊', desc: 'MPS +200',              baseCost: 250_000, costMult: 2.0, mpsBonus: 200,           maxCount: 10 },
+  { id: 'mps4',        name: 'MPS強化 IV',          icon: '🌊', desc: 'MPS +200',              baseCost: 250_000, costMult: 2.0, mpsBonus: 200,    maxCount: 10 },
+  { id: 'awaken_time', name: '覚醒時間延長',        icon: '⏱️', desc: '覚醒時間 +5秒',         baseCost: 50_000,  costMult: 3.0,                              maxCount: 5  },
+  { id: 'awaken_gauge',name: '覚醒ゲージ強化',      icon: '⚡', desc: 'ゲージ増加 +0.05/タップ', baseCost: 30_000,  costMult: 3.0,                              maxCount: 7  },
 ];
 
 // 所持数に応じて MPS が増加（baseCost * 1.15^所持数 で価格上昇）
@@ -569,6 +582,11 @@ const PRESTIGE_SKILLS = [
   { id: 'pAwaken', name: '覚醒強化',            desc: '覚醒効果 ×2（5倍→10倍）',   costs: [300],                  type: 'awakenMult', value: 2,    maxLevel: 1 },
   { id: 'pStone',    name: '転生加速',      desc: '転生石獲得量 ×2',          costs: [500],                                                    type: 'stoneMult', value: 2,   maxLevel: 1 },
   { id: 'pStoneCap', name: '転生石上限UP', desc: '転生石獲得上限 +500（現在上限: {cap}石）', costs: [250,250,250,250,250,250,250,250,250,250], type: 'stoneCap',  value: 500, maxLevel: 10 },
+  { id: 'pTap2',   name: '深海の力',              desc: '恒久タップ ×2倍',          costs: [3000, 6000, 12000], type: 'tapMult',  value: 2,    maxLevel: 3, requirePrestige: 20 },
+  { id: 'pMps2',   name: '深海の流れ',            desc: '恒久MPS ×2倍',             costs: [3000, 6000, 12000], type: 'mpsMult',  value: 2,    maxLevel: 3, requirePrestige: 20 },
+  { id: 'pCritR2', name: 'クリティカルの極意',    desc: '恒久クリティカル率 +10%',  costs: [5000, 5000, 5000],  type: 'critRate', value: 0.10, maxLevel: 3, requirePrestige: 25 },
+  { id: 'pCritM2', name: 'クリティカル倍率の極意', desc: '恒久クリティカル倍率 +2倍', costs: [4000, 8000, 16000], type: 'critMult', value: 2,    maxLevel: 3, requirePrestige: 25 },
+  { id: 'pAll',    name: '社長の覇道',            desc: 'タップ＆MPS ×3倍',         costs: [20000, 50000],      type: 'allMult',  value: 3,    maxLevel: 2, requirePrestige: 30 },
 ];
 
 // ========== 初期状態 ==========
@@ -628,9 +646,13 @@ let gameState = structuredClone(DEFAULT_STATE);
 
 function fmt(n) {
   n = Math.floor(n);
-  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + 'B';
-  if (n >= 1_000_000)     return (n / 1_000_000).toFixed(2) + 'M';
-  if (n >= 10_000)        return (n / 1_000).toFixed(1) + 'K';
+  if (n >= 1e21) return (n / 1e21).toFixed(2) + 'Sx';
+  if (n >= 1e18) return (n / 1e18).toFixed(2) + 'Qi';
+  if (n >= 1e15) return (n / 1e15).toFixed(2) + 'Qa';
+  if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
+  if (n >= 1e9)  return (n / 1e9).toFixed(2)  + 'B';
+  if (n >= 1e6)  return (n / 1e6).toFixed(2)  + 'M';
+  if (n >= 1e4)  return (n / 1e3).toFixed(1)  + 'K';
   return n.toLocaleString();
 }
 
@@ -711,7 +733,7 @@ function getFacilityIconStyle(facId) {
 }
 
 function getPrestigeBonus(type) {
-  const isMult = ['tapMult', 'mpsMult', 'awakenMult', 'stoneMult'].includes(type);
+  const isMult = ['tapMult', 'mpsMult', 'awakenMult', 'stoneMult', 'allMult'].includes(type);
   let bonus = isMult ? 1 : 0;
   for (const s of PRESTIGE_SKILLS) {
     if (s.type !== type) continue;
@@ -744,7 +766,7 @@ function recalcTapPower() {
     power += (f.tapBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
   }
   const skinOp = getSkinOp();
-  gameState.tapPower = power * getPrestigeBonus('tapMult') * (skinOp.tap ?? 1);
+  gameState.tapPower = power * getPrestigeBonus('tapMult') * getPrestigeBonus('allMult') * (skinOp.tap ?? 1);
   if (!Number.isFinite(gameState.tapPower)) {
     console.error('[mokuzu] recalcTapPower: NaN/Infinityを検出。tapPower=1にフォールバック');
     gameState.tapPower = 1;
@@ -763,7 +785,7 @@ function recalcMPS() {
     mps += (u.mpsBonus ?? 0) * (gameState.upgrades[u.id] ?? 0);
   }
   const skinOp = getSkinOp();
-  gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult') * (skinOp.mps ?? 1);
+  gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * (skinOp.mps ?? 1);
   if (!Number.isFinite(gameState.mokuPerSecond)) {
     console.error('[mokuzu] recalcMPS: NaN/Infinityを検出。mokuPerSecond=0にフォールバック');
     gameState.mokuPerSecond = 0;
@@ -1013,7 +1035,7 @@ function onTap(e) {
   gameState.totalMoku += gained;
   gameState.tapCount   = (gameState.tapCount ?? 0) + 1;
 
-  gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 2);
+  gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 0.1 + (gameState.upgrades?.['awaken_gauge'] ?? 0) * 0.05);
 
   playSound(isCritical ? 'critical' : gained >= TAP_EFFECT_THRESHOLDS.large ? 'tapLarge' : 'tap');
   spawnFloatText(e, `+${fmt(gained)}`, isCritical);
@@ -1148,7 +1170,7 @@ function gameLoop() {
 function activateAwaken() {
   if (gameState.awakenGauge < 100 || gameState.isAwakened) return;
   gameState.isAwakened  = true;
-  gameState.awakenTimer = 30;
+  gameState.awakenTimer = 10 + (gameState.upgrades?.['awaken_time'] ?? 0) * 5;
   gameState.awakenGauge = 0;
   const el = document.getElementById('character-img');
   el.classList.add('awakened');
@@ -2608,6 +2630,7 @@ function showPrestigeCongrats(level) {
 function buyPrestigeSkill(skillId) {
   const s  = PRESTIGE_SKILLS.find(x => x.id === skillId);
   if (!s) return;
+  if (s.requirePrestige && (gameState.prestigeLevel ?? 0) < s.requirePrestige) return;
   const lv   = gameState.prestigeSkills?.[s.id] ?? 0;
   if (lv >= s.maxLevel) return;
   const cost = s.costs[lv];
@@ -2637,11 +2660,28 @@ function renderPrestigeSkillList() {
   }
 
   for (const s of PRESTIGE_SKILLS) {
+    const btn      = document.getElementById(`pskill-btn-${s.id}`);
+    const locked   = s.requirePrestige && (gameState.prestigeLevel ?? 0) < s.requirePrestige;
+
+    if (locked) {
+      btn.className = 'item-btn skill-locked';
+      btn.innerHTML = `
+        <div class="item-icon">🔒</div>
+        <div class="item-info">
+          <div class="item-name">${s.name}</div>
+          <div class="item-desc" style="color:#666">転生 ${s.requirePrestige} 回で解放</div>
+        </div>
+        <div class="item-right">
+          <div class="item-cost" style="color:#555">転生 ${s.requirePrestige} 回</div>
+        </div>
+      `;
+      continue;
+    }
+
     const lv     = gameState.prestigeSkills?.[s.id] ?? 0;
     const maxed  = lv >= s.maxLevel;
     const cost   = maxed ? 0 : s.costs[lv];
     const canBuy = !maxed && (gameState.prestigeStones ?? 0) >= cost;
-    const btn    = document.getElementById(`pskill-btn-${s.id}`);
 
     const dots = Array.from({ length: s.maxLevel }, (_, i) =>
       `<div class="item-count-dot${i < lv ? ' filled' : ''}"></div>`
@@ -2962,6 +3002,11 @@ function init() {
     document.getElementById('debug-section').classList.remove('hidden');
     document.getElementById('debug-add-stones').addEventListener('click', () => {
       gameState.prestigeStones = (gameState.prestigeStones ?? 0) + 10000;
+      saveGame();
+      updateDisplay();
+    });
+    document.getElementById('debug-add-moku').addEventListener('click', () => {
+      gameState.moku = (gameState.moku ?? 0) + 100_000_000;
       saveGame();
       updateDisplay();
     });
