@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.6.1';
+const CURRENT_VERSION = '2.6.2';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.6.2',
+    date: '2026/05/06',
+    title: '🌿 社員の生産性が大幅アップ！',
+    items: [
+      '📈 全社員の生産性を大幅強化しました！海藻バイトからサメ幹部まで、みんなより頑張って稼いでくれます🦈',
+      '🌿 小型海藻バイト: 0.1→0.3 / クラゲ社員: 0.6→2.0 / カニ主任: 3→8 / サンゴ管理職: 10→30 / サメ幹部: 40→100（/秒）',
+      '💤 放置中もしっかり藻が増えるようになったのでぜひ置いといてください！',
+    ],
+  },
   {
     id: 'v2.6.1',
     date: '2026/05/06',
@@ -511,11 +521,11 @@ const UPGRADES = [
 
 // 所持数に応じて MPS が増加（baseCost * 1.15^所持数 で価格上昇）
 const EMPLOYEES = [
-  { id: 'algae',    name: '小型海藻バイト', icon: '🌿', baseCost: 8,      mpsBonus: 0.1  },
-  { id: 'jellyfish',name: 'クラゲ社員',     icon: '🪼', baseCost: 80,     mpsBonus: 0.6  },
-  { id: 'crab',     name: 'カニ主任',       icon: '🦀', baseCost: 800,    mpsBonus: 3.0  },
-  { id: 'coral',    name: 'サンゴ管理職',   icon: '🪸', baseCost: 5_000,  mpsBonus: 10.0 },
-  { id: 'shark',    name: 'サメ幹部',       icon: '🦈', baseCost: 30_000, mpsBonus: 40.0 },
+  { id: 'algae',    name: '小型海藻バイト', icon: '🌿', baseCost: 8,      mpsBonus: 0.3   },
+  { id: 'jellyfish',name: 'クラゲ社員',     icon: '🪼', baseCost: 80,     mpsBonus: 2.0   },
+  { id: 'crab',     name: 'カニ主任',       icon: '🦀', baseCost: 800,    mpsBonus: 8.0   },
+  { id: 'coral',    name: 'サンゴ管理職',   icon: '🪸', baseCost: 5_000,  mpsBonus: 30.0  },
+  { id: 'shark',    name: 'サメ幹部',       icon: '🦈', baseCost: 30_000, mpsBonus: 100.0 },
 ];
 
 const EVENTS = [
