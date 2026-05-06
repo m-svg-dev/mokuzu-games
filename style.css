@@ -1613,6 +1613,13 @@ button,
   opacity: 0.75;
 }
 
+.item-btn.skill-locked {
+  border-color: #2a2a2a;
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
 .item-icon {
   width: 52px;
   height: 52px;
