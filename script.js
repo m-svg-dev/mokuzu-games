@@ -678,6 +678,7 @@ function calcLevel(totalMoku) {
 let _audioCtx = null;
 let _lastCloudSave = null;
 let _minCloudTotalMoku = 0;
+let _cloudCheckDone = false; // クラウド確認完了前のsaveGame()ブロック用
 const _petWaitingSet = new Set(); // 進化待機中のペット追跡（タイマー完了検知用）
 
 function getAudioCtx() {
@@ -3113,8 +3114,10 @@ function init() {
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
-      saveGame();
-      saveGameCloud();
+      if (_cloudCheckDone) {
+        saveGame();
+        saveGameCloud();
+      }
     } else {
       checkOfflineEarnings();
     }
@@ -3259,38 +3262,51 @@ function initFirebase() {
           const cloudSaved = cloudState.lastSaved ?? 0;
           const localTotalMoku = gameState.totalMoku ?? 0;
           const cloudTotalMoku = cloudState.totalMoku ?? 0;
+          const localPrestige = gameState.prestigeLevel ?? 0;
+          const cloudPrestige = cloudState.prestigeLevel ?? 0;
           // クラウドのtotalMokuを記録（saveGameCloudで低品質上書き防止に使用）
           _minCloudTotalMoku = cloudTotalMoku;
-          // タイムスタンプ比較に加え、totalMokuがクラウドより低い場合もクラウドを優先
-          // （totalMokuは累計値で減らないため、低いほうが明らかに古い/壊れた状態）
+          // 転生回数を優先比較（totalMokuは転生でリセットされるため巻き戻り判定に使えない）
           const cloudIsNewer = cloudSaved > localSaved;
-          const cloudHasMoreProgress = cloudTotalMoku > localTotalMoku;
+          const cloudHasMoreProgress = cloudPrestige > localPrestige ||
+            (cloudPrestige === localPrestige && cloudTotalMoku > localTotalMoku);
+
+          const localIsEmpty = (gameState.moku ?? 0) === 0
+            && Object.keys(gameState.employees ?? {}).length === 0
+            && (gameState.tapCount ?? 0) === 0;
+
+          const applyCloudRestore = () => {
+            // ownedSkins / usedCoupons はローカルとクラウドを合わせて引き継ぐ
+            // （クラウドより新しいローカルで取得したスキンが上書き消去されるバグを防止）
+            const mergedSkins   = [...new Set([...(cloudState.ownedSkins  ?? []), ...(gameState.ownedSkins  ?? [])])];
+            const mergedCoupons = [...new Set([...(cloudState.usedCoupons ?? []), ...(gameState.usedCoupons ?? [])])];
+            Object.assign(gameState, cloudState);
+            gameState.ownedSkins  = mergedSkins;
+            gameState.usedCoupons = mergedCoupons;
+            recalcTapPower();
+            recalcMPS();
+            // lastSaved を更新せずに保存（リロード後のオフライン収益計算のため）
+            const json = JSON.stringify(gameState);
+            localStorage.setItem(SAVE_KEY, json);
+            localStorage.setItem(CHECKSUM_KEY, computeChecksum(json));
+            location.reload();
+          };
+
           if (cloudIsNewer || cloudHasMoreProgress) {
+            if (localIsEmpty) {
+              // ローカルが空なら確認不要で自動復元
+              applyCloudRestore();
+              return;
+            }
             const d = new Date(cloudSaved);
             const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
             if (confirm(`☁️ クラウドにセーブデータが見つかりました！\n保存日時: ${dateStr}\n\nクラウドのデータを引き継ぎますか？`)) {
-              // ownedSkins / usedCoupons はローカルとクラウドを合わせて引き継ぐ
-              // （クラウドより新しいローカルで取得したスキンが上書き消去されるバグを防止）
-              const mergedSkins   = [...new Set([...(cloudState.ownedSkins  ?? []), ...(gameState.ownedSkins  ?? [])])];
-              const mergedCoupons = [...new Set([...(cloudState.usedCoupons ?? []), ...(gameState.usedCoupons ?? [])])];
-              Object.assign(gameState, cloudState);
-              gameState.ownedSkins  = mergedSkins;
-              gameState.usedCoupons = mergedCoupons;
-              recalcTapPower();
-              recalcMPS();
-              // lastSaved を更新せずに保存（リロード後のオフライン収益計算のため）
-              const json = JSON.stringify(gameState);
-              localStorage.setItem(SAVE_KEY, json);
-              localStorage.setItem(CHECKSUM_KEY, computeChecksum(json));
-              location.reload();
+              applyCloudRestore();
               return;
             }
           } else {
             // ローカルが新しければクラウドを自動更新
             // ただしローカルが空状態（moku=0 かつ従業員なし）の場合は上書きしない
-            const localIsEmpty = (gameState.moku ?? 0) === 0
-              && Object.keys(gameState.employees ?? {}).length === 0
-              && (gameState.tapCount ?? 0) === 0;
             if (!localIsEmpty) {
               saveGameData(JSON.stringify(gameState)).catch(() => {});
             }
@@ -3299,6 +3315,7 @@ function initFirebase() {
       } catch (e) {
         console.warn('[mokuzu] クラウドセーブの読み込みに失敗', e);
       }
+      _cloudCheckDone = true;
 
       // ② 登録ボーナス付与（クラウド比較の後）
       if (!gameState.registrationBonusClaimed) {
@@ -3362,6 +3379,7 @@ function initFirebase() {
         console.warn('[mokuzu] pendingRewards の取得に失敗', e);
       }
     } else {
+      _cloudCheckDone = false;
       authSec.classList.remove('hidden');
       loggedSec.classList.add('hidden');
       rankingPrompt.classList.remove('hidden');
