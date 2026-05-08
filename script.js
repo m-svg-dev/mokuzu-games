@@ -936,7 +936,7 @@ function updatePrestigeBar() {
     bar.classList.add('prestige-ready');
     labelEl.textContent = '✨ 転生可能！';
     remEl.textContent   = '';
-    const stonesPreview = Math.floor(total / 1_000_000) * getPrestigeBonus('stoneMult');
+    const stonesPreview = Math.min(Math.floor(total / 1_000_000) * getPrestigeBonus('stoneMult'), getPrestigeStoneCap());
     if (stonePreview) {
       stonePreview.classList.remove('hidden');
       stonePreview.innerHTML = `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt="転生石"> 転生すると <strong>${stonesPreview} 転生石</strong> 獲得！`;
