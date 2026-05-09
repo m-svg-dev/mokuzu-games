@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.6.3';
+const CURRENT_VERSION = '2.7.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,19 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.7.0',
+    date: '2026/05/09',
+    title: '🌟 神話スキルツリー実装！',
+    items: [
+      '🌟【新機能】神話スキルツリーを追加しました！転生50回以上で解放されます',
+      '⚡【新通貨】神転生石を追加しました。転生石100個と交換できます（1個・10個・全部交換）',
+      '💎 神話の力（転生50回〜）: 恒久タップ×5倍　3段階強化',
+      '🌊 神話の流れ（転生50回〜）: 恒久MPS×5倍　3段階強化',
+      '👑 神話の覇道（転生75回〜）: タップ&MPS×3倍　3段階強化',
+      '🔒 転生石上限強化II（転生30回〜）: 上限+3000石　5段階強化を追加しました',
+    ],
+  },
   {
     id: 'v2.6.3',
     date: '2026/05/08',
@@ -606,7 +619,11 @@ const PRESTIGE_SKILLS = [
   { id: 'pMps2',   name: '深海の流れ',            desc: '恒久MPS ×2倍',             costs: [3000, 6000, 12000], type: 'mpsMult',  value: 2,    maxLevel: 3, requirePrestige: 20 },
   { id: 'pCritR2', name: 'クリティカルの極意',    desc: '恒久クリティカル率 +10%',  costs: [5000, 5000, 5000],  type: 'critRate', value: 0.10, maxLevel: 3, requirePrestige: 25 },
   { id: 'pCritM2', name: 'クリティカル倍率の極意', desc: '恒久クリティカル倍率 +2倍', costs: [4000, 8000, 16000], type: 'critMult', value: 2,    maxLevel: 3, requirePrestige: 25 },
-  { id: 'pAll',    name: '社長の覇道',            desc: 'タップ＆MPS ×3倍',         costs: [20000, 50000],      type: 'allMult',  value: 3,    maxLevel: 2, requirePrestige: 30 },
+  { id: 'pAll',       name: '社長の覇道',      desc: 'タップ＆MPS ×3倍',                             costs: [20000, 50000],             type: 'allMult',     value: 3,    maxLevel: 2, requirePrestige: 30 },
+  { id: 'pStoneCap2', name: '転生石上限強化II', desc: '転生石獲得上限 +3000（現在上限: {cap}石）',     costs: [5000,5000,5000,5000,5000], type: 'stoneCap2',   value: 3000, maxLevel: 5, requirePrestige: 30 },
+  { id: 'shinTap',    name: '神話の力',         desc: '恒久タップ ×5倍',                              costs: [250, 500, 1000],           type: 'shinTapMult', value: 5,    maxLevel: 3, requirePrestige: 50, currencyType: 'shin' },
+  { id: 'shinMps',    name: '神話の流れ',       desc: '恒久MPS ×5倍',                                 costs: [250, 500, 1000],           type: 'shinMpsMult', value: 5,    maxLevel: 3, requirePrestige: 50, currencyType: 'shin' },
+  { id: 'shinAll',    name: '神話の覇道',       desc: 'タップ＆MPS ×3倍',                             costs: [250, 500, 1000],           type: 'shinAllMult', value: 3,    maxLevel: 3, requirePrestige: 75, currencyType: 'shin' },
 ];
 
 // ========== 初期状態 ==========
@@ -658,6 +675,7 @@ const DEFAULT_STATE = {
   tapCount:             0,
   achievements:         {},
   usedCoupons:          [],
+  shinStones:           0,
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -754,7 +772,7 @@ function getFacilityIconStyle(facId) {
 }
 
 function getPrestigeBonus(type) {
-  const isMult = ['tapMult', 'mpsMult', 'awakenMult', 'stoneMult', 'allMult'].includes(type);
+  const isMult = ['tapMult', 'mpsMult', 'awakenMult', 'stoneMult', 'allMult', 'shinTapMult', 'shinMpsMult', 'shinAllMult'].includes(type);
   let bonus = isMult ? 1 : 0;
   for (const s of PRESTIGE_SKILLS) {
     if (s.type !== type) continue;
@@ -787,7 +805,7 @@ function recalcTapPower() {
     power += (f.tapBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
   }
   const skinOp = getSkinOp();
-  gameState.tapPower = power * getPrestigeBonus('tapMult') * getPrestigeBonus('allMult') * (skinOp.tap ?? 1);
+  gameState.tapPower = power * getPrestigeBonus('tapMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinTapMult') * getPrestigeBonus('shinAllMult') * (skinOp.tap ?? 1);
   if (!Number.isFinite(gameState.tapPower)) {
     console.error('[mokuzu] recalcTapPower: NaN/Infinityを検出。tapPower=1にフォールバック');
     gameState.tapPower = 1;
@@ -806,7 +824,7 @@ function recalcMPS() {
     mps += (u.mpsBonus ?? 0) * (gameState.upgrades[u.id] ?? 0);
   }
   const skinOp = getSkinOp();
-  gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * (skinOp.mps ?? 1);
+  gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinMpsMult') * getPrestigeBonus('shinAllMult') * (skinOp.mps ?? 1);
   if (!Number.isFinite(gameState.mokuPerSecond)) {
     console.error('[mokuzu] recalcMPS: NaN/Infinityを検出。mokuPerSecond=0にフォールバック');
     gameState.mokuPerSecond = 0;
@@ -922,7 +940,7 @@ function getPrestigeThreshold() {
 }
 
 function getPrestigeStoneCap() {
-  return 1000 + (gameState.prestigeSkills?.pStoneCap ?? 0) * 500;
+  return 1000 + (gameState.prestigeSkills?.pStoneCap ?? 0) * 500 + (gameState.prestigeSkills?.pStoneCap2 ?? 0) * 3000;
 }
 
 function updatePrestigeBar() {
@@ -2615,6 +2633,7 @@ function doPrestige() {
     registrationBonusClaimed: gameState.registrationBonusClaimed,
     lastReadUpdateId:         gameState.lastReadUpdateId,
     usedCoupons:              gameState.usedCoupons,
+    shinStones:               gameState.shinStones ?? 0,
   };
 
   gameState = structuredClone(DEFAULT_STATE);
@@ -2655,13 +2674,30 @@ function buyPrestigeSkill(skillId) {
   const lv   = gameState.prestigeSkills?.[s.id] ?? 0;
   if (lv >= s.maxLevel) return;
   const cost = s.costs[lv];
-  if ((gameState.prestigeStones ?? 0) < cost) return;
-
-  gameState.prestigeStones -= cost;
+  if (s.currencyType === 'shin') {
+    if ((gameState.shinStones ?? 0) < cost) return;
+    gameState.shinStones -= cost;
+  } else {
+    if ((gameState.prestigeStones ?? 0) < cost) return;
+    gameState.prestigeStones -= cost;
+  }
   gameState.prestigeSkills = { ...gameState.prestigeSkills, [s.id]: lv + 1 };
   recalcTapPower();
   recalcMPS();
   playSound('buy');
+  updateDisplay();
+}
+
+function exchangeToShinStones(amount) {
+  const stones = gameState.prestigeStones ?? 0;
+  if (stones < 100) return;
+  const max   = Math.floor(stones / 100);
+  const count = amount === 'all' ? max : Math.min(amount, max);
+  if (count < 1) return;
+  gameState.prestigeStones -= count * 100;
+  gameState.shinStones      = (gameState.shinStones ?? 0) + count;
+  playSound('buy');
+  updatePrestigeTab();
   updateDisplay();
 }
 
@@ -2671,7 +2707,16 @@ function renderPrestigeSkillList() {
 
   if (!container.dataset.initialized) {
     container.className = 'item-list';
+    let shinHeaderAdded = false;
     for (const s of PRESTIGE_SKILLS) {
+      if (s.currencyType === 'shin' && !shinHeaderAdded) {
+        const header = document.createElement('div');
+        header.id = 'shin-skill-section-header';
+        header.className = 'prestige-section-divider';
+        header.textContent = '🌟 神話スキルツリー（神転生石）';
+        container.appendChild(header);
+        shinHeaderAdded = true;
+      }
       const btn = document.createElement('button');
       btn.id = `pskill-btn-${s.id}`;
       btn.addEventListener('click', () => buyPrestigeSkill(s.id));
@@ -2680,10 +2725,18 @@ function renderPrestigeSkillList() {
     container.dataset.initialized = '1';
   }
 
-  for (const s of PRESTIGE_SKILLS) {
-    const btn      = document.getElementById(`pskill-btn-${s.id}`);
-    const locked   = s.requirePrestige && (gameState.prestigeLevel ?? 0) < s.requirePrestige;
+  const prestige = gameState.prestigeLevel ?? 0;
 
+  const shinHeader = document.getElementById('shin-skill-section-header');
+  if (shinHeader) shinHeader.classList.remove('hidden');
+
+  for (const s of PRESTIGE_SKILLS) {
+    const btn    = document.getElementById(`pskill-btn-${s.id}`);
+    if (!btn) continue;
+    const isShin = s.currencyType === 'shin';
+    btn.classList.remove('hidden');
+
+    const locked = s.requirePrestige && prestige < s.requirePrestige;
     if (locked) {
       btn.className = 'item-btn skill-locked';
       btn.innerHTML = `
@@ -2699,10 +2752,20 @@ function renderPrestigeSkillList() {
       continue;
     }
 
-    const lv     = gameState.prestigeSkills?.[s.id] ?? 0;
-    const maxed  = lv >= s.maxLevel;
-    const cost   = maxed ? 0 : s.costs[lv];
-    const canBuy = !maxed && (gameState.prestigeStones ?? 0) >= cost;
+    const lv       = gameState.prestigeSkills?.[s.id] ?? 0;
+    const maxed    = lv >= s.maxLevel;
+    const cost     = maxed ? 0 : s.costs[lv];
+    const owned    = isShin ? (gameState.shinStones ?? 0) : (gameState.prestigeStones ?? 0);
+    const canBuy   = !maxed && owned >= cost;
+    const iconSrc  = isShin ? 'assets/prestige/prestige_got_stone.png' : 'assets/prestige/prestige_stone.png';
+    const iconAlt  = isShin ? '神転生石' : '転生石';
+    const currency = isShin ? '神転生石' : '転生石';
+    const costColor = isShin ? '#ffaa00' : '#cc88ff';
+    const skillIcon = isShin ? '🌟' : '✨';
+
+    const descText = (s.id === 'pStoneCap' || s.id === 'pStoneCap2')
+      ? s.desc.replace('{cap}', getPrestigeStoneCap())
+      : s.desc;
 
     const dots = Array.from({ length: s.maxLevel }, (_, i) =>
       `<div class="item-count-dot${i < lv ? ' filled' : ''}"></div>`
@@ -2710,14 +2773,14 @@ function renderPrestigeSkillList() {
 
     btn.className = `item-btn${canBuy ? ' can-buy' : ''}${maxed ? ' maxed' : ''}`;
     btn.innerHTML = `
-      <div class="item-icon">✨</div>
+      <div class="item-icon">${skillIcon}</div>
       <div class="item-info">
         <div class="item-name">${s.name}</div>
-        <div class="item-desc">${s.id === 'pStoneCap' ? s.desc.replace('{cap}', getPrestigeStoneCap()) : s.desc}</div>
+        <div class="item-desc">${descText}</div>
         <div class="item-count-bar">${dots}</div>
       </div>
       <div class="item-right">
-        <div class="item-cost" style="color:#cc88ff">${maxed ? 'MAX' : `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt=""> ${cost} 転生石`}</div>
+        <div class="item-cost" style="color:${costColor}">${maxed ? 'MAX' : `<img class="prestige-stone-icon" src="${iconSrc}" alt="${iconAlt}"> ${cost} ${currency}`}</div>
         <div class="item-count-label">${lv} / ${s.maxLevel}</div>
       </div>
     `;
@@ -2727,8 +2790,48 @@ function renderPrestigeSkillList() {
 function updatePrestigeTab() {
   const lvEl     = document.getElementById('prestige-tab-level');
   const stoneEl  = document.getElementById('prestige-tab-stones');
+  const shinEl   = document.getElementById('prestige-tab-shin-stones');
   if (lvEl)    lvEl.innerHTML    = `<img class="prestige-badge-icon" src="assets/prestige/prestige_badge.png" alt=""> 転生 Lv.${gameState.prestigeLevel ?? 0}`;
   if (stoneEl) stoneEl.innerHTML = `<img class="prestige-stone-icon" src="assets/prestige/prestige_stone.png" alt="転生石"> 転生石: ${gameState.prestigeStones ?? 0}`;
+  const shinVisible = (gameState.prestigeLevel ?? 0) >= 50;
+  if (shinEl) {
+    shinEl.classList.remove('hidden');
+    shinEl.innerHTML = shinVisible
+      ? `<img class="prestige-stone-icon" src="assets/prestige/prestige_got_stone.png" alt="神転生石"> 神転生石: ${gameState.shinStones ?? 0}`
+      : `🔒 神転生石（転生50回で解放）`;
+  }
+  const shinExArea = document.getElementById('shin-exchange-area');
+  if (shinExArea) {
+    shinExArea.classList.remove('hidden');
+    const exBtn    = document.getElementById('shin-exchange-btn');
+    const exAllBtn = document.getElementById('shin-exchange-all-btn');
+    const fromEl   = document.getElementById('shin-ex-from-count');
+    const toEl     = document.getElementById('shin-ex-to-count');
+    const allLabel = document.getElementById('shin-ex-all-label');
+    const stones   = gameState.prestigeStones ?? 0;
+    const canGet   = Math.floor(stones / 100);
+    const ownedEl = document.getElementById('shin-ex-owned-count');
+    if (fromEl)   fromEl.textContent   = stones.toLocaleString();
+    if (toEl)     toEl.textContent     = canGet.toLocaleString();
+    if (ownedEl)  ownedEl.textContent  = `所持: ${(gameState.shinStones ?? 0).toLocaleString()}個`;
+    if (allLabel) allLabel.textContent = canGet > 0 ? `最大 ${canGet}個` : '転生石が足りない';
+    const ex10Btn = document.getElementById('shin-exchange-10-btn');
+    if (exBtn)    exBtn.disabled    = !shinVisible || stones < 100;
+    if (ex10Btn)  ex10Btn.disabled  = !shinVisible || stones < 1000;
+    if (exAllBtn) exAllBtn.disabled = !shinVisible || canGet < 1;
+    const lockNote = shinExArea.querySelector('.shin-lock-note');
+    if (!shinVisible) {
+      if (!lockNote) {
+        const p = document.createElement('p');
+        p.className = 'shin-lock-note section-note';
+        p.style.cssText = 'text-align:center;color:#666;margin-bottom:8px';
+        p.textContent = '🔒 転生50回で解放';
+        shinExArea.querySelector('.shin-exchange-box').prepend(p);
+      }
+    } else if (lockNote) {
+      lockNote.remove();
+    }
+  }
 
   const exampleEl = document.getElementById('stone-guide-example');
   if (exampleEl) {
@@ -3216,6 +3319,9 @@ document.addEventListener('DOMContentLoaded', () => {
     saveGame();
     location.href = location.pathname + '?_cb=' + Date.now();
   });
+  document.getElementById('shin-exchange-btn')?.addEventListener('click', () => exchangeToShinStones(1));
+  document.getElementById('shin-exchange-10-btn')?.addEventListener('click', () => exchangeToShinStones(10));
+  document.getElementById('shin-exchange-all-btn')?.addEventListener('click', () => exchangeToShinStones('all'));
   const vLabel = document.getElementById('settings-version-label') ?? document.querySelector('.settings-version-label');
   if (vLabel) vLabel.textContent = `バージョン ${CURRENT_VERSION}`;
   setTimeout(checkForUpdate, 3_000);
