@@ -684,6 +684,10 @@ let gameState = structuredClone(DEFAULT_STATE);
 
 function fmt(n) {
   n = Math.floor(n);
+  if (n >= 1e33) return (n / 1e33).toFixed(2) + 'Dc';
+  if (n >= 1e30) return (n / 1e30).toFixed(2) + 'No';
+  if (n >= 1e27) return (n / 1e27).toFixed(2) + 'Oc';
+  if (n >= 1e24) return (n / 1e24).toFixed(2) + 'Sp';
   if (n >= 1e21) return (n / 1e21).toFixed(2) + 'Sx';
   if (n >= 1e18) return (n / 1e18).toFixed(2) + 'Qi';
   if (n >= 1e15) return (n / 1e15).toFixed(2) + 'Qa';
