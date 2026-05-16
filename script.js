@@ -3828,6 +3828,8 @@ function initYomogi() {
   _ygPhaseIdx = 0; _ygScores = []; _ygRunning = false; _ygUrgentPlayed = false;
   if (_ygInterval) { clearInterval(_ygInterval); _ygInterval = null; }
   _ygStopEmbers();
+  document.getElementById('yomogi-fire')?.removeEventListener('click', _ygTap);
+  document.getElementById('yomogi-asa')?.removeEventListener('click', _ygTap);
   const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
   if (scene) scene.style.background = '';
   document.getElementById('yomogi-game-area')?.classList.remove('hidden');
@@ -3851,6 +3853,8 @@ function initYomogi() {
     tapBtn.addEventListener('click', function startHandler() {
       tapBtn.removeEventListener('click', startHandler);
       tapBtn.onclick = _ygTap;
+      document.getElementById('yomogi-fire')?.addEventListener('click', _ygTap);
+      document.getElementById('yomogi-asa')?.addEventListener('click', _ygTap);
       _ygStartPhase();
     }, { once: true });
   }
@@ -4368,6 +4372,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (_ygInterval) { clearInterval(_ygInterval); _ygInterval = null; }
     _ygStopEmbers();
     _ygRunning = false;
+    document.getElementById('yomogi-fire')?.removeEventListener('click', _ygTap);
+    document.getElementById('yomogi-asa')?.removeEventListener('click', _ygTap);
     const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
     if (scene) scene.style.background = '';
     showMinigameLobby();
