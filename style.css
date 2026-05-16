@@ -3263,6 +3263,300 @@ button,
 .rl-bet-preset:hover,
 .rl-bet-preset:active { background: #2a5a34; }
 
+/* ========== よもぎ蒸し ========== */
+
+.yomogi-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  position: relative;
+  transition: background 0.6s ease;
+  border-radius: 16px;
+}
+
+.yomogi-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+@keyframes yg-asa-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-7px); }
+}
+.yomogi-asa {
+  width: 190px;
+  height: 190px;
+  background-image: url('assets/yomogi/asa_1.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  flex-shrink: 0;
+  animation: yg-asa-float 2.8s ease-in-out infinite;
+}
+
+.yomogi-talk {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 8px 16px;
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+  position: relative;
+}
+
+.yomogi-speech {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #fff;
+  line-height: 1.4;
+}
+
+.yomogi-sub {
+  font-size: 0.72rem;
+  color: #aaf;
+  margin-top: 4px;
+}
+
+@keyframes yg-fire-flicker {
+  0%, 100% { transform: scaleX(1)    scaleY(1); }
+  25%       { transform: scaleX(0.96) scaleY(1.05); }
+  60%       { transform: scaleX(1.04) scaleY(0.96); }
+  80%       { transform: scaleX(0.98) scaleY(1.02); }
+}
+.yomogi-fire {
+  width: 120px;
+  height: 120px;
+  background-image: url('assets/yomogi/hi_1.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  transform-origin: bottom center;
+  cursor: pointer;
+  animation: yg-fire-flicker 0.75s ease-in-out infinite;
+}
+
+/* キャラぴょんバウンス */
+@keyframes yg-asa-bounce {
+  0%   { transform: translateY(0); }
+  35%  { transform: translateY(-10px); }
+  65%  { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+.yg-asa-bounce { animation: yg-asa-bounce 0.28s ease-out; }
+
+/* タップボタンポップ */
+@keyframes yg-btn-pop {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(0.88); }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.yg-btn-pop { animation: yg-btn-pop 0.22s ease-out; }
+.yomogi-tap-btn:active { transform: none; }
+
+/* 浮かぶ +1 */
+@keyframes yg-float-up {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-52px) scale(1.4); }
+}
+.yg-float-num {
+  position: absolute;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 8px #ff8800;
+  pointer-events: none;
+  z-index: 20;
+  animation: yg-float-up 0.65s ease-out forwards;
+}
+
+/* 熾火パーティクル */
+@keyframes yg-ember-rise {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), -65px) scale(0.2); }
+}
+.yg-ember {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 15;
+  animation: yg-ember-rise 0.9s ease-out forwards;
+}
+
+/* シーンシェイク */
+@keyframes yg-shake {
+  0%, 100% { transform: translate(0, 0); }
+  15%       { transform: translate(-5px, 2px); }
+  35%       { transform: translate(5px, -2px); }
+  55%       { transform: translate(-3px, 3px); }
+  75%       { transform: translate(3px, -1px); }
+}
+.yg-shake { animation: yg-shake 0.35s ease-out; }
+
+/* Sランクキラキラ */
+@keyframes yg-sparkle-fall {
+  0%   { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), 100px) rotate(var(--rot)) scale(0.5); }
+}
+.yg-sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 25;
+  animation: yg-sparkle-fall 1.3s ease-in forwards;
+}
+
+/* タイマー緊急点滅 */
+@keyframes yg-timer-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.35); }
+}
+.yg-timer-urgent {
+  color: #ff3333 !important;
+  animation: yg-timer-pulse 0.38s infinite;
+  display: inline-block;
+}
+
+/* フェーズ移行オーバーレイ */
+@keyframes yg-phase-overlay-anim {
+  0%   { opacity: 0; }
+  12%  { opacity: 1; }
+  78%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.yg-phase-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  animation: yg-phase-overlay-anim 1.6s ease forwards;
+  pointer-events: none;
+}
+@keyframes yg-phase-text-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  45%  { transform: scale(1.25); opacity: 1; }
+  65%  { transform: scale(0.92); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.yg-phase-overlay-text {
+  font-size: 2.4rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 24px #ff8800, 0 0 48px #ff4400;
+  animation: yg-phase-text-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.12s both;
+}
+
+.yomogi-tap-btn {
+  background: linear-gradient(135deg, #e55, #c33);
+  border: none;
+  border-radius: 50px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 14px 48px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(200,50,50,0.5);
+  transition: transform 0.08s, box-shadow 0.08s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.yomogi-tap-btn:active { transform: scale(0.93); box-shadow: 0 2px 6px rgba(200,50,50,0.4); }
+.yomogi-tap-btn:disabled { opacity: 0.4; cursor: default; }
+
+.yomogi-status-row {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: #ccc;
+}
+.yomogi-phase-label { color: #8cf; font-weight: bold; }
+.yomogi-tap-count   { color: #fc8; }
+.yomogi-timer-label { color: #f88; font-weight: bold; }
+
+.yomogi-bar-wrap {
+  width: 90%;
+  max-width: 320px;
+  height: 14px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 7px;
+  overflow: hidden;
+}
+@keyframes yg-bar-shine {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.yomogi-progress {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #f60 0%, #fc0 40%, #fff7a0 50%, #fc0 60%, #f60 100%);
+  background-size: 200% 100%;
+  animation: yg-bar-shine 1.2s linear infinite;
+  border-radius: 7px;
+  transition: width 0.15s;
+}
+
+/* 結果画面 */
+.yomogi-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  position: relative;
+  overflow: hidden;
+}
+@keyframes yg-rank-bounce {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  50%  { transform: scale(1.4) rotate(8deg); opacity: 1; }
+  75%  { transform: scale(0.88) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.yg-rank-letter {
+  font-size: 4rem;
+  font-weight: bold;
+  text-shadow: 0 0 20px currentColor;
+  line-height: 1;
+  animation: yg-rank-bounce 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.yg-rank-S { color: #ffd700; }
+.yg-rank-A { color: #00cfff; }
+.yg-rank-B { color: #88ff88; }
+.yg-rank-C { color: #aaa; }
+.yg-rank-F { color: #888; }
+.yg-rank-label { font-size: 1rem; color: #fff; margin-top: 4px; text-align: center; }
+.yomogi-rank-display { text-align: center; }
+.yomogi-comment {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: #ddd;
+  line-height: 1.6;
+  text-align: center;
+  max-width: 280px;
+}
+.yomogi-reward-display { color: #fc8; font-size: 0.95rem; font-weight: bold; }
+.yomogi-retry-btn {
+  background: linear-gradient(135deg, #2a8, #196);
+  border: none; border-radius: 50px; color: #fff;
+  font-size: 1rem; font-weight: bold; padding: 12px 36px; cursor: pointer;
+}
+
 /* ========== ルーレット ========== */
 
 /* ルーレットホイール */

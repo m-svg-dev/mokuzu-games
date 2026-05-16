@@ -533,6 +533,14 @@
           </div>
           <span class="mg-arrow">›</span>
         </button>
+        <button class="mg-card" data-game="yomogi">
+          <span class="mg-icon">🌿</span>
+          <div class="mg-info">
+            <div class="mg-name">あさのよもぎ蒸し</div>
+            <div class="mg-desc">火を育ててあさを満足させろ！</div>
+          </div>
+          <span class="mg-arrow">›</span>
+        </button>
         <button class="mg-card" data-game="slot">
           <span class="mg-icon">🎰</span>
           <div class="mg-info">
@@ -696,6 +704,46 @@
       </div>
 
       <button id="rl-spin-btn" class="rl-spin-btn" disabled>🎡 スピン！</button>
+    </div>
+
+    <!-- よもぎ蒸し ゲーム画面 -->
+    <div id="minigame-game-yomogi" class="hidden">
+      <div class="mg-game-header">
+        <button id="yomogi-back-btn" class="mg-back-btn">‹ 戻る</button>
+        <span class="mg-game-title">🌿 あさのよもぎ蒸し</span>
+      </div>
+
+      <!-- ゲームエリア -->
+      <div id="yomogi-game-area">
+        <div class="yomogi-scene">
+          <div class="yomogi-top">
+            <div class="yomogi-talk">
+              <div id="yomogi-speech" class="yomogi-speech"></div>
+              <div id="yomogi-sub" class="yomogi-sub"></div>
+            </div>
+            <div id="yomogi-asa" class="yomogi-asa"></div>
+          </div>
+          <div id="yomogi-fire" class="yomogi-fire"></div>
+          <button id="yomogi-tap-btn" class="yomogi-tap-btn">START！</button>
+          <div class="yomogi-status-row">
+            <span id="yomogi-phase" class="yomogi-phase-label"></span>
+            <span id="yomogi-tap-count" class="yomogi-tap-count"></span>
+            <span id="yomogi-timer" class="yomogi-timer-label"></span>
+          </div>
+          <div class="yomogi-bar-wrap">
+            <div id="yomogi-progress" class="yomogi-progress"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 結果エリア -->
+      <div id="yomogi-result" class="yomogi-result hidden">
+        <div id="yomogi-result-asa" class="yomogi-asa"></div>
+        <div id="yomogi-rank" class="yomogi-rank-display"></div>
+        <div id="yomogi-comment" class="yomogi-comment"></div>
+        <div id="yomogi-reward" class="yomogi-reward-display"></div>
+        <button id="yomogi-retry-btn" class="yomogi-retry-btn">もう一度！</button>
+      </div>
     </div>
 
     <!-- スロット ゲーム画面 -->

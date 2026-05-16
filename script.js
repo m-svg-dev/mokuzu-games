@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.8.0';
+const CURRENT_VERSION = '2.9.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.9.0',
+    date: '2026/05/17',
+    title: '🌿 あさのよもぎ蒸しミニゲーム追加！',
+    items: [
+      '🌿【新ミニゲーム】あさのよもぎ蒸しを追加！タップして火を育ててあさを満足させろ！',
+      '🔥 3フェーズ構成で制限時間内に連打！S〜Fのランク評価で藻をゲット！',
+      '✨ Sランクで藻5,000獲得！あさの反応も見どころ！',
+    ],
+  },
   {
     id: 'v2.8.0',
     date: '2026/05/16',
@@ -749,6 +759,34 @@ function playSound(type) {
     osc.stop(t + duration);
   };
 
+  // 未来時刻を明示してスケジュールするbeep（setTimeout不要でタイミングが正確）
+  const beepAt = (at, freq, endFreq, duration, gain = 0.18, wave = 'square') => {
+    const osc = ctx.createOscillator();
+    const vol = ctx.createGain();
+    osc.connect(vol); vol.connect(ctx.destination);
+    osc.type = wave;
+    osc.frequency.setValueAtTime(freq, at);
+    if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, at + duration);
+    vol.gain.setValueAtTime(gain, at);
+    vol.gain.exponentialRampToValueAtTime(0.001, at + duration);
+    osc.start(at);
+    osc.stop(at + duration);
+  };
+
+  const noise = (duration, gain = 0.12) => {
+    const bufSize = Math.ceil(ctx.sampleRate * duration);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const vol = ctx.createGain();
+    vol.gain.setValueAtTime(gain, t);
+    vol.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    src.connect(vol); vol.connect(ctx.destination);
+    src.start(t);
+  };
+
   switch (type) {
     case 'tap':      beep(380, 200, 0.07, 0.12); break;
     case 'tapLarge': beep(600, 280, 0.11, 0.18); break;
@@ -759,6 +797,37 @@ function playSound(type) {
     case 'awaken':   beep(180, 1600, 0.5, 0.25, 'sawtooth'); break;
     case 'levelup':
       [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, f, 0.12, 0.16, 'triangle'), i * 90));
+      break;
+
+    // ========== よもぎ蒸し ==========
+    case 'yg_tap':
+      noise(0.055, 0.1);
+      beep(140, 55, 0.06, 0.13, 'sawtooth');
+      break;
+    case 'yg_start':
+      beepAt(t,        440,  660, 0.12, 0.15, 'sine');
+      beepAt(t + 0.13, 660,  880, 0.10, 0.12, 'sine');
+      break;
+    case 'yg_phase':
+      [[330,396],[440,528],[550,660],[740,888]].forEach(([f,ef], i) =>
+        beepAt(t + i * 0.085, f, ef, 0.14, 0.16, 'triangle'));
+      break;
+    case 'yg_urgent':
+      beep(880, 880, 0.07, 0.2, 'square');
+      break;
+    case 'yg_result_S':
+      [523,659,784,1047,1319].forEach((f, i) =>
+        beepAt(t + i * 0.08, f, f, 0.15, 0.2, 'triangle'));
+      beepAt(t + 0.46, 1047, 1400, 0.35, 0.2, 'sine');
+      beepAt(t + 0.50, 1319, 1600, 0.30, 0.15, 'sine');
+      break;
+    case 'yg_result_good':
+      [523,659,784].forEach((f, i) =>
+        beepAt(t + i * 0.09, f, f, 0.12, 0.16, 'triangle'));
+      break;
+    case 'yg_result_bad':
+      [400,300,220].forEach((f, i) =>
+        beepAt(t + i * 0.11, f, f * 0.85, 0.18, 0.14, 'sine'));
       break;
   }
 }
@@ -3074,6 +3143,7 @@ function showMinigame(gameId) {
   if (gameId === 'highlow')  { if (!_hlCard) initHighLow(); else _hlRender(); }
   if (gameId === 'roulette') initRoulette();
   if (gameId === 'slot')     initSlot();
+  if (gameId === 'yomogi')   initYomogi();
 }
 
 // ========== ハイロー ミニゲーム ==========
@@ -3493,6 +3563,297 @@ function initRoulette() {
   _rlBuildWheel();
   _rlSpinning = false;
   rlRender();
+}
+
+// ========== よもぎ蒸し ミニゲーム ==========
+
+const YOMOGI_PHASES = [
+  { msg: 'わっちのよもぎ蒸し、始めるぞ！🌿', sub: '火を育ててくりゃれ！',                sec: 12, goal: 28 },
+  { msg: 'もっと！わっちが熱くなれんじゃろ！', sub: '(っ`ω´c)ｷﾞﾘｨｨｨｨｨｨ',              sec: 10, goal: 42 },
+  { msg: 'わっちの限界まで付き合えぃ！💥',    sub: '今すぐ！(っ`ω´c)ｷﾞﾘｨｨｨｨｨｨ', sec: 8,  goal: 55 },
+];
+
+// asa_1〜10 個別ファイル番号マップ
+const YG_ASA = {
+  calm: 1, happy: 2, content: 3, instruct: 4,
+  sad: 5, surprised: 6, bored: 7, worried: 8, zombie: 9, wink: 10,
+};
+
+let _ygPhaseIdx = 0, _ygTaps = 0, _ygTimeLeft = 0;
+let _ygInterval = null, _ygEmberInterval = null, _ygRunning = false, _ygScores = [];
+let _ygUrgentPlayed = false;
+
+function _ygSetAsa(state, elId) {
+  const el = document.getElementById(elId || 'yomogi-asa');
+  if (!el) return;
+  const num = YG_ASA[state] ?? YG_ASA.calm;
+  el.style.backgroundImage = `url('assets/yomogi/asa_${num}.png')`;
+}
+
+function _ygSetFire(level) {
+  const el = document.getElementById('yomogi-fire');
+  if (!el) return;
+  const lv = level ?? 0;
+  el.style.backgroundImage = `url('assets/yomogi/hi_${lv + 1}.png')`;
+  el.dataset.fireLevel = lv;
+  const glows = [
+    '',
+    'drop-shadow(0 0 8px #ff8800)',
+    'drop-shadow(0 0 14px #ff6600) drop-shadow(0 0 28px #ff3300)',
+  ];
+  el.style.filter = glows[lv] || '';
+  // 背景ヒートグロー
+  const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
+  if (scene) {
+    const bgs = [
+      '',
+      'radial-gradient(ellipse at 50% 90%, rgba(140,50,0,0.25) 0%, transparent 65%)',
+      'radial-gradient(ellipse at 50% 90%, rgba(200,70,0,0.4) 0%, transparent 60%)',
+    ];
+    scene.style.background = bgs[lv] || '';
+  }
+}
+
+function _ygSpawnEmbers() {
+  const fire = document.getElementById('yomogi-fire');
+  const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
+  if (!fire || !scene) return;
+  const lv = parseInt(fire.dataset.fireLevel ?? '0');
+  const count = lv === 2 ? 3 : lv === 1 ? 2 : 1;
+  const colors = ['#ff8800', '#ffcc00', '#ff4400', '#ffee88', '#fff'];
+  for (let i = 0; i < count; i++) {
+    const fr = fire.getBoundingClientRect();
+    const sr = scene.getBoundingClientRect();
+    const ember = document.createElement('div');
+    ember.className = 'yg-ember';
+    ember.style.background = colors[Math.floor(Math.random() * colors.length)];
+    ember.style.left = (fr.left - sr.left + fr.width * (0.25 + Math.random() * 0.5)) + 'px';
+    ember.style.top  = (fr.top  - sr.top  + 15) + 'px';
+    ember.style.setProperty('--dx', (Math.random() * 44 - 22) + 'px');
+    scene.appendChild(ember);
+    setTimeout(() => ember.remove(), 950);
+  }
+}
+
+function _ygStartEmbers() {
+  if (_ygEmberInterval) clearInterval(_ygEmberInterval);
+  _ygEmberInterval = setInterval(() => { if (_ygRunning) _ygSpawnEmbers(); }, 350);
+}
+
+function _ygStopEmbers() {
+  if (_ygEmberInterval) { clearInterval(_ygEmberInterval); _ygEmberInterval = null; }
+}
+
+function _ygUpdateUI() {
+  const phase = YOMOGI_PHASES[_ygPhaseIdx];
+  const ratio = _ygTaps / phase.goal;
+  _ygSetFire(ratio >= 0.66 ? 2 : ratio >= 0.33 ? 1 : 0);
+  _ygSetAsa(ratio >= 0.75 ? 'happy' : ratio >= 0.35 ? 'instruct' : 'sad');
+  if (_ygRunning) {
+    const sp = document.getElementById('yomogi-speech');
+    const sub = document.getElementById('yomogi-sub');
+    if (ratio >= 0.9 && sp) { sp.textContent = 'わっち最高に気持ちいいぞ！！🔥'; if (sub) sub.textContent = 'そのまま続けてくりゃれ！'; }
+    else if (ratio >= 0.66 && sp) { sp.textContent = phase.msg; if (sub) sub.textContent = '(っ`ω´c)ｷﾞﾘｨｨｨｨｨｨ いいぞ！'; }
+    else if (ratio >= 0.33 && sp) { sp.textContent = phase.msg; if (sub) sub.textContent = phase.sub; }
+    else if (_ygTaps > 0 && sp) { sp.textContent = 'もっとじゃ！火が足りんぞ！'; if (sub) sub.textContent = '(っ`ω´c)ｷﾞﾘｨｨｨｨｨｨ'; }
+  }
+  const bar = document.getElementById('yomogi-progress');
+  if (bar) bar.style.width = Math.min(100, ratio * 100) + '%';
+  const tc = document.getElementById('yomogi-tap-count');
+  if (tc) tc.textContent = `${_ygTaps} / ${phase.goal}`;
+  const tm = document.getElementById('yomogi-timer');
+  if (tm) {
+    tm.textContent = _ygTimeLeft + '秒';
+    const urgent = _ygRunning && _ygTimeLeft <= 3;
+    tm.classList.toggle('yg-timer-urgent', urgent);
+    if (urgent && !_ygUrgentPlayed) { _ygUrgentPlayed = true; playSound('yg_urgent'); }
+  }
+}
+
+function _ygTap() {
+  if (!_ygRunning) return;
+  _ygTaps++;
+  playSound('yg_tap');
+  _ygUpdateUI();
+
+  // 火のフラッシュ（グロー維持しつつ一瞬明るく）
+  const fire = document.getElementById('yomogi-fire');
+  if (fire) {
+    const base = fire.style.filter;
+    fire.style.filter = 'brightness(2.4) ' + base;
+    setTimeout(() => { fire.style.filter = base; }, 90);
+  }
+
+  // ボタンバウンス
+  const btn = document.getElementById('yomogi-tap-btn');
+  if (btn) { btn.classList.remove('yg-btn-pop'); void btn.offsetWidth; btn.classList.add('yg-btn-pop'); }
+
+  // キャラぴょん
+  const asa = document.getElementById('yomogi-asa');
+  if (asa) { asa.classList.remove('yg-asa-bounce'); void asa.offsetWidth; asa.classList.add('yg-asa-bounce'); }
+
+  // 浮かぶ +1
+  const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
+  if (scene && fire) {
+    const fr = fire.getBoundingClientRect();
+    const sr = scene.getBoundingClientRect();
+    const span = document.createElement('span');
+    span.className = 'yg-float-num';
+    span.textContent = '+1';
+    span.style.left = (fr.left - sr.left + fr.width / 2 + (Math.random() * 28 - 14)) + 'px';
+    span.style.top  = (fr.top  - sr.top  + 10) + 'px';
+    scene.appendChild(span);
+    setTimeout(() => span.remove(), 700);
+  }
+}
+
+function _ygEndPhase() {
+  clearInterval(_ygInterval); _ygStopEmbers(); _ygRunning = false;
+  // シーンシェイク
+  const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
+  if (scene) { scene.classList.remove('yg-shake'); void scene.offsetWidth; scene.classList.add('yg-shake'); }
+  const phase = YOMOGI_PHASES[_ygPhaseIdx];
+  _ygScores.push(Math.min(1, _ygTaps / phase.goal));
+  const tapBtn = document.getElementById('yomogi-tap-btn');
+  if (tapBtn) tapBtn.disabled = true;
+  const sp = document.getElementById('yomogi-speech');
+  const isGood = _ygScores[_ygScores.length - 1] >= 0.65;
+  if (_ygPhaseIdx < YOMOGI_PHASES.length - 1) {
+    _ygSetAsa(isGood ? 'happy' : 'sad');
+    if (sp) sp.textContent = isGood ? 'わっちいい感じじゃ！次もよろしゅう！✨' : '(っ`ω´c)ｷﾞﾘｨｨｨｨｨｨ もっとじゃ！！';
+    // フェーズ移行オーバーレイ
+    const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
+    if (scene) {
+      const overlay = document.createElement('div');
+      overlay.className = 'yg-phase-overlay';
+      overlay.innerHTML = `<div class="yg-phase-overlay-text">フェーズ ${_ygPhaseIdx + 2}！🔥</div>`;
+      scene.appendChild(overlay);
+      setTimeout(() => overlay.remove(), 1800);
+    }
+    setTimeout(() => { _ygPhaseIdx++; _ygStartPhase(); }, 1800);
+  } else {
+    _ygSetAsa(isGood ? 'happy' : 'sad');
+    if (sp) sp.textContent = isGood ? 'わっち最高に満足じゃ！ありがとうのう！' : 'わっち...まだ温かくなれてないぞ...';
+    setTimeout(_ygShowResult, 1500);
+  }
+}
+
+function _ygStartPhase() {
+  const phase = YOMOGI_PHASES[_ygPhaseIdx];
+  _ygTaps = 0; _ygTimeLeft = phase.sec; _ygRunning = true;
+  const el = id => document.getElementById(id);
+  if (el('yomogi-speech')) el('yomogi-speech').textContent = phase.msg;
+  if (el('yomogi-sub'))    el('yomogi-sub').textContent    = phase.sub;
+  if (el('yomogi-phase'))  el('yomogi-phase').textContent  = `フェーズ ${_ygPhaseIdx + 1} / ${YOMOGI_PHASES.length}`;
+  if (el('yomogi-progress')) el('yomogi-progress').style.width = '0%';
+  const tapBtn = el('yomogi-tap-btn');
+  if (tapBtn) { tapBtn.disabled = false; tapBtn.textContent = 'タップ！🔥'; }
+  _ygSetAsa('instruct'); _ygSetFire(0); _ygUpdateUI();
+  _ygUrgentPlayed = false;
+  playSound(_ygPhaseIdx === 0 ? 'yg_start' : 'yg_phase');
+  _ygStartEmbers();
+  _ygInterval = setInterval(() => {
+    _ygTimeLeft--;
+    _ygUpdateUI();
+    if (_ygTimeLeft <= 0) _ygEndPhase();
+  }, 1000);
+}
+
+function _ygShowResult() {
+  const avg = _ygScores.reduce((a, b) => a + b, 0) / _ygScores.length;
+  let rank, label, comment, moku, item, asaState;
+  if (avg >= 0.9) {
+    rank='S'; label='🌟 Sランク！最高！'; moku=5000; item=null; asaState='wink';
+    comment='わっち感激！わっちの屁はヨモギの香り！ブリュュ！あっ.,,,';
+  } else if (avg >= 0.7) {
+    rank='A'; label='✨ Aランク！すごい！'; moku=2000; item=null; asaState='happy';
+    comment='わっちかなり満足じゃ！もう少しでSだったのに惜しいのう！次はSを狙ってくりゃれ！';
+  } else if (avg >= 0.5) {
+    rank='B'; label='👍 Bランク！まあまあ！'; moku=800; item=null; asaState='content';
+    comment='まあ...悪くはないぞ？でもわっちはもっと熱くなれるはずじゃ。もうちょっと本気出してくりゃれ！';
+  } else if (avg >= 0.3) {
+    rank='C'; label='😅 Cランク...'; moku=200; item=null; asaState='bored';
+    comment='(っ`ω´c)ｷﾞﾘｨｨｨｨｨｨ...わっちまだ全然温かくないぞ？これで終わりとは言わせんからな？！';
+  } else {
+    rank='F'; label='💧 Fランク...また来てね'; moku=1; item=null; asaState='zombie';
+    comment='わっち...完全に冷えちゃったじゃろ...もはや言葉もないぞ...次こそはちゃんと火を育ててくりゃれ...';
+  }
+
+  if (moku > 0) {
+    gameState.moku      = (gameState.moku ?? 0) + moku;
+    gameState.totalMoku = (gameState.totalMoku ?? 0) + moku;
+  }
+  if (item) {
+    gameState.consumables = gameState.consumables ?? {};
+    gameState.consumables[item] = (gameState.consumables[item] ?? 0) + 1;
+  }
+  saveGame(); updateDisplay();
+  if      (rank === 'S')                    playSound('yg_result_S');
+  else if (rank === 'A' || rank === 'B')    playSound('yg_result_good');
+  else                                      playSound('yg_result_bad');
+
+  // 背景リセット
+  const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
+  if (scene) scene.style.background = '';
+  document.getElementById('yomogi-game-area')?.classList.add('hidden');
+  const resEl = document.getElementById('yomogi-result');
+  if (resEl) resEl.classList.remove('hidden');
+  _ygSetAsa(asaState, 'yomogi-result-asa');
+  // Sランク紙吹雪
+  if (rank === 'S' && resEl) {
+    const colors = ['#ffd700','#fff','#ff8800','#ffee00','#ffe0a0'];
+    for (let i = 0; i < 28; i++) {
+      setTimeout(() => {
+        const sp = document.createElement('div');
+        sp.className = 'yg-sparkle';
+        sp.style.left = (Math.random() * 100) + '%';
+        sp.style.top  = (-8 + Math.random() * 20) + 'px';
+        sp.style.background = colors[Math.floor(Math.random() * colors.length)];
+        sp.style.setProperty('--dx', (Math.random() * 70 - 35) + 'px');
+        sp.style.setProperty('--rot', (Math.random() * 720) + 'deg');
+        resEl.appendChild(sp);
+        setTimeout(() => sp.remove(), 1400);
+      }, i * 55);
+    }
+  }
+  const rkEl = document.getElementById('yomogi-rank');
+  if (rkEl) rkEl.innerHTML = `<div class="yg-rank-letter yg-rank-${rank}">${rank}</div><div class="yg-rank-label">${label}</div>`;
+  const cmEl = document.getElementById('yomogi-comment');
+  if (cmEl) cmEl.textContent = comment;
+  const rwEl = document.getElementById('yomogi-reward');
+  if (rwEl) rwEl.textContent = moku > 0 ? `藻 +${fmt(moku)}` : '報酬なし（F判定）';
+}
+
+function initYomogi() {
+  _ygPhaseIdx = 0; _ygScores = []; _ygRunning = false; _ygUrgentPlayed = false;
+  if (_ygInterval) { clearInterval(_ygInterval); _ygInterval = null; }
+  _ygStopEmbers();
+  const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
+  if (scene) scene.style.background = '';
+  document.getElementById('yomogi-game-area')?.classList.remove('hidden');
+  document.getElementById('yomogi-result')?.classList.add('hidden');
+  _ygSetAsa('calm');
+  _ygSetFire(0);
+  ['yomogi-phase','yomogi-timer','yomogi-tap-count'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = '';
+  });
+  const bar = document.getElementById('yomogi-progress');
+  if (bar) bar.style.width = '0%';
+  const sp = document.getElementById('yomogi-speech');
+  if (sp) sp.textContent = 'わっちのよもぎ蒸し、手伝ってくりゃれ！🌿';
+  const sub = document.getElementById('yomogi-sub');
+  if (sub) sub.textContent = 'STARTをタップ！';
+  const tapBtn = document.getElementById('yomogi-tap-btn');
+  if (tapBtn) {
+    tapBtn.disabled = false;
+    tapBtn.textContent = 'START！';
+    tapBtn.onclick = null;
+    tapBtn.addEventListener('click', function startHandler() {
+      tapBtn.removeEventListener('click', startHandler);
+      tapBtn.onclick = _ygTap;
+      _ygStartPhase();
+    }, { once: true });
+  }
 }
 
 // ========== スロット ミニゲーム ==========
@@ -4003,6 +4364,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('minigame-back-btn')?.addEventListener('click', showMinigameLobby);
   document.getElementById('roulette-back-btn')?.addEventListener('click', showMinigameLobby);
+  document.getElementById('yomogi-back-btn')?.addEventListener('click', () => {
+    if (_ygInterval) { clearInterval(_ygInterval); _ygInterval = null; }
+    _ygStopEmbers();
+    _ygRunning = false;
+    const scene = document.querySelector('#minigame-game-yomogi .yomogi-scene');
+    if (scene) scene.style.background = '';
+    showMinigameLobby();
+  });
+  document.getElementById('yomogi-retry-btn')?.addEventListener('click', initYomogi);
 
   // ルーレット
   document.querySelectorAll('.rl-bet-preset').forEach(btn => {
