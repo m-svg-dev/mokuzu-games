@@ -3274,6 +3274,9 @@ button,
   position: relative;
   transition: background 0.6s ease;
   border-radius: 16px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .yomogi-top {
@@ -3465,14 +3468,18 @@ button,
   border: none;
   border-radius: 50px;
   color: #fff;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  padding: 14px 48px;
+  padding: 18px 0;
+  width: 88%;
+  max-width: 320px;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(200,50,50,0.5);
   transition: transform 0.08s, box-shadow 0.08s;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   user-select: none;
+  -webkit-user-select: none;
 }
 .yomogi-tap-btn:active { transform: scale(0.93); box-shadow: 0 2px 6px rgba(200,50,50,0.4); }
 .yomogi-tap-btn:disabled { opacity: 0.4; cursor: default; }
