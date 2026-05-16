@@ -114,6 +114,7 @@
           <p style="color:#ff4444;font-size:0.7rem;margin:0 0 4px">🛠️ デバッグ</p>
           <button id="debug-add-stones">💎 転生石+10000</button>
           <button id="debug-add-moku">🌿 藻+100M</button>
+          <button id="debug-add-coins">🪙 コイン+100</button>
         </div>
 
         <hr class="settings-divider">
@@ -508,6 +509,254 @@
     <div id="achievement-list"></div>
   </div>
 
+  <!-- ⑧ ミニゲーム -->
+  <div id="tab-minigame" class="tab-panel">
+
+    <!-- ロビー（ゲーム選択） -->
+    <div id="minigame-lobby">
+      <h2 class="panel-title">🎮 ミニゲーム</h2>
+      <p class="section-note" style="text-align:center;margin-bottom:16px">藻コインを使って遊べるゲーム！</p>
+      <div class="mg-list">
+        <button class="mg-card" data-game="highlow">
+          <span class="mg-icon">🃏</span>
+          <div class="mg-info">
+            <div class="mg-name">ハイロー</div>
+            <div class="mg-desc">次のカードが高いか低いかを当てよう</div>
+          </div>
+          <span class="mg-arrow">›</span>
+        </button>
+        <button class="mg-card" data-game="roulette">
+          <span class="mg-icon">🎡</span>
+          <div class="mg-info">
+            <div class="mg-name">ルーレット</div>
+            <div class="mg-desc">赤・黒・単番など、0〜36で賭けよう</div>
+          </div>
+          <span class="mg-arrow">›</span>
+        </button>
+        <button class="mg-card" data-game="slot">
+          <span class="mg-icon">🎰</span>
+          <div class="mg-info">
+            <div class="mg-name">スロット</div>
+            <div class="mg-desc">9マスで同じ絵柄を集めろ！</div>
+          </div>
+          <span class="mg-arrow">›</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ハイロー ゲーム画面 -->
+    <div id="minigame-game-highlow" class="hidden">
+      <div class="mg-game-header">
+        <button id="minigame-back-btn" class="mg-back-btn">‹ 戻る</button>
+        <span class="mg-game-title">🃏 ハイロー</span>
+      </div>
+
+      <div class="hl-coin-bar">
+        <img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン">
+        <span>所持コイン: <span id="hl-coin-count">0</span>枚</span>
+      </div>
+
+      <div class="hl-cards-area">
+        <div class="hl-card-wrap" id="hl-current-wrap"></div>
+        <div class="hl-vs-arrow">→</div>
+        <div class="hl-card-wrap" id="hl-next-wrap"></div>
+      </div>
+
+      <div id="hl-result" class="hl-result"></div>
+
+      <div class="hl-bet-section">
+        <div class="hl-bet-label">ベット: <span id="hl-bet-val">1</span>枚</div>
+        <div class="hl-bet-presets">
+          <button class="hl-bet-preset" data-bet="1">1</button>
+          <button class="hl-bet-preset" data-bet="5">5</button>
+          <button class="hl-bet-preset" data-bet="10">10</button>
+          <button class="hl-bet-preset" data-bet="all">ALL</button>
+        </div>
+      </div>
+
+      <div class="hl-choice-row">
+        <button id="hl-high-btn" class="hl-btn hl-high" disabled>⬆️ HIGH</button>
+        <button id="hl-low-btn"  class="hl-btn hl-low"  disabled>⬇️ LOW</button>
+      </div>
+
+      <div class="hl-streak-row">
+        <div class="hl-streak-item">🔥 連続正解: <strong id="hl-streak-val">0</strong>回</div>
+        <div class="hl-streak-item">🏆 最高記録: <strong id="hl-highscore-val">0</strong>回</div>
+      </div>
+
+      <p class="section-note" style="text-align:center;margin-top:12px;line-height:1.8">
+        ✨ 5連続正解でコイン+10ボーナス！<br>
+        勝利: 賭け額×1.9倍返却　同値は負け扱い
+      </p>
+    </div>
+
+    <!-- ルーレット ゲーム画面 -->
+    <div id="minigame-game-roulette" class="hidden">
+      <div class="mg-game-header">
+        <button id="roulette-back-btn" class="mg-back-btn">‹ 戻る</button>
+        <span class="mg-game-title">🎡 ルーレット</span>
+      </div>
+
+      <div class="hl-coin-bar">
+        <img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン">
+        <span>所持コイン: <span id="rl-coin-count">0</span>枚</span>
+      </div>
+
+      <div class="rl-wheel-wrap">
+        <div class="rl-pointer">▼</div>
+        <div id="rl-wheel" class="rl-wheel"></div>
+      </div>
+
+      <div id="rl-display" class="rl-display rl-display-green">
+        <div id="rl-display-num" class="rl-display-num">?</div>
+      </div>
+
+      <div id="rl-result" class="rl-result"></div>
+
+      <!-- ルーレットテーブル -->
+      <div class="rl-table-wrap">
+        <table class="rl-table">
+          <tbody>
+            <tr>
+              <td class="rl-zero" rowspan="3" data-bet="number" data-num="0">0</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="3">3</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="6">6</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="9">9</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="12">12</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="15">15</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="18">18</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="21">21</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="24">24</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="27">27</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="30">30</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="33">33</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="36">36</td>
+              <td class="rl-2to1" data-bet="col3">2:1</td>
+            </tr>
+            <tr>
+              <td class="rl-num rl-black" data-bet="number" data-num="2">2</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="5">5</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="8">8</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="11">11</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="14">14</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="17">17</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="20">20</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="23">23</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="26">26</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="29">29</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="32">32</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="35">35</td>
+              <td class="rl-2to1" data-bet="col2">2:1</td>
+            </tr>
+            <tr>
+              <td class="rl-num rl-red"   data-bet="number" data-num="1">1</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="4">4</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="7">7</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="10">10</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="13">13</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="16">16</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="19">19</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="22">22</td>
+              <td class="rl-num rl-red"   data-bet="number" data-num="25">25</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="28">28</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="31">31</td>
+              <td class="rl-num rl-black" data-bet="number" data-num="34">34</td>
+              <td class="rl-2to1" data-bet="col1">2:1</td>
+            </tr>
+            <tr>
+              <td class="rl-empty"></td>
+              <td colspan="4" class="rl-dozen" data-bet="dozen1">1st 12</td>
+              <td colspan="4" class="rl-dozen" data-bet="dozen2">2nd 12</td>
+              <td colspan="4" class="rl-dozen" data-bet="dozen3">3rd 12</td>
+              <td class="rl-empty"></td>
+            </tr>
+            <tr>
+              <td class="rl-empty"></td>
+              <td colspan="2" class="rl-outside" data-bet="low">1-18</td>
+              <td colspan="2" class="rl-outside" data-bet="even">Even</td>
+              <td colspan="2" class="rl-outside rl-outside-red" data-bet="red">♦</td>
+              <td colspan="2" class="rl-outside rl-outside-black" data-bet="black">♦</td>
+              <td colspan="2" class="rl-outside" data-bet="odd">Odd</td>
+              <td colspan="2" class="rl-outside" data-bet="high">19-36</td>
+              <td class="rl-empty"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="rl-bet-info">
+        <span>賭け方: <strong id="rl-bet-label">テーブルをタップ</strong></span>
+        <span>ベット: <span id="rl-bet-val">1</span>枚</span>
+      </div>
+      <div class="hl-bet-presets" style="justify-content:center;margin:8px 0">
+        <button class="rl-bet-preset" data-bet="1">1</button>
+        <button class="rl-bet-preset" data-bet="5">5</button>
+        <button class="rl-bet-preset" data-bet="10">10</button>
+        <button class="rl-bet-preset" data-bet="all">ALL</button>
+      </div>
+
+      <button id="rl-spin-btn" class="rl-spin-btn" disabled>🎡 スピン！</button>
+    </div>
+
+    <!-- スロット ゲーム画面 -->
+    <div id="minigame-game-slot" class="hidden">
+      <div class="mg-game-header">
+        <button id="slot-back-btn" class="mg-back-btn">‹ 戻る</button>
+        <span class="mg-game-title">🎰 スロット</span>
+      </div>
+
+      <div class="hl-coin-bar">
+        <img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン">
+        <span>所持コイン: <span id="slot-coin-count">0</span>枚</span>
+      </div>
+
+      <div class="slot-machine">
+        <div class="slot-frame">
+          <div class="slot-grid">
+            <div class="slot-cell-wrap"><img class="slot-symbol" id="slot-cell-0" src="assets/slot/1_png.png" alt=""></div>
+            <div class="slot-cell-wrap"><img class="slot-symbol" id="slot-cell-1" src="assets/slot/1_png.png" alt=""></div>
+            <div class="slot-cell-wrap"><img class="slot-symbol" id="slot-cell-2" src="assets/slot/1_png.png" alt=""></div>
+            <div class="slot-cell-wrap"><img class="slot-symbol" id="slot-cell-3" src="assets/slot/1_png.png" alt=""></div>
+            <div class="slot-cell-wrap"><img class="slot-symbol" id="slot-cell-4" src="assets/slot/1_png.png" alt=""></div>
+            <div class="slot-cell-wrap"><img class="slot-symbol" id="slot-cell-5" src="assets/slot/1_png.png" alt=""></div>
+            <div class="slot-cell-wrap"><img class="slot-symbol" id="slot-cell-6" src="assets/slot/1_png.png" alt=""></div>
+            <div class="slot-cell-wrap"><img class="slot-symbol" id="slot-cell-7" src="assets/slot/1_png.png" alt=""></div>
+            <div class="slot-cell-wrap"><img class="slot-symbol" id="slot-cell-8" src="assets/slot/1_png.png" alt=""></div>
+          </div>
+        </div>
+        <div id="slot-result" class="slot-result"></div>
+      </div>
+
+      <div id="slot-event" class="slot-event hidden"></div>
+
+      <!-- 配当表 -->
+      <div class="slot-paytable">
+        <div class="slot-pay-item"><img src="assets/slot/100_.png" alt="青7"><span class="slot-pay-mult">×100</span><span class="slot-pay-prob" id="slot-prob-6"></span></div>
+        <div class="slot-pay-item"><img src="assets/slot/50_.png"  alt="赤7"><span class="slot-pay-mult">×50</span><span class="slot-pay-prob" id="slot-prob-5"></span></div>
+        <div class="slot-pay-item"><img src="assets/slot/30_.png"  alt="BAR"><span class="slot-pay-mult">×30</span><span class="slot-pay-prob" id="slot-prob-4"></span></div>
+        <div class="slot-pay-item"><img src="assets/slot/5_.png"   alt="帽子"><span class="slot-pay-mult">×5</span><span class="slot-pay-prob" id="slot-prob-3"></span></div>
+        <div class="slot-pay-item"><img src="assets/slot/3_.png"   alt="ひよこ"><span class="slot-pay-mult">×3</span><span class="slot-pay-prob" id="slot-prob-2"></span></div>
+        <div class="slot-pay-item"><img src="assets/slot/2_.png"   alt="たまご"><span class="slot-pay-mult">×2</span><span class="slot-pay-prob" id="slot-prob-1"></span></div>
+      </div>
+      <div class="slot-count-table">
+        <span>3個<b>×1</b></span><span>4個<b>×2</b></span><span>5個<b>×5</b></span>
+        <span>6個<b>×10</b></span><span>7個<b>×20</b></span><span>8個<b>×50</b></span><span>9個<b>×100</b></span>
+      </div>
+
+      <div class="hl-bet-section">
+        <div class="hl-bet-label">ベット: <span id="slot-bet-val">1</span>枚</div>
+        <div class="hl-bet-presets">
+          <button class="slot-bet-preset" data-bet="1">1</button>
+          <button class="slot-bet-preset" data-bet="5">5</button>
+          <button class="slot-bet-preset" data-bet="10">10</button>
+          <button class="slot-bet-preset" data-bet="all">ALL</button>
+        </div>
+      </div>
+      <button id="slot-spin-btn" class="slot-spin-btn" disabled>🎰 スピン！</button>
+    </div>
+
+  </div>
+
   <!-- タブナビゲーション（画面下部固定） -->
   <nav id="tab-nav">
     <div id="tab-nav-inner">
@@ -519,6 +768,7 @@
       <button class="tab-btn" data-tab="pet"><img src="assets/tabs/tab_pet.png" alt="ペット"></button>
       <button class="tab-btn" data-tab="ranking"><img src="assets/tabs/tab_ranking.png" alt="ランキング"></button>
       <button class="tab-btn" data-tab="achievement"><img src="assets/tabs/Achievenmements.png" alt="実績"></button>
+      <button class="tab-btn" data-tab="minigame"><img src="assets/tabs/minigame.png" alt="ミニゲーム"></button>
     </div>
   </nav>
 

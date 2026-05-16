@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.7.0';
+const CURRENT_VERSION = '2.8.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.8.0',
+    date: '2026/05/16',
+    title: '🎰 ミニゲーム追加！',
+    items: [
+      '🎰【新機能】ミニゲームを追加しました！藻コインを賭けてひりつけ！',
+      '🎡【ルーレット】0〜36の数字に賭けて当てろ！当たれば35倍！',
+      '🎲【スロット9マス】9マスに絵柄を並べて同じ絵柄を集めろ！ランダムで確率UPイベントも発生！',
+    ],
+  },
   {
     id: 'v2.7.0',
     date: '2026/05/09',
@@ -676,6 +686,7 @@ const DEFAULT_STATE = {
   achievements:         {},
   usedCoupons:          [],
   shinStones:           0,
+  highlowHighScore:     0,
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -2638,6 +2649,7 @@ function doPrestige() {
     lastReadUpdateId:         gameState.lastReadUpdateId,
     usedCoupons:              gameState.usedCoupons,
     shinStones:               gameState.shinStones ?? 0,
+    highlowHighScore:         gameState.highlowHighScore ?? 0,
   };
 
   gameState = structuredClone(DEFAULT_STATE);
@@ -3049,6 +3061,539 @@ function resetGame() {
   location.reload();
 }
 
+// ========== ミニゲーム ロビー ==========
+
+function showMinigameLobby() {
+  document.getElementById('minigame-lobby').classList.remove('hidden');
+  document.querySelectorAll('[id^="minigame-game-"]').forEach(el => el.classList.add('hidden'));
+}
+
+function showMinigame(gameId) {
+  document.getElementById('minigame-lobby').classList.add('hidden');
+  document.querySelectorAll('[id^="minigame-game-"]').forEach(el => el.classList.add('hidden'));
+  document.getElementById(`minigame-game-${gameId}`).classList.remove('hidden');
+  if (gameId === 'highlow')  { if (!_hlCard) initHighLow(); else _hlRender(); }
+  if (gameId === 'roulette') initRoulette();
+  if (gameId === 'slot')     initSlot();
+}
+
+// ========== ハイロー ミニゲーム ==========
+
+const HL_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const HL_SUITS  = ['♠', '♥', '♦', '♣'];
+
+let _hlCard   = null;   // 現在表示中のカード
+let _hlPhase  = 'idle'; // 'idle' | 'playing' | 'result'
+let _hlBet    = 1;
+let _hlStreak = 0;
+
+function _hlDraw() {
+  const idx = Math.floor(Math.random() * 13);
+  return { value: HL_VALUES[idx], suit: HL_SUITS[Math.floor(Math.random() * 4)], rank: idx + 1 };
+}
+
+function _hlCardHTML(card) {
+  const isRed = card.suit === '♥' || card.suit === '♦';
+  return `<div class="hl-card${isRed ? ' hl-card-red' : ''}">
+    <div class="hl-corner hl-tl"><div class="hl-rank">${card.value}</div><div class="hl-suit">${card.suit}</div></div>
+    <div class="hl-center">${card.suit}</div>
+    <div class="hl-corner hl-br"><div class="hl-rank">${card.value}</div><div class="hl-suit">${card.suit}</div></div>
+  </div>`;
+}
+
+function _hlCardBackHTML() {
+  return `<div class="hl-card hl-card-back"><span>?</span></div>`;
+}
+
+function _hlRender() {
+  const coins = gameState.mokuCoins ?? 0;
+  _hlBet = Math.max(1, Math.min(_hlBet, Math.max(1, coins)));
+
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('hl-coin-count',   coins);
+  setTxt('hl-bet-val',      _hlBet);
+  setTxt('hl-streak-val',   _hlStreak);
+  setTxt('hl-highscore-val', gameState.highlowHighScore ?? 0);
+
+  const curEl = document.getElementById('hl-current-wrap');
+  const nxtEl = document.getElementById('hl-next-wrap');
+  if (curEl) curEl.innerHTML = _hlCard ? _hlCardHTML(_hlCard) : _hlCardBackHTML();
+  if (nxtEl) nxtEl.innerHTML = _hlCardBackHTML();
+
+  const resultEl = document.getElementById('hl-result');
+  if (resultEl) { resultEl.className = 'hl-result'; resultEl.innerHTML = ''; }
+
+  const canPlay = _hlPhase === 'playing' && coins >= 1;
+  const hBtn = document.getElementById('hl-high-btn');
+  const lBtn = document.getElementById('hl-low-btn');
+  if (hBtn) hBtn.disabled = !canPlay;
+  if (lBtn) lBtn.disabled = !canPlay;
+
+  if (coins <= 0 && _hlPhase === 'playing' && resultEl) {
+    resultEl.className = 'hl-result hl-result-lose';
+    resultEl.textContent = '💸 コインが足りません！デイリーログインでもらおう';
+  }
+}
+
+function initHighLow() {
+  _hlCard  = _hlDraw();
+  _hlPhase = 'playing';
+  _hlRender();
+}
+
+function hlChoose(choice) {
+  if (_hlPhase !== 'playing') return;
+  const coins = gameState.mokuCoins ?? 0;
+  if (coins < 1) { _hlRender(); return; }
+
+  const bet  = Math.min(_hlBet, coins);
+  const next = _hlDraw();
+  const win  = (choice === 'high' && next.rank > _hlCard.rank) ||
+               (choice === 'low'  && next.rank < _hlCard.rank);
+
+  _hlPhase = 'result';
+
+  const curEl    = document.getElementById('hl-current-wrap');
+  const nxtEl    = document.getElementById('hl-next-wrap');
+  const resultEl = document.getElementById('hl-result');
+  const hBtn     = document.getElementById('hl-high-btn');
+  const lBtn     = document.getElementById('hl-low-btn');
+
+  if (curEl) curEl.innerHTML = _hlCardHTML(_hlCard);
+  if (nxtEl) nxtEl.innerHTML = _hlCardHTML(next);
+  if (hBtn)  hBtn.disabled   = true;
+  if (lBtn)  lBtn.disabled   = true;
+
+  if (win) {
+    const gain = Math.max(1, Math.floor(bet * 0.9));
+    gameState.mokuCoins = coins + gain;
+    _hlStreak++;
+    if (_hlStreak > (gameState.highlowHighScore ?? 0)) gameState.highlowHighScore = _hlStreak;
+
+    const returned = bet + gain;
+    if (_hlStreak % 5 === 0) {
+      gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 10;
+      if (resultEl) {
+        resultEl.innerHTML  = `<span class="hl-win">✅ 正解！ ${bet} → ${returned}コイン (+${gain})</span><br><span class="hl-bonus">🎉 ${_hlStreak}連続ボーナス！+10コイン！</span>`;
+        resultEl.className  = 'hl-result hl-result-win';
+      }
+    } else {
+      if (resultEl) {
+        resultEl.innerHTML = `<span class="hl-win">✅ 正解！ ${bet} → ${returned}コイン (+${gain})</span>`;
+        resultEl.className = 'hl-result hl-result-win';
+      }
+    }
+  } else {
+    gameState.mokuCoins = Math.max(0, coins - bet);
+    _hlStreak = 0;
+    const isTie = next.rank === _hlCard.rank;
+    if (resultEl) {
+      resultEl.innerHTML = `<span class="hl-lose">${isTie ? '😵 引き分け（負け） ' : '❌ 不正解！ '}-${bet}コイン</span>`;
+      resultEl.className = 'hl-result hl-result-lose';
+    }
+  }
+
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('hl-coin-count',    gameState.mokuCoins);
+  setTxt('hl-streak-val',    _hlStreak);
+  setTxt('hl-highscore-val', gameState.highlowHighScore ?? 0);
+
+  saveGame();
+  updateDisplay();
+
+  setTimeout(() => {
+    _hlCard  = next;
+    _hlPhase = 'playing';
+    _hlRender();
+  }, 1800);
+}
+
+// ========== ルーレット ミニゲーム ==========
+
+const RL_RED_NUMS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const RL_BET_LABELS = {
+  red: '🔴 赤 (×2)', black: '⚫ 黒 (×2)', odd: '奇数 (×2)', even: '偶数 (×2)',
+  low: '1-18 (×2)', high: '19-36 (×2)',
+  col1: '列1下段 (×3)', col2: '列2中段 (×3)', col3: '列3上段 (×3)',
+  dozen1: '1st 12 (×3)', dozen2: '2nd 12 (×3)', dozen3: '3rd 12 (×3)',
+};
+// 欧州ルーレット標準ホイール順（時計回り）
+const RL_WHEEL_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+
+let _rlBetType       = null;
+let _rlBetNum        = null;
+let _rlBet           = 1;
+let _rlSpinning      = false;
+let _rlWheelRotation = 0;
+
+function _rlColor(n) {
+  if (n === 0) return 'green';
+  return RL_RED_NUMS.has(n) ? 'red' : 'black';
+}
+
+function _rlBuildWheel() {
+  const wheel = document.getElementById('rl-wheel');
+  if (!wheel || wheel.dataset.built) return;
+  const segDeg = 360 / RL_WHEEL_ORDER.length;
+  const parts = RL_WHEEL_ORDER.map((n, i) => {
+    const color = n === 0 ? '#1d7a1d' : RL_RED_NUMS.has(n) ? '#c0392b' : '#111';
+    return `${color} ${(i * segDeg).toFixed(4)}deg ${((i + 1) * segDeg).toFixed(4)}deg`;
+  });
+  wheel.style.background = `conic-gradient(from 0deg, ${parts.join(',')})`;
+  wheel.style.transform = `rotate(0deg)`;
+  wheel.dataset.built = '1';
+}
+
+function _rlSpinWheel(result, onDone) {
+  _rlBuildWheel();
+  const wheel = document.getElementById('rl-wheel');
+  if (!wheel) { onDone(); return; }
+
+  const segDeg = 360 / RL_WHEEL_ORDER.length;
+  const idx = RL_WHEEL_ORDER.indexOf(result);
+  const centerAngle = (idx + 0.5) * segDeg;
+  // 目的の番号がポインター（12時）に来る回転量を計算
+  const targetMod = (360 - centerAngle % 360 + 360) % 360;
+  const currentMod = ((_rlWheelRotation % 360) + 360) % 360;
+  let diff = (targetMod - currentMod + 360) % 360;
+  if (diff < 90) diff += 360;
+
+  _rlWheelRotation += diff + 360 * 5;
+
+  const spinMs = 3800;
+  wheel.style.transition = `transform ${spinMs}ms cubic-bezier(0.05, 0.85, 0.3, 1.0)`;
+  wheel.style.transform = `rotate(${_rlWheelRotation}deg)`;
+
+  setTimeout(onDone, spinMs + 80);
+}
+
+function _rlIsWin(result) {
+  switch (_rlBetType) {
+    case 'red':    return RL_RED_NUMS.has(result);
+    case 'black':  return result !== 0 && !RL_RED_NUMS.has(result);
+    case 'odd':    return result !== 0 && result % 2 === 1;
+    case 'even':   return result !== 0 && result % 2 === 0;
+    case 'low':    return result >= 1 && result <= 18;
+    case 'high':   return result >= 19 && result <= 36;
+    case 'number': return result === _rlBetNum;
+    case 'col1':   return result !== 0 && result % 3 === 1;
+    case 'col2':   return result !== 0 && result % 3 === 2;
+    case 'col3':   return result !== 0 && result % 3 === 0;
+    case 'dozen1': return result >= 1  && result <= 12;
+    case 'dozen2': return result >= 13 && result <= 24;
+    case 'dozen3': return result >= 25 && result <= 36;
+  }
+  return false;
+}
+
+function _rlMultiplier() {
+  if (_rlBetType === 'number') return 36;
+  if (['col1','col2','col3','dozen1','dozen2','dozen3'].includes(_rlBetType)) return 3;
+  return 2;
+}
+
+function rlRender() {
+  const coins = gameState.mokuCoins ?? 0;
+  _rlBet = Math.max(1, Math.min(_rlBet, Math.max(1, coins)));
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('rl-coin-count', coins);
+  setTxt('rl-bet-val', _rlBet);
+
+  const labelEl = document.getElementById('rl-bet-label');
+  if (labelEl) {
+    if (_rlBetType === 'number' && _rlBetNum !== null) {
+      labelEl.textContent = `単番 ${_rlBetNum}番 (×36)`;
+    } else if (_rlBetType) {
+      labelEl.textContent = RL_BET_LABELS[_rlBetType] ?? _rlBetType;
+    } else {
+      labelEl.textContent = 'テーブルをタップ';
+    }
+  }
+
+  const canSpin = !_rlSpinning && coins >= 1 && _rlBetType !== null &&
+                  !(_rlBetType === 'number' && _rlBetNum === null);
+  const spinBtn = document.getElementById('rl-spin-btn');
+  if (spinBtn) spinBtn.disabled = !canSpin;
+}
+
+function rlSpin() {
+  if (_rlSpinning || !_rlBetType) return;
+  if (_rlBetType === 'number' && _rlBetNum === null) return;
+  const coins = gameState.mokuCoins ?? 0;
+  if (coins < 1) return;
+
+  const bet    = Math.min(_rlBet, coins);
+  const result = Math.floor(Math.random() * 37);
+  _rlSpinning  = true;
+
+  const dispEl   = document.getElementById('rl-display');
+  const numEl    = document.getElementById('rl-display-num');
+  const resultEl = document.getElementById('rl-result');
+  const spinBtn  = document.getElementById('rl-spin-btn');
+
+  if (resultEl) { resultEl.className = 'rl-result'; resultEl.innerHTML = ''; }
+  if (spinBtn)  spinBtn.disabled = true;
+  if (dispEl)   dispEl.className = 'rl-display rl-display-spinning';
+  if (numEl)    numEl.textContent = '?';
+
+  _rlSpinWheel(result, () => {
+    if (numEl)  numEl.textContent = result;
+    if (dispEl) dispEl.className  = `rl-display rl-display-${_rlColor(result)}`;
+
+    const win = _rlIsWin(result);
+    if (win) {
+      const gain = bet * (_rlMultiplier() - 1);
+      gameState.mokuCoins = coins + gain;
+      if (resultEl) {
+        resultEl.innerHTML = `<span class="hl-win">✅ 当たり！ ${bet} → ${bet + gain}コイン (+${gain})</span>`;
+        resultEl.className = 'rl-result rl-result-win';
+      }
+    } else {
+      gameState.mokuCoins = Math.max(0, coins - bet);
+      if (resultEl) {
+        resultEl.innerHTML = `<span class="hl-lose">❌ ハズレ -${bet}コイン</span>`;
+        resultEl.className = 'rl-result rl-result-lose';
+      }
+    }
+
+    _rlSpinning = false;
+    saveGame();
+    updateDisplay();
+    rlRender();
+  });
+}
+
+function initRoulette() {
+  const table = document.querySelector('.rl-table');
+  if (table && !table.dataset.ready) {
+    table.addEventListener('click', e => {
+      if (_rlSpinning) return;
+      const cell = e.target.closest('[data-bet]');
+      if (!cell) return;
+      _rlBetType = cell.dataset.bet;
+      _rlBetNum  = cell.dataset.num !== undefined ? parseInt(cell.dataset.num) : null;
+      table.querySelectorAll('.rl-selected').forEach(el => el.classList.remove('rl-selected'));
+      cell.classList.add('rl-selected');
+      rlRender();
+    });
+    table.dataset.ready = '1';
+  }
+  _rlBuildWheel();
+  _rlSpinning = false;
+  rlRender();
+}
+
+// ========== スロット ミニゲーム ==========
+
+// { file, mult } — mult=0 は外れ扱い
+const SLOT_SYMBOLS = [
+  { file: '1_png.png', mult: 0   },  // X（外れ）
+  { file: '2_.png',    mult: 2   },  // たまご
+  { file: '3_.png',    mult: 3   },  // ひよこ
+  { file: '5_.png',    mult: 5   },  // 帽子
+  { file: '30_.png',   mult: 30  },  // BAR
+  { file: '50_.png',   mult: 50  },  // 赤7
+  { file: '100_.png',  mult: 100 },  // 青7
+];
+// 出現重み（Xが最多、高倍率ほど低頻度）
+const SLOT_WEIGHTS = [50, 22, 14, 9, 3, 1.5, 0.5];
+
+let _slotSpinning = false;
+let _slotBet      = 1;
+
+function _slotPick() {
+  const weights = SLOT_WEIGHTS.map((w, i) =>
+    (i === _slotEventSymIdx) ? w * _slotEventBoost : w
+  );
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return i;
+  }
+  return 0;
+}
+
+function slotRender() {
+  const coins = gameState.mokuCoins ?? 0;
+  _slotBet = Math.max(1, Math.min(_slotBet, Math.max(1, coins)));
+  const el = document.getElementById('slot-coin-count');
+  if (el) el.textContent = coins;
+  const bv = document.getElementById('slot-bet-val');
+  if (bv) bv.textContent = _slotBet;
+  const btn = document.getElementById('slot-spin-btn');
+  if (btn) btn.disabled = _slotSpinning || coins < 1;
+}
+
+// 個数ボーナス倍率（3個以上で当たり）
+const SLOT_COUNT_MULT = { 3: 1, 4: 2, 5: 5, 6: 10, 7: 20, 8: 50, 9: 100 };
+
+let _slotEventSymIdx = -1; // 次スピンで確率UPする絵柄（-1=なし）
+let _slotEventBoost  = 1;  // UP倍率
+
+// 9マス中3個以上揃う確率（二項分布）
+function _slot3plusProb(p) {
+  const C9 = [1, 9, 36, 84, 126, 126, 84, 36, 9, 1];
+  let prob = 0;
+  for (let k = 3; k <= 9; k++) {
+    prob += C9[k] * Math.pow(p, k) * Math.pow(1 - p, 9 - k);
+  }
+  return prob;
+}
+
+function _slotUpdateProbs() {
+  const weights = SLOT_WEIGHTS.map((w, i) =>
+    (i === _slotEventSymIdx) ? w * _slotEventBoost : w
+  );
+  const total = weights.reduce((a, b) => a + b, 0);
+  for (let i = 1; i < SLOT_SYMBOLS.length; i++) {
+    const el = document.getElementById(`slot-prob-${i}`);
+    if (!el) continue;
+    const p    = weights[i] / total;
+    const winP = _slot3plusProb(p) * 100;
+    el.textContent = winP.toFixed(1) + '%';
+    el.classList.toggle('slot-prob-boosted', i === _slotEventSymIdx);
+  }
+}
+
+function _slotMaybeEvent() {
+  if (Math.random() > 0.22) return; // 約22%でイベント発生
+  const symIdx = 1 + Math.floor(Math.random() * (SLOT_SYMBOLS.length - 1)); // X除く
+  const boost  = [2, 3, 5, 7, 20][Math.floor(Math.random() * 5)];
+  _slotEventSymIdx = symIdx;
+  _slotEventBoost  = boost;
+  const sym = SLOT_SYMBOLS[symIdx];
+  const el  = document.getElementById('slot-event');
+  if (el) {
+    el.innerHTML = `<img src="assets/slot/${sym.file}" class="slot-event-img"> NEXT確率 ×${boost} UP！`;
+    el.classList.remove('hidden');
+  }
+  _slotUpdateProbs();
+}
+
+function slotSpin() {
+  if (_slotSpinning) return;
+  const coins = gameState.mokuCoins ?? 0;
+  if (coins < 1) return;
+
+  const bet = Math.min(_slotBet, coins);
+  _slotSpinning = true;
+
+  const resultEl = document.getElementById('slot-result');
+  if (resultEl) { resultEl.className = 'slot-result'; resultEl.innerHTML = ''; }
+  const spinBtn = document.getElementById('slot-spin-btn');
+  if (spinBtn) spinBtn.disabled = true;
+
+  // イベントブーストを適用した結果を先に確定
+  const results = Array.from({length: 9}, () => _slotPick());
+
+  // イベント・ハイライトをリセット
+  _slotEventSymIdx = -1;
+  _slotEventBoost  = 1;
+  document.getElementById('slot-event')?.classList.add('hidden');
+  _slotUpdateProbs();
+  document.querySelectorAll('.slot-cell-wrap').forEach(el => el.classList.remove('slot-hit'));
+
+  // 行ごとに止まる（0-2行目）
+  const stopTimes = [
+    900, 1050, 1200,
+    1700, 1850, 2000,
+    2500, 2650, 2800,
+  ];
+
+  for (let i = 0; i < 9; i++) {
+    const img = document.getElementById(`slot-cell-${i}`);
+    if (!img) continue;
+    img.classList.add('slot-spinning');
+
+    const timer = setInterval(() => {
+      const r = Math.floor(Math.random() * SLOT_SYMBOLS.length);
+      img.src = `assets/slot/${SLOT_SYMBOLS[r].file}`;
+    }, 80);
+
+    setTimeout(() => {
+      clearInterval(timer);
+      img.classList.remove('slot-spinning');
+      img.src = `assets/slot/${SLOT_SYMBOLS[results[i]].file}`;
+
+      if (i === 8) {
+        setTimeout(() => _slotEvaluate(bet, coins, results, resultEl), 400);
+      }
+    }, stopTimes[i]);
+  }
+}
+
+function _slotEvaluate(bet, coins, results, resultEl) {
+  // 各絵柄の出現回数を集計（Xは除外）
+  const counts = {};
+  results.forEach(idx => {
+    if (SLOT_SYMBOLS[idx].mult > 0) {
+      counts[idx] = (counts[idx] || 0) + 1;
+    }
+  });
+
+  // 最多一致の絵柄を選出（同数ならより高倍率を優先）
+  let bestIdx = -1, bestCount = 0;
+  Object.entries(counts).forEach(([idxStr, cnt]) => {
+    const idx = parseInt(idxStr);
+    if (cnt > bestCount || (cnt === bestCount && SLOT_SYMBOLS[idx].mult > (SLOT_SYMBOLS[bestIdx]?.mult ?? 0))) {
+      bestCount = cnt;
+      bestIdx = idx;
+    }
+  });
+
+  let msg = '';
+  const countMult = SLOT_COUNT_MULT[bestCount] ?? 0;
+
+  if (bestIdx >= 0 && countMult > 0) {
+    const sym   = SLOT_SYMBOLS[bestIdx];
+    const total = bet * sym.mult * countMult;
+    const gain  = total - bet;
+    gameState.mokuCoins = coins + gain;
+    msg = `<span class="hl-win"><img src="assets/slot/${sym.file}" class="slot-result-sym"> ×${sym.mult} が ${bestCount}個！ ${bet} → ${total}コイン (+${gain})</span>`;
+    if (resultEl) resultEl.className = 'slot-result slot-result-win';
+    // 揃ったセルをハイライト
+    results.forEach((idx, i) => {
+      if (idx === bestIdx) {
+        document.getElementById(`slot-cell-${i}`)?.closest('.slot-cell-wrap')?.classList.add('slot-hit');
+      }
+    });
+  } else {
+    gameState.mokuCoins = Math.max(0, coins - bet);
+    msg = `<span class="hl-lose">❌ ハズレ -${bet}コイン</span>`;
+    if (resultEl) resultEl.className = 'slot-result slot-result-lose';
+  }
+
+  if (resultEl) resultEl.innerHTML = msg;
+  _slotSpinning = false;
+  saveGame();
+  updateDisplay();
+  slotRender();
+  _slotMaybeEvent(); // 次スピンのイベント抽選
+}
+
+function initSlot() {
+  _slotSpinning = false;
+  document.querySelectorAll('.slot-cell-wrap').forEach(el => el.classList.remove('slot-hit'));
+  // 代表画像のサイズからセル幅・高さを決定
+  const probe = new Image();
+  probe.onload = () => {
+    const cellW = Math.floor((Math.min(window.innerWidth, 480) - 72) / 3);
+    const cellH = Math.round(probe.naturalHeight * cellW / probe.naturalWidth);
+    document.querySelectorAll('.slot-cell-wrap').forEach(el => {
+      el.style.width  = `${cellW}px`;
+      el.style.height = `${cellH}px`;
+    });
+    document.querySelectorAll('.slot-symbol').forEach(img => {
+      img.style.width  = `${cellW}px`;
+      img.style.height = `${cellH}px`;
+    });
+  };
+  probe.src = 'assets/slot/50_.png';
+  _slotUpdateProbs();
+  slotRender();
+}
+
 // ========== タブ切り替え ==========
 
 function initTabs() {
@@ -3062,6 +3607,7 @@ function initTabs() {
       btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       if (tabId === 'ranking') loadRanking();
       if (tabId === 'pet') { renderPetSection(); renderPetEggShop(); }
+      if (tabId === 'minigame') showMinigameLobby();
     });
   });
 
@@ -3135,6 +3681,11 @@ function init() {
     });
     document.getElementById('debug-add-moku').addEventListener('click', () => {
       gameState.moku = (gameState.moku ?? 0) + 100_000_000;
+      saveGame();
+      updateDisplay();
+    });
+    document.getElementById('debug-add-coins').addEventListener('click', () => {
+      gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 100;
       saveGame();
       updateDisplay();
     });
@@ -3326,6 +3877,50 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('shin-exchange-btn')?.addEventListener('click', () => exchangeToShinStones(1));
   document.getElementById('shin-exchange-10-btn')?.addEventListener('click', () => exchangeToShinStones(10));
   document.getElementById('shin-exchange-all-btn')?.addEventListener('click', () => exchangeToShinStones('all'));
+
+  // ミニゲーム ロビー
+  document.querySelectorAll('.mg-card').forEach(btn => {
+    btn.addEventListener('click', () => showMinigame(btn.dataset.game));
+  });
+  document.getElementById('minigame-back-btn')?.addEventListener('click', showMinigameLobby);
+  document.getElementById('roulette-back-btn')?.addEventListener('click', showMinigameLobby);
+
+  // ルーレット
+  document.querySelectorAll('.rl-bet-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.bet;
+      const coins = gameState.mokuCoins ?? 0;
+      _rlBet = val === 'all' ? Math.max(1, coins) : Math.min(parseInt(val), Math.max(1, coins));
+      const betEl = document.getElementById('rl-bet-val');
+      if (betEl) betEl.textContent = _rlBet;
+    });
+  });
+  document.getElementById('rl-spin-btn')?.addEventListener('click', rlSpin);
+
+  // スロット
+  document.getElementById('slot-back-btn')?.addEventListener('click', showMinigameLobby);
+  document.getElementById('slot-spin-btn')?.addEventListener('click', slotSpin);
+  document.querySelectorAll('.slot-bet-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.bet;
+      const coins = gameState.mokuCoins ?? 0;
+      _slotBet = val === 'all' ? Math.max(1, coins) : Math.min(parseInt(val), Math.max(1, coins));
+      slotRender();
+    });
+  });
+
+  // ハイロー ミニゲーム
+  document.querySelectorAll('.hl-bet-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val   = btn.dataset.bet;
+      const coins = gameState.mokuCoins ?? 0;
+      _hlBet = val === 'all' ? Math.max(1, coins) : Math.min(parseInt(val), Math.max(1, coins));
+      const betEl = document.getElementById('hl-bet-val');
+      if (betEl) betEl.textContent = _hlBet;
+    });
+  });
+  document.getElementById('hl-high-btn')?.addEventListener('click', () => hlChoose('high'));
+  document.getElementById('hl-low-btn')?.addEventListener('click',  () => hlChoose('low'));
   const vLabel = document.getElementById('settings-version-label') ?? document.querySelector('.settings-version-label');
   if (vLabel) vLabel.textContent = `バージョン ${CURRENT_VERSION}`;
   setTimeout(checkForUpdate, 3_000);
