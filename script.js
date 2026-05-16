@@ -1934,7 +1934,7 @@ function unlockPetSlot2() {
 // ========== お知らせ ==========
 
 function hasUnreadUpdate() {
-  const lastRead = gameState.lastReadUpdateId;
+  const lastRead = localStorage.getItem('mzk_last_read_update');
   return UPDATE_LOG.length > 0 && UPDATE_LOG[0].id !== lastRead;
 }
 
@@ -1975,9 +1975,8 @@ function openNoticeModal() {
 
   modal.classList.remove('hidden');
 
-  // 既読にする
-  gameState.lastReadUpdateId = UPDATE_LOG[0].id;
-  saveGame();
+  // 既読にする（クラウド同期に影響されないよう独立キーで保存）
+  localStorage.setItem('mzk_last_read_update', UPDATE_LOG[0].id);
   updateNoticeBadge();
 }
 
