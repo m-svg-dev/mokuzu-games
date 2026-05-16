@@ -3232,15 +3232,90 @@ function _rlColor(n) {
 
 function _rlBuildWheel() {
   const wheel = document.getElementById('rl-wheel');
-  if (!wheel || wheel.dataset.built) return;
-  const segDeg = 360 / RL_WHEEL_ORDER.length;
-  const parts = RL_WHEEL_ORDER.map((n, i) => {
-    const color = n === 0 ? '#1d7a1d' : RL_RED_NUMS.has(n) ? '#c0392b' : '#111';
-    return `${color} ${(i * segDeg).toFixed(4)}deg ${((i + 1) * segDeg).toFixed(4)}deg`;
+  if (!wheel || wheel.dataset.built === 'svg1') return;
+
+  const S = 260, cx = 130, cy = 130, Ro = 127, Ri = 16, Rt = 102;
+  const n  = RL_WHEEL_ORDER.length;
+  const sr = (2 * Math.PI) / n;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${S} ${S}`);
+  svg.setAttribute('width', S); svg.setAttribute('height', S);
+  svg.style.display = 'block';
+
+  for (let i = 0; i < n; i++) {
+    const num = RL_WHEEL_ORDER[i];
+    const a0 = i * sr - Math.PI / 2, a1 = (i + 1) * sr - Math.PI / 2;
+    const am = (a0 + a1) / 2;
+    const c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
+
+    const g = document.createElementNS(NS, 'g');
+    g.dataset.num = num;
+
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d',
+      `M ${cx+Ri*c0} ${cy+Ri*s0} L ${cx+Ro*c0} ${cy+Ro*s0}` +
+      ` A ${Ro} ${Ro} 0 0 1 ${cx+Ro*c1} ${cy+Ro*s1}` +
+      ` L ${cx+Ri*c1} ${cy+Ri*s1}` +
+      ` A ${Ri} ${Ri} 0 0 0 ${cx+Ri*c0} ${cy+Ri*s0} Z`
+    );
+    path.setAttribute('fill', num === 0 ? '#1a7a2a' : RL_RED_NUMS.has(num) ? '#c0392b' : '#1a1a1a');
+    path.setAttribute('stroke', '#666'); path.setAttribute('stroke-width', '0.5');
+    g.appendChild(path);
+
+    const tx = cx + Rt * Math.cos(am), ty = cy + Rt * Math.sin(am);
+    const text = document.createElementNS(NS, 'text');
+    text.setAttribute('x', tx); text.setAttribute('y', ty);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('dominant-baseline', 'central');
+    text.setAttribute('font-size', num < 10 ? '11' : '8.5');
+    text.setAttribute('font-weight', 'bold');
+    text.setAttribute('fill', '#fff');
+    text.setAttribute('transform', `rotate(${am * 180 / Math.PI + 90}, ${tx}, ${ty})`);
+    text.setAttribute('pointer-events', 'none');
+    text.textContent = num;
+    g.appendChild(text);
+    svg.appendChild(g);
+  }
+
+  const rim = document.createElementNS(NS, 'circle');
+  rim.setAttribute('cx', cx); rim.setAttribute('cy', cy); rim.setAttribute('r', Ro);
+  rim.setAttribute('fill', 'none'); rim.setAttribute('stroke', '#aaa'); rim.setAttribute('stroke-width', '2');
+  svg.appendChild(rim);
+
+  wheel.style.background = 'none';
+  wheel.innerHTML = '';
+  wheel.appendChild(svg);
+  wheel.dataset.built = 'svg1';
+}
+
+function _rlClearHighlights() {
+  document.querySelectorAll('#rl-wheel svg g[data-num] path').forEach(p => {
+    p.setAttribute('stroke', '#666'); p.setAttribute('stroke-width', '0.5');
+    p.style.filter = '';
   });
-  wheel.style.background = `conic-gradient(from 0deg, ${parts.join(',')})`;
-  wheel.style.transform = `rotate(0deg)`;
-  wheel.dataset.built = '1';
+}
+
+function _rlHighlightSelected() {
+  _rlClearHighlights();
+  if (_rlBetType === 'number' && _rlBetNum !== null) {
+    const g = document.querySelector(`#rl-wheel svg g[data-num="${_rlBetNum}"]`);
+    if (g) {
+      const p = g.querySelector('path');
+      p.setAttribute('stroke', '#00cfff'); p.setAttribute('stroke-width', '2.5');
+      p.style.filter = 'drop-shadow(0 0 4px #00cfff)';
+    }
+  }
+}
+
+function _rlHighlightResult(result) {
+  _rlClearHighlights();
+  const g = document.querySelector(`#rl-wheel svg g[data-num="${result}"]`);
+  if (g) {
+    const p = g.querySelector('path');
+    p.setAttribute('stroke', '#ffd700'); p.setAttribute('stroke-width', '3');
+    p.style.filter = 'drop-shadow(0 0 6px #ffd700)';
+  }
 }
 
 function _rlSpinWheel(result, onDone) {
@@ -3334,6 +3409,7 @@ function rlSpin() {
   if (spinBtn)  spinBtn.disabled = true;
   if (dispEl)   dispEl.className = 'rl-display rl-display-spinning';
   if (numEl)    numEl.textContent = '?';
+  _rlClearHighlights();
 
   _rlSpinWheel(result, () => {
     if (numEl)  numEl.textContent = result;
@@ -3359,6 +3435,7 @@ function rlSpin() {
     saveGame();
     updateDisplay();
     rlRender();
+    _rlHighlightResult(result);
   });
 }
 
@@ -3374,9 +3451,12 @@ function initRoulette() {
       table.querySelectorAll('.rl-selected').forEach(el => el.classList.remove('rl-selected'));
       cell.classList.add('rl-selected');
       rlRender();
+      _rlHighlightSelected();
     });
     table.dataset.ready = '1';
   }
+  const _w = document.getElementById('rl-wheel');
+  if (_w) delete _w.dataset.built;
   _rlBuildWheel();
   _rlSpinning = false;
   rlRender();

@@ -3258,8 +3258,8 @@ button,
 /* ルーレットホイール */
 .rl-wheel-wrap {
   position: relative;
-  width: 180px;
-  height: 180px;
+  width: 260px;
+  height: 260px;
   margin: 8px auto 4px;
 }
 .rl-pointer {
@@ -3274,12 +3274,12 @@ button,
   line-height: 1;
 }
 .rl-wheel {
-  width: 180px;
-  height: 180px;
+  width: 260px;
+  height: 260px;
   border-radius: 50%;
-  border: 5px solid rgba(255,255,255,0.45);
   box-shadow: 0 4px 24px rgba(0,0,0,0.6);
   will-change: transform;
+  overflow: hidden;
 }
 .rl-wheel-wrap::after {
   content: '';
