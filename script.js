@@ -1601,7 +1601,7 @@ function buyConsumable(itemId) {
   const item = CONSUMABLE_ITEMS.find(x => x.id === itemId);
   if (!item) return;
   if ((gameState.mokuCoins ?? 0) < item.cost) return;
-  if (!confirm(`「${item.name}」を${item.cost}コインで購入しますか？`)) return;
+  if (!confirm(`「${item.name}」を${item.cost}藻コインで購入しますか？`)) return;
 
   gameState.mokuCoins  = (gameState.mokuCoins  ?? 0) - item.cost;
   gameState.consumables = {
@@ -1750,7 +1750,7 @@ function renderConsumableList() {
         ${active ? `<div class="effect-active-label">発動中 残り${rem}</div>` : ''}
       </div>
       <div class="item-right">
-        <div class="item-cost">🪙 ${item.cost}</div>
+        <div class="item-cost"><img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン"> ${item.cost}</div>
         <div class="consumable-count">× ${count}</div>
       </div>
     `;
