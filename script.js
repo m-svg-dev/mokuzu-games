@@ -3086,6 +3086,13 @@ let _hlPhase  = 'idle'; // 'idle' | 'playing' | 'result'
 let _hlBet    = 1;
 let _hlStreak = 0;
 
+// 確率連動倍率: 1.1 ÷ 勝率（cap 12.0）
+function _hlGetMult(rank, choice) {
+  const p = choice === 'high' ? (13 - rank) / 13 : (rank - 1) / 13;
+  if (p <= 0) return null;
+  return Math.min(2.0, Math.round(1.1 / p * 10) / 10);
+}
+
 function _hlDraw() {
   const idx = Math.floor(Math.random() * 13);
   return { value: HL_VALUES[idx], suit: HL_SUITS[Math.floor(Math.random() * 4)], rank: idx + 1 };
@@ -3104,6 +3111,15 @@ function _hlCardBackHTML() {
   return `<div class="hl-card hl-card-back"><span>?</span></div>`;
 }
 
+function _syncBetActive(selector, bet, coins) {
+  document.querySelectorAll(selector).forEach(btn => {
+    const v = btn.dataset.bet;
+    btn.classList.toggle('bet-active',
+      v === 'all' ? bet >= coins : parseInt(v) === bet
+    );
+  });
+}
+
 function _hlRender() {
   const coins = gameState.mokuCoins ?? 0;
   _hlBet = Math.max(1, Math.min(_hlBet, Math.max(1, coins)));
@@ -3112,6 +3128,7 @@ function _hlRender() {
   setTxt('hl-coin-count',   coins);
   setTxt('hl-bet-val',      _hlBet);
   setTxt('hl-streak-val',   _hlStreak);
+  _syncBetActive('.hl-bet-preset', _hlBet, coins);
   setTxt('hl-highscore-val', gameState.highlowHighScore ?? 0);
 
   const curEl = document.getElementById('hl-current-wrap');
@@ -3125,8 +3142,16 @@ function _hlRender() {
   const canPlay = _hlPhase === 'playing' && coins >= 1;
   const hBtn = document.getElementById('hl-high-btn');
   const lBtn = document.getElementById('hl-low-btn');
-  if (hBtn) hBtn.disabled = !canPlay;
-  if (lBtn) lBtn.disabled = !canPlay;
+  const hMult = _hlCard ? _hlGetMult(_hlCard.rank, 'high') : null;
+  const lMult = _hlCard ? _hlGetMult(_hlCard.rank, 'low')  : null;
+  if (hBtn) {
+    hBtn.disabled  = !canPlay || !hMult;
+    hBtn.textContent = hMult ? `⬆️ HIGH ×${hMult}` : '⬆️ HIGH —';
+  }
+  if (lBtn) {
+    lBtn.disabled  = !canPlay || !lMult;
+    lBtn.textContent = lMult ? `⬇️ LOW ×${lMult}` : '⬇️ LOW —';
+  }
 
   if (coins <= 0 && _hlPhase === 'playing' && resultEl) {
     resultEl.className = 'hl-result hl-result-lose';
@@ -3146,6 +3171,7 @@ function hlChoose(choice) {
   if (coins < 1) { _hlRender(); return; }
 
   const bet  = Math.min(_hlBet, coins);
+  const mult = _hlGetMult(_hlCard.rank, choice) ?? 1.1;
   const next = _hlDraw();
   const win  = (choice === 'high' && next.rank > _hlCard.rank) ||
                (choice === 'low'  && next.rank < _hlCard.rank);
@@ -3164,7 +3190,7 @@ function hlChoose(choice) {
   if (lBtn)  lBtn.disabled   = true;
 
   if (win) {
-    const gain = Math.max(1, Math.floor(bet * 0.9));
+    const gain = Math.max(1, Math.floor(bet * (mult - 1)));
     gameState.mokuCoins = coins + gain;
     _hlStreak++;
     if (_hlStreak > (gameState.highlowHighScore ?? 0)) gameState.highlowHighScore = _hlStreak;
@@ -3173,12 +3199,12 @@ function hlChoose(choice) {
     if (_hlStreak % 5 === 0) {
       gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 10;
       if (resultEl) {
-        resultEl.innerHTML  = `<span class="hl-win">✅ 正解！ ${bet} → ${returned}コイン (+${gain})</span><br><span class="hl-bonus">🎉 ${_hlStreak}連続ボーナス！+10コイン！</span>`;
+        resultEl.innerHTML  = `<span class="hl-win">✅ 正解！×${mult} ${bet} → ${returned}コイン (+${gain})</span><br><span class="hl-bonus">🎉 ${_hlStreak}連続ボーナス！+10コイン！</span>`;
         resultEl.className  = 'hl-result hl-result-win';
       }
     } else {
       if (resultEl) {
-        resultEl.innerHTML = `<span class="hl-win">✅ 正解！ ${bet} → ${returned}コイン (+${gain})</span>`;
+        resultEl.innerHTML = `<span class="hl-win">✅ 正解！×${mult} ${bet} → ${returned}コイン (+${gain})</span>`;
         resultEl.className = 'hl-result hl-result-win';
       }
     }
@@ -3372,6 +3398,7 @@ function rlRender() {
   const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   setTxt('rl-coin-count', coins);
   setTxt('rl-bet-val', _rlBet);
+  _syncBetActive('.rl-bet-preset', _rlBet, coins);
 
   const labelEl = document.getElementById('rl-bet-label');
   if (labelEl) {
@@ -3388,6 +3415,12 @@ function rlRender() {
                   !(_rlBetType === 'number' && _rlBetNum === null);
   const spinBtn = document.getElementById('rl-spin-btn');
   if (spinBtn) spinBtn.disabled = !canSpin;
+
+  const resultEl = document.getElementById('rl-result');
+  if (coins <= 0 && resultEl && !resultEl.innerHTML) {
+    resultEl.className = 'rl-result rl-result-lose';
+    resultEl.textContent = '💸 コインが足りません！デイリーログインでもらおう';
+  }
 }
 
 function rlSpin() {
@@ -3500,8 +3533,15 @@ function slotRender() {
   if (el) el.textContent = coins;
   const bv = document.getElementById('slot-bet-val');
   if (bv) bv.textContent = _slotBet;
+  _syncBetActive('.slot-bet-preset', _slotBet, coins);
   const btn = document.getElementById('slot-spin-btn');
   if (btn) btn.disabled = _slotSpinning || coins < 1;
+
+  const resultEl = document.getElementById('slot-result');
+  if (coins <= 0 && resultEl && !resultEl.innerHTML) {
+    resultEl.className = 'slot-result slot-result-lose';
+    resultEl.textContent = '💸 コインが足りません！デイリーログインでもらおう';
+  }
 }
 
 // 個数ボーナス倍率（3個以上で当たり）

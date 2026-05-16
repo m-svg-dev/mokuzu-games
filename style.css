@@ -3199,6 +3199,16 @@ button,
 .slot-bet-preset:hover,
 .slot-bet-preset:active { background: #2a5a34; }
 
+.hl-bet-preset.bet-active,
+.slot-bet-preset.bet-active,
+.rl-bet-preset.bet-active {
+  background: #1a4a2a;
+  border-color: #ffd700;
+  color: #ffd700;
+  font-weight: bold;
+  box-shadow: 0 0 6px rgba(255,215,0,0.45);
+}
+
 .hl-choice-row {
   display: flex;
   gap: 12px;
