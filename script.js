@@ -1006,7 +1006,7 @@ function updateDisplay() {
   const totalEmployees = Object.values(gameState.employees).reduce((s, n) => s + n, 0);
   const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
   setVal('stat-tap-power', `+${fmt(gameState.tapPower)}`);
-  setVal('stat-mps',       `${fmt(gameState.mokuPerSecond)}<span class="stat-unit">/秒</span>`);
+  setVal('stat-mps',       `${fmt(mpsTotal)}<span class="stat-unit">/秒</span>`);
   setVal('stat-employees', `${totalEmployees}<span class="stat-unit">体</span>`);
   setVal('stat-total-moku', fmt(gameState.totalMoku));
 
