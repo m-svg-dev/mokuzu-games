@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.9.0';
+const CURRENT_VERSION = '2.9.1';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.9.1',
+    date: '2026/05/18',
+    title: '🔧 UI改善',
+    items: [
+      '📊 ヘッダーの藻コイン表示を省略形式に変更（長い数字でも崩れなくなりました）',
+      '⚡ 藻/秒の表示を最大4桁に短縮（1,234→1.2K など）',
+      '🔤 ヘッダー表示が2段になるバグを修正',
+    ],
+  },
   {
     id: 'v2.9.0',
     date: '2026/05/17',
