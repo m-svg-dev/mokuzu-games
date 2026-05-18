@@ -3282,21 +3282,24 @@ function hlChoose(choice) {
 
   if (win) {
     const gain = Math.max(1, Math.floor(bet * (mult - 1)));
-    gameState.mokuCoins = coins + gain;
-    _hlStreak++;
-    if (_hlStreak > (gameState.highlowHighScore ?? 0)) gameState.highlowHighScore = _hlStreak;
-
-    const returned = bet + gain;
-    if (_hlStreak % 5 === 0) {
-      gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 10;
-      if (resultEl) {
-        resultEl.innerHTML  = `<span class="hl-win">✅ 正解！×${mult} ${bet} → ${returned}コイン (+${gain})</span><br><span class="hl-bonus">🎉 ${_hlStreak}連続ボーナス！+10コイン！</span>`;
-        resultEl.className  = 'hl-result hl-result-win';
-      }
+    if (_zaibatsuCheck(coins, gain)) {
+      _zaibatsuStrike(resultEl, gain, 'hl-result hl-result-lose');
     } else {
-      if (resultEl) {
-        resultEl.innerHTML = `<span class="hl-win">✅ 正解！×${mult} ${bet} → ${returned}コイン (+${gain})</span>`;
-        resultEl.className = 'hl-result hl-result-win';
+      gameState.mokuCoins = coins + gain;
+      _hlStreak++;
+      if (_hlStreak > (gameState.highlowHighScore ?? 0)) gameState.highlowHighScore = _hlStreak;
+      const returned = bet + gain;
+      if (_hlStreak % 5 === 0) {
+        gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 10;
+        if (resultEl) {
+          resultEl.innerHTML  = `<span class="hl-win">✅ 正解！×${mult} ${bet} → ${returned}コイン (+${gain})</span><br><span class="hl-bonus">🎉 ${_hlStreak}連続ボーナス！+10コイン！</span>`;
+          resultEl.className  = 'hl-result hl-result-win';
+        }
+      } else {
+        if (resultEl) {
+          resultEl.innerHTML = `<span class="hl-win">✅ 正解！×${mult} ${bet} → ${returned}コイン (+${gain})</span>`;
+          resultEl.className = 'hl-result hl-result-win';
+        }
       }
     }
   } else {
@@ -3542,10 +3545,14 @@ function rlSpin() {
     const win = _rlIsWin(result);
     if (win) {
       const gain = bet * (_rlMultiplier() - 1);
-      gameState.mokuCoins = coins + gain;
-      if (resultEl) {
-        resultEl.innerHTML = `<span class="hl-win">✅ 当たり！ ${bet} → ${bet + gain}コイン (+${gain})</span>`;
-        resultEl.className = 'rl-result rl-result-win';
+      if (_zaibatsuCheck(coins, gain)) {
+        _zaibatsuStrike(resultEl, gain, 'rl-result rl-result-lose');
+      } else {
+        gameState.mokuCoins = coins + gain;
+        if (resultEl) {
+          resultEl.innerHTML = `<span class="hl-win">✅ 当たり！ ${bet} → ${bet + gain}コイン (+${gain})</span>`;
+          resultEl.className = 'rl-result rl-result-win';
+        }
       }
     } else {
       gameState.mokuCoins = Math.max(0, coins - bet);
@@ -3632,6 +3639,27 @@ function _ygSetFire(level) {
       'radial-gradient(ellipse at 50% 90%, rgba(200,70,0,0.4) 0%, transparent 60%)',
     ];
     scene.style.background = bgs[lv] || '';
+  }
+}
+
+// ========== あさのよもぎ蒸し財閥 ==========
+const ZAIBATSU_THRESHOLD = 10_000_000;
+const ZAIBATSU_PROB      = 0.8;
+
+function _zaibatsuCheck(coins, gain) {
+  return coins >= ZAIBATSU_THRESHOLD && gain > 0 && Math.random() < ZAIBATSU_PROB;
+}
+
+function _zaibatsuStrike(resultEl, gain, resultClass) {
+  // 利益だけ没収（ベットは返る）
+  playSound('yg_result_bad');
+  if (resultEl) {
+    resultEl.className = resultClass;
+    resultEl.innerHTML =
+      `<span style="color:#ff88dd">🌿 <strong>あさのよもぎ蒸し財閥</strong> より<br>` +
+      `あなたは藻コインをたくさんお持ちなので、<br>` +
+      `本来の取り分 <strong>${fmt(gain)} コイン</strong> を全額寄付していただきました！<br>` +
+      `ありがたや〜🙏 (っ\`ω´c)ｷﾞﾘｨｨｨｨｨｨ</span>`;
   }
 }
 
@@ -4054,9 +4082,14 @@ function _slotEvaluate(bet, coins, results, resultEl) {
     const sym   = SLOT_SYMBOLS[bestIdx];
     const total = bet * sym.mult * countMult;
     const gain  = total - bet;
-    gameState.mokuCoins = coins + gain;
-    msg = `<span class="hl-win"><img src="assets/slot/${sym.file}" class="slot-result-sym"> ×${sym.mult} が ${bestCount}個！ ${bet} → ${total}コイン (+${gain})</span>`;
-    if (resultEl) resultEl.className = 'slot-result slot-result-win';
+    if (_zaibatsuCheck(coins, gain)) {
+      _zaibatsuStrike(resultEl, gain, 'slot-result slot-result-lose');
+      msg = '';
+    } else {
+      gameState.mokuCoins = coins + gain;
+      msg = `<span class="hl-win"><img src="assets/slot/${sym.file}" class="slot-result-sym"> ×${sym.mult} が ${bestCount}個！ ${bet} → ${total}コイン (+${gain})</span>`;
+      if (resultEl) resultEl.className = 'slot-result slot-result-win';
+    }
     // 揃ったセルをハイライト
     results.forEach((idx, i) => {
       if (idx === bestIdx) {
@@ -4069,7 +4102,7 @@ function _slotEvaluate(bet, coins, results, resultEl) {
     if (resultEl) resultEl.className = 'slot-result slot-result-lose';
   }
 
-  if (resultEl) resultEl.innerHTML = msg;
+  if (resultEl && msg) resultEl.innerHTML = msg;
   _slotSpinning = false;
   saveGame();
   updateDisplay();
