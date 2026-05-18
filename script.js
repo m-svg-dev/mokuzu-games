@@ -2473,11 +2473,17 @@ function pullOnce(pitied = false) {
   return pool[pool.length - 1];
 }
 
-function doGachaPull(count = 1, free = false) {
+function doGachaPull(count = 1, free = false, useShin = false) {
   if (!free) {
-    const cost = count === 1 ? 50 : 450;
-    if ((gameState.prestigeStones ?? 0) < cost) return;
-    gameState.prestigeStones -= cost;
+    if (useShin) {
+      const cost = count === 1 ? 125 : 1000;
+      if ((gameState.shinStones ?? 0) < cost) return;
+      gameState.shinStones -= cost;
+    } else {
+      const cost = count === 1 ? 50 : 450;
+      if ((gameState.prestigeStones ?? 0) < cost) return;
+      gameState.prestigeStones -= cost;
+    }
   }
 
   const results = [];
@@ -2590,6 +2596,18 @@ function renderSkinCollection() {
   const ticketEl   = document.getElementById('gacha-ticket-count');
   if (ticketRow) ticketRow.classList.toggle('hidden', tickets === 0);
   if (ticketEl)  ticketEl.textContent = tickets;
+
+  // 神転生石ガチャ（転生Lv.50解放）
+  const shinVisible = (gameState.prestigeLevel ?? 0) >= 50;
+  const shinBtnsEl  = document.getElementById('gacha-shin-btns');
+  if (shinBtnsEl) shinBtnsEl.classList.toggle('hidden', !shinVisible);
+  const shinOwned = gameState.shinStones ?? 0;
+  const btnShin1  = document.getElementById('gacha-btn-shin1');
+  const btnShin10 = document.getElementById('gacha-btn-shin10');
+  const shinOwnedEl = document.getElementById('gacha-shin-owned-count');
+  if (btnShin1)    btnShin1.disabled    = shinOwned < 125;
+  if (btnShin10)   btnShin10.disabled   = shinOwned < 1000;
+  if (shinOwnedEl) shinOwnedEl.textContent = shinOwned.toLocaleString();
 }
 
 // ========== 実績システム ==========
@@ -4294,6 +4312,8 @@ function init() {
 
   document.getElementById('gacha-btn-1')   .addEventListener('click', () => doGachaPull(1));
   document.getElementById('gacha-btn-10')  .addEventListener('click', () => doGachaPull(10));
+  document.getElementById('gacha-btn-shin1') .addEventListener('click', () => doGachaPull(1,  false, true));
+  document.getElementById('gacha-btn-shin10').addEventListener('click', () => doGachaPull(10, false, true));
   document.getElementById('gacha-btn-free').addEventListener('click', () => {
     const tickets = (gameState.consumables ?? {})['gacha_coin'] ?? 0;
     if (tickets <= 0) return;

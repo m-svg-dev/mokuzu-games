@@ -1002,6 +1002,39 @@ button,
   margin-left: auto;
 }
 
+/* 神転生石ガチャ */
+#gacha-shin-btns {
+  margin-top: 12px;
+  background: linear-gradient(135deg, #1a1400, #0d0c00);
+  border: 1px solid #ffd700aa;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.gacha-shin-label {
+  font-size: 0.75rem;
+  color: #ffd700;
+  text-align: center;
+  margin: 0 0 8px;
+  font-weight: bold;
+  letter-spacing: 0.03em;
+}
+#gacha-shin-btn-row {
+  display: flex;
+  gap: 10px;
+}
+.gacha-btn-shin {
+  background: linear-gradient(135deg, #4a3800, #2a2000) !important;
+  color: #ffd700 !important;
+  border-color: #ffd700 !important;
+}
+.gacha-btn-shin span { color: #cc9900 !important; }
+.gacha-shin-owned {
+  font-size: 0.72rem;
+  color: #cc9900;
+  text-align: center;
+  margin: 6px 0 0;
+}
+
 /* ガチャ排出率 */
 .gacha-rates {
   margin-top: 10px;
