@@ -4257,6 +4257,11 @@ function init() {
       saveGame();
       updateDisplay();
     });
+    document.getElementById('debug-add-coins-10m').addEventListener('click', () => {
+      gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 10_000_000;
+      saveGame();
+      updateDisplay();
+    });
   }
 
   document.getElementById('menhera-toggle-btn').addEventListener('click', () => {
