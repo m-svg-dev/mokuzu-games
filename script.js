@@ -1726,7 +1726,8 @@ function claimDailyCoins() {
   const coins = getDailyCoins();
   gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coins;
   saveGame();
-  document.getElementById('daily-modal-body').textContent = `🪙 藻コイン ×${coins} を受け取りました！`;
+  const coinImg = `<img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン">`;
+  document.getElementById('daily-modal-body').innerHTML = `${coinImg} 藻コイン ×${coins} を受け取りました！`;
   playSound('buy');
   updateDisplay();
   document.getElementById('daily-modal').classList.remove('hidden');
