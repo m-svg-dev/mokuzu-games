@@ -3650,6 +3650,35 @@ function _zaibatsuCheck(coins, gain) {
   return coins >= ZAIBATSU_THRESHOLD && gain > 0 && Math.random() < ZAIBATSU_PROB;
 }
 
+function _zaibatsuShowAsa() {
+  const el = document.createElement('div');
+  el.style.cssText = [
+    'position:fixed',
+    'width:150px',
+    'height:150px',
+    'background:url("assets/yomogi/asa_2.png") center/contain no-repeat',
+    'z-index:99999',
+    'pointer-events:none',
+    'transition:left 0.2s cubic-bezier(0.34,1.56,0.64,1),top 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+  ].join(';');
+  document.body.appendChild(el);
+
+  const rnd = () => [
+    Math.random() * (window.innerWidth  - 160),
+    Math.random() * (window.innerHeight - 160),
+  ];
+  const move = () => { const [x, y] = rnd(); el.style.left = x + 'px'; el.style.top = y + 'px'; };
+  move();
+  const iv = setInterval(move, 220);
+
+  setTimeout(() => {
+    clearInterval(iv);
+    el.style.transition += ',opacity 0.5s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 500);
+  }, 3500);
+}
+
 function _zaibatsuStrike(resultEl, gain, resultClass) {
   // 利益だけ没収（ベットは返る）
   playSound('yg_result_bad');
@@ -3661,6 +3690,7 @@ function _zaibatsuStrike(resultEl, gain, resultClass) {
       `本来の取り分 <strong>${fmt(gain)} コイン</strong> を全額寄付していただきました！<br>` +
       `ありがたや〜🙏 (っ\`ω´c)ｷﾞﾘｨｨｨｨｨｨ</span>`;
   }
+  _zaibatsuShowAsa();
 }
 
 function _ygSpawnEmbers() {
