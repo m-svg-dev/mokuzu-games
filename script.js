@@ -941,7 +941,9 @@ function updateDisplay() {
 
   const mpsTotal = gameState.mokuPerSecond
     * (gameState.isAwakened ? 5 : 1)
-    * (gameState.eventMpsMult ?? 1);
+    * (gameState.eventMpsMult ?? 1)
+    * (isEffectActive('mps_boost') ? 5 : 1)
+    * getPetMultiplier().mps;
   document.getElementById('mps-display').textContent = `${fmtShort(mpsTotal)} / 秒`;
 
   // 覚醒ゲージ
