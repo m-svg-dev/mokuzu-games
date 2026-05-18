@@ -1731,10 +1731,10 @@ function exchangeStonesForCoins() {
 function updateCoinDisplay() {
   const el = document.getElementById('coin-display');
   const coinImg = `<img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン">`;
-  if (el) el.innerHTML = `${coinImg} ${gameState.mokuCoins ?? 0}`;
+  if (el) el.innerHTML = `${coinImg} ${fmt(gameState.mokuCoins ?? 0)}`;
 
   const balEl = document.getElementById('coin-balance-val');
-  if (balEl) balEl.innerHTML = `${coinImg} ${gameState.mokuCoins ?? 0} コイン`;
+  if (balEl) balEl.innerHTML = `${coinImg} ${fmt(gameState.mokuCoins ?? 0)} コイン`;
 
   const last     = gameState.lastDailyLogin ?? 0;
   const claimed  = Date.now() - last < DAILY_INTERVAL_MS;
@@ -3195,7 +3195,7 @@ function _hlRender() {
   _hlBet = Math.max(1, Math.min(_hlBet, Math.max(1, coins)));
 
   const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  setTxt('hl-coin-count',   coins);
+  setTxt('hl-coin-count',   fmt(coins));
   setTxt('hl-bet-val',      _hlBet);
   setTxt('hl-streak-val',   _hlStreak);
   _syncBetActive('.hl-bet-preset', _hlBet, coins);
@@ -3289,7 +3289,7 @@ function hlChoose(choice) {
   }
 
   const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  setTxt('hl-coin-count',    gameState.mokuCoins);
+  setTxt('hl-coin-count',    fmt(gameState.mokuCoins ?? 0));
   setTxt('hl-streak-val',    _hlStreak);
   setTxt('hl-highscore-val', gameState.highlowHighScore ?? 0);
 
@@ -3466,7 +3466,7 @@ function rlRender() {
   const coins = gameState.mokuCoins ?? 0;
   _rlBet = Math.max(1, Math.min(_rlBet, Math.max(1, coins)));
   const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  setTxt('rl-coin-count', coins);
+  setTxt('rl-coin-count', fmt(coins));
   setTxt('rl-bet-val', _rlBet);
   _syncBetActive('.rl-bet-preset', _rlBet, coins);
 
@@ -3895,7 +3895,7 @@ function slotRender() {
   const coins = gameState.mokuCoins ?? 0;
   _slotBet = Math.max(1, Math.min(_slotBet, Math.max(1, coins)));
   const el = document.getElementById('slot-coin-count');
-  if (el) el.textContent = coins;
+  if (el) el.textContent = fmt(coins);
   const bv = document.getElementById('slot-bet-val');
   if (bv) bv.textContent = _slotBet;
   _syncBetActive('.slot-bet-preset', _slotBet, coins);
