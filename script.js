@@ -3644,7 +3644,7 @@ function _ygSetFire(level) {
 
 // ========== あさのよもぎ蒸し財閥 ==========
 const ZAIBATSU_THRESHOLD = 10_000_000;
-const ZAIBATSU_PROB      = 0.8;
+const ZAIBATSU_PROB      = 0.9;
 
 function _zaibatsuCheck(coins, gain) {
   return coins >= ZAIBATSU_THRESHOLD && gain > 0 && Math.random() < ZAIBATSU_PROB;
