@@ -60,11 +60,13 @@ button,
   font-weight: bold;
   color: #3dff7a;
   letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 #mps-display {
   font-size: 0.9rem;
   color: #78bb99;
+  white-space: nowrap;
 }
 .glossary-list {
   display: flex;
@@ -826,6 +828,8 @@ button,
   border: 1px solid #ffd70050;
   border-radius: 8px;
   padding: 3px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 #coin-balance-val {
