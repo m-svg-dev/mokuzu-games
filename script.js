@@ -703,6 +703,15 @@ let gameState = structuredClone(DEFAULT_STATE);
 
 // ========== ユーティリティ ==========
 
+function fmtShort(n) {
+  n = Math.floor(n);
+  if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
+  if (n >= 1e9)  return (n / 1e9).toFixed(1)  + 'B';
+  if (n >= 1e6)  return (n / 1e6).toFixed(1)  + 'M';
+  if (n >= 1e3)  return (n / 1e3).toFixed(1)  + 'K';
+  return String(n);
+}
+
 function fmt(n) {
   n = Math.floor(n);
   if (n >= 1e33) return (n / 1e33).toFixed(2) + 'Dc';
@@ -923,7 +932,7 @@ function updateDisplay() {
   const mpsTotal = gameState.mokuPerSecond
     * (gameState.isAwakened ? 5 : 1)
     * (gameState.eventMpsMult ?? 1);
-  document.getElementById('mps-display').textContent = `${fmt(mpsTotal)} / 秒`;
+  document.getElementById('mps-display').textContent = `${fmtShort(mpsTotal)} / 秒`;
 
   // 覚醒ゲージ
   document.getElementById('awaken-gauge-bar').style.width = `${gameState.awakenGauge}%`;
