@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.9.4';
+const CURRENT_VERSION = '2.9.5';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -724,16 +724,16 @@ function fmtShort(n) {
 
 function fmt(n) {
   n = Math.floor(n);
-  if (n >= 1e33) return (n / 1e33).toFixed(2) + 'Dc';
-  if (n >= 1e30) return (n / 1e30).toFixed(2) + 'No';
-  if (n >= 1e27) return (n / 1e27).toFixed(2) + 'Oc';
-  if (n >= 1e24) return (n / 1e24).toFixed(2) + 'Sp';
-  if (n >= 1e21) return (n / 1e21).toFixed(2) + 'Sx';
-  if (n >= 1e18) return (n / 1e18).toFixed(2) + 'Qi';
-  if (n >= 1e15) return (n / 1e15).toFixed(2) + 'Qa';
-  if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
-  if (n >= 1e9)  return (n / 1e9).toFixed(2)  + 'B';
-  if (n >= 1e6)  return (n / 1e6).toFixed(2)  + 'M';
+  if (n >= 1e33) return (n / 1e33).toFixed(1) + 'Dc';
+  if (n >= 1e30) return (n / 1e30).toFixed(1) + 'No';
+  if (n >= 1e27) return (n / 1e27).toFixed(1) + 'Oc';
+  if (n >= 1e24) return (n / 1e24).toFixed(1) + 'Sp';
+  if (n >= 1e21) return (n / 1e21).toFixed(1) + 'Sx';
+  if (n >= 1e18) return (n / 1e18).toFixed(1) + 'Qi';
+  if (n >= 1e15) return (n / 1e15).toFixed(1) + 'Qa';
+  if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
+  if (n >= 1e9)  return (n / 1e9).toFixed(1)  + 'B';
+  if (n >= 1e6)  return (n / 1e6).toFixed(1)  + 'M';
   if (n >= 1e3)  return (n / 1e3).toFixed(1)  + 'K';
   return n.toLocaleString();
 }
