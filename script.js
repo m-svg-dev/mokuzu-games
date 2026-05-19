@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.9.5';
+const CURRENT_VERSION = '2.9.6';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -1193,6 +1193,7 @@ function onTap(e) {
 }
 
 function spawnFloatText(e, text, isCritical = false) {
+  if (!document.getElementById('tab-main')?.classList.contains('active')) return;
   const el = document.createElement('span');
   el.className = isCritical ? 'float-text crit' : 'float-text';
   el.textContent = isCritical ? `${text} CRIT!` : text;
@@ -1210,6 +1211,7 @@ const TAP_EFFECT_THRESHOLDS = {
 };
 
 function spawnTapEffect(e, gained, isCritical = false) {
+  if (!document.getElementById('tab-main')?.classList.contains('active')) return;
   const fx = IMAGE_CONFIG.effects;
   const x  = e.touches ? e.touches[0].clientX : e.clientX;
   const y  = e.touches ? e.touches[0].clientY : e.clientY;
