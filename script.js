@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.9.3';
+const CURRENT_VERSION = '2.9.4';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -2466,8 +2466,10 @@ function renderUnlockedEventList() {
 
 // ========== ガチャ ==========
 
-function pullOnce(pitied = false) {
-  const pool  = pitied ? GACHA_SKINS.filter(s => s.rarity !== 'N') : GACHA_SKINS;
+function pullOnce(pitied = false, shinMode = false) {
+  const pool  = shinMode
+    ? GACHA_SKINS.filter(s => s.rarity === 'SSR' || s.rarity === 'UR')
+    : pitied ? GACHA_SKINS.filter(s => s.rarity !== 'N') : GACHA_SKINS;
   const total = pool.reduce((s, x) => s + x.prob, 0);
   let r = Math.random() * total;
   for (const skin of pool) { r -= skin.prob; if (r <= 0) return skin; }
@@ -2491,8 +2493,8 @@ function doGachaPull(count = 1, free = false, useShin = false) {
   for (let i = 0; i < count; i++) {
     gameState.gachaPity = (gameState.gachaPity ?? 0) + 1;
     const pitied = gameState.gachaPity >= 10;
-    const skin   = pullOnce(pitied);
-    if (pitied || skin.rarity !== 'N') gameState.gachaPity = 0;
+    const skin   = pullOnce(pitied, useShin);
+    if (useShin || pitied || skin.rarity !== 'N') gameState.gachaPity = 0;
     const isNew  = !(gameState.ownedSkins ?? []).includes(skin.id);
     let dupeStones = 0;
     if (isNew) {
