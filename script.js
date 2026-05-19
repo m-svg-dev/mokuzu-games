@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.9.7';
+const CURRENT_VERSION = '2.9.8';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -1678,7 +1678,12 @@ function useConsumable(itemId) {
     };
     if (item.effect === 'auto_click') startAutoClicker();
   } else if (item.effect === 'moku_storm') {
-    const gained = Math.floor(gameState.mokuPerSecond * 300);
+    const mpsTotal = gameState.mokuPerSecond
+      * (gameState.isAwakened ? 5 : 1)
+      * (gameState.eventMpsMult ?? 1)
+      * (isEffectActive('mps_boost') ? 5 : 1)
+      * getPetMultiplier().mps;
+    const gained = Math.floor(mpsTotal * 300);
     gameState.moku      += gained;
     gameState.totalMoku += gained;
   } else if (item.effect === 'gacha') {
