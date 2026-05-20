@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.9.9';
+const CURRENT_VERSION = '2.10.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -3679,32 +3679,42 @@ function _zaibatsuCheck(coins, gain) {
 }
 
 function _zaibatsuShowAsa() {
-  const el = document.createElement('div');
-  el.style.cssText = [
-    'position:fixed',
-    'width:150px',
-    'height:150px',
-    'background:url("assets/yomogi/asa_2.png") center/contain no-repeat',
-    'z-index:99999',
-    'pointer-events:none',
-    'transition:left 0.2s cubic-bezier(0.34,1.56,0.64,1),top 0.2s cubic-bezier(0.34,1.56,0.64,1)',
-  ].join(';');
-  document.body.appendChild(el);
+  const COUNT   = 5;
+  const IMGS    = ['asa_2.png', 'asa_3.png', 'asa_5.png', 'asa_7.png', 'asa_9.png'];
+  const SIZES   = [150, 110, 130, 90, 120];
+  const SPEEDS  = [180, 250, 140, 300, 200];
 
-  const rnd = () => [
-    Math.random() * (window.innerWidth  - 160),
-    Math.random() * (window.innerHeight - 160),
-  ];
-  const move = () => { const [x, y] = rnd(); el.style.left = x + 'px'; el.style.top = y + 'px'; };
-  move();
-  const iv = setInterval(move, 220);
+  IMGS.forEach((img, i) => {
+    setTimeout(() => {
+      const sz = SIZES[i];
+      const el = document.createElement('div');
+      el.style.cssText = [
+        'position:fixed',
+        `width:${sz}px`,
+        `height:${sz}px`,
+        `background:url("assets/yomogi/${img}") center/contain no-repeat`,
+        'z-index:99999',
+        'pointer-events:none',
+        `transition:left 0.18s cubic-bezier(0.34,1.56,0.64,1),top 0.18s cubic-bezier(0.34,1.56,0.64,1)`,
+      ].join(';');
+      document.body.appendChild(el);
 
-  setTimeout(() => {
-    clearInterval(iv);
-    el.style.transition += ',opacity 0.5s';
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 500);
-  }, 3500);
+      const rnd  = () => [
+        Math.random() * (window.innerWidth  - sz - 10),
+        Math.random() * (window.innerHeight - sz - 10),
+      ];
+      const move = () => { const [x, y] = rnd(); el.style.left = x + 'px'; el.style.top = y + 'px'; };
+      move();
+      const iv = setInterval(move, SPEEDS[i]);
+
+      setTimeout(() => {
+        clearInterval(iv);
+        el.style.transition += ',opacity 0.5s';
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 500);
+      }, 3500);
+    }, i * 120);
+  });
 }
 
 function _zaibatsuStrike(resultEl, gain, resultClass) {
