@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.9.8';
+const CURRENT_VERSION = '2.9.9';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -3672,7 +3672,7 @@ function _ygSetFire(level) {
 
 // ========== あさのよもぎ蒸し財閥 ==========
 const ZAIBATSU_THRESHOLD = 10_000_000;
-const ZAIBATSU_PROB      = 0.9;
+const ZAIBATSU_PROB      = 0.2;
 
 function _zaibatsuCheck(coins, gain) {
   return coins >= ZAIBATSU_THRESHOLD && gain > 0 && Math.random() < ZAIBATSU_PROB;
