@@ -4015,14 +4015,16 @@ button,
   touch-action: none;
 }
 .shooting-hud {
-  width: 100%;
-  max-width: 400px;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 4px 8px;
   background: rgba(0,0,0,0.7);
   box-sizing: border-box;
+  white-space: nowrap;
 }
 .shooting-hp { display: flex; gap: 2px; }
 .st-heart { width: 22px; height: 22px; object-fit: contain; }

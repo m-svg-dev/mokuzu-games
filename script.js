@@ -4571,7 +4571,6 @@ function _stCheckVer() {
   setTimeout(() => _stBeep(880, 1000, 0.12, 0.15, 'sine'), 160);
   _stVerAnim = { timer: 120 };
   _stInvincible = 90;
-  _stShake.timer = 18; _stShake.intensity = 5;
   _stUpdateHud();
 }
 
@@ -4841,7 +4840,7 @@ function _stDraw() {
   // WEAPON EVOLUTION 演出
   if (_stVerAnim) {
     const t = _stVerAnim.timer;
-    ctx.globalAlpha = t > 90 ? 1 : t / 90;
+    ctx.globalAlpha = t > 110 ? (120 - t) / 10 : t > 90 ? 1 : t / 90;
     ctx.textAlign = 'center';
     ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
     ctx.font = 'bold 18px monospace';
