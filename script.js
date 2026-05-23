@@ -4325,7 +4325,7 @@ let _stPlayer, _stEnemies, _stBullets, _stItems, _stStars;
 let _stScore, _stHp, _stStones, _stVerIdx;
 let _stShootCd, _stSpawnCd, _stDifficulty, _stWaveCd;
 let _stBoss = null, _stBossSpawned = false;
-let _stParticles, _stFlash, _stShake, _stVerAnim, _stCombo, _stComboCd;
+let _stParticles, _stFlash, _stShake, _stVerAnim, _stCombo, _stComboCd, _stInvincible;
 let _stRafId = null, _stLastTs = 0;
 let _stImgsLoaded = false;
 
