@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.10.0';
+const CURRENT_VERSION = '2.12.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,19 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.12.0',
+    date: '2026/05/23',
+    title: '🌊 雨の日に消えた約束コラボ開催！',
+    items: [
+      '🤝【コラボ】「雨の日に消えた約束」コラボスキン4枚追加！',
+      '🟠 藻屑×海ぶどう ver共闘（UR）：タップ&MPS ×3.0 / 基礎MPS +1',
+      '🟣 海ぶどう 雨約コラボ（SSR）：タップ&MPS ×1.5',
+      '🟠 とし ver赤羽エレベータ修理工（UR）：タップ ×3.5',
+      '🟠 バロン verぶっころぉ（UR）：MPS ×3.5',
+      '💎 超転生石ガチャならSSR/URが超狙い目！コラボスキンをゲットしよう！',
+    ],
+  },
   {
     id: 'v2.9.1',
     date: '2026/05/18',
@@ -340,8 +353,12 @@ const IMAGE_CONFIG = {
       mo_majyo: 'assets/characters/mo_majyo.png',
       puikyua_ki:  'assets/characters/puikyua_kiiro_.png',
       puikyua_pk:  'assets/characters/puikyua_pink_.png',
-      ur_rushieru: 'assets/characters/ur_rushieru.png',
-      ur_nokushia: 'assets/characters/ur_nokushia.png',
+      ur_rushieru:      'assets/characters/ur_rushieru.png',
+      ur_nokushia:      'assets/characters/ur_nokushia.png',
+      mokuzu_budou:     'assets/characters/mokuzu_budou.png',
+      budou_soro:       'assets/characters/budou_soro.png',
+      toshi_ver_akaba:  'assets/characters/toshi_ver_akaba.png',
+      baron_ver_bukkoro:'assets/characters/baron_ver_bukkoro.png',
     },
   },
   employees: {
@@ -398,7 +415,7 @@ const IMAGE_CONFIG = {
 };
 
 const SUIT_COVER_FIT = new Set(['silver', 'white']); // 正方形画像はcoverで表示
-const SUIT_TOP_FIT   = new Set(['moku_ki', 'mo_mizu', 'mo_pink', 'mo_majyo', 'puikyua_ki', 'puikyua_pk', 'ur_rushieru', 'ur_nokushia']); // 正方形・上寄せ表示
+const SUIT_TOP_FIT   = new Set(['moku_ki', 'mo_mizu', 'mo_pink', 'mo_majyo', 'puikyua_ki', 'puikyua_pk', 'ur_rushieru', 'ur_nokushia', 'mokuzu_budou', 'budou_soro', 'toshi_ver_akaba', 'baron_ver_bukkoro']); // 正方形・上寄せ表示
 
 function applyCharacterSprite(suit) {
   let effectiveSuit = suit;
@@ -616,12 +633,22 @@ const GACHA_SKINS = [
   { id: 'skin_mo_majyo',   name: 'もまじょちゃん',         rarity: 'SSR', suit: 'mo_majyo',    prob: 0.0033, op: { tap: 1.5 } },
   { id: 'skin_puikyua_ki', name: 'ぷいきゅあきいろちゃん', rarity: 'SSR', suit: 'puikyua_ki',  prob: 0.0033, op: { mps: 1.5 } },
   { id: 'skin_puikyua_pk', name: 'ぷいきゅあぴんくちゃん', rarity: 'SSR', suit: 'puikyua_pk',  prob: 0.0033, op: { tap: 1.5 } },
-  { id: 'skin_ur_rushieru', name: '星屑のルシエル', rarity: 'UR', suit: 'ur_rushieru', prob: 0.001, op: { tap: 2.0, mps: 2.0 } },
-  { id: 'skin_ur_nokushia', name: '黒星のノクシア', rarity: 'UR', suit: 'ur_nokushia', prob: 0.001, op: { tap: 2.0, mps: 2.0 } },
+  { id: 'skin_ur_rushieru',      name: '星屑のルシエル',             rarity: 'UR',  suit: 'ur_rushieru',       prob: 0.001,  op: { tap: 2.0, mps: 2.0 } },
+  { id: 'skin_ur_nokushia',      name: '黒星のノクシア',             rarity: 'UR',  suit: 'ur_nokushia',       prob: 0.001,  op: { tap: 2.0, mps: 2.0 } },
+  { id: 'skin_mokuzu_budou',     name: '藻屑×海ぶどう ver共闘',     rarity: 'UR',  suit: 'mokuzu_budou',      prob: 1, op: { tap: 3.0, mps: 3.0, baseMps: 1 } },
+  { id: 'skin_budou_soro',       name: '海ぶどう 雨約コラボ',        rarity: 'SSR', suit: 'budou_soro',        prob: 1,  op: { tap: 1.5, mps: 1.5 } },
+  { id: 'skin_toshi_ver_akaba',  name: 'とし ver赤羽エレベータ修理工', rarity: 'UR', suit: 'toshi_ver_akaba',   prob: 1, op: { tap: 3.5, mps: 1.0 } },
+  { id: 'skin_baron_ver_bukkoro',name: 'バロン verぶっころぉ',        rarity: 'UR',  suit: 'baron_ver_bukkoro', prob: 1, op: { tap: 1.0, mps: 3.5 } },
 ];
 
 const RARITY_COLOR       = { N: '#888888', R: '#4499ff', SR: '#ffd700', SSR: '#ff44ff', UR: '#ff6600' };
 const RARITY_DUPE_STONES = { N: 1, R: 5, SR: 15, SSR: 50, UR: 100 };
+
+const RARITY_RATES = {
+  normal: { N: 0.60, R: 0.25, SR: 0.12, SSR: 0.025, UR: 0.005 },
+  pity:   { R: 0.55, SR: 0.35, SSR: 0.08, UR: 0.02 },
+  shin:   { SSR: 0.80, UR: 0.20 },
+};
 
 // ========== 消費アイテム ==========
 
@@ -893,10 +920,14 @@ function getSkinOp() {
 
 function formatSkinOp(op) {
   if (!op) return '';
-  if (op.tap && op.mps) return `タップ&MPS ×${op.tap}`;
-  if (op.tap) return `タップ ×${op.tap}`;
-  if (op.mps) return `MPS ×${op.mps}`;
-  return '';
+  const parts = [];
+  if (op.tap && op.mps && op.tap === op.mps) parts.push(`タップ&MPS ×${op.tap}`);
+  else {
+    if (op.tap && op.tap !== 1) parts.push(`タップ ×${op.tap}`);
+    if (op.mps && op.mps !== 1) parts.push(`MPS ×${op.mps}`);
+  }
+  if (op.baseMps) parts.push(`基礎MPS +${op.baseMps}`);
+  return parts.join(' / ');
 }
 
 function recalcTapPower() {
@@ -927,7 +958,8 @@ function recalcMPS() {
     mps += (u.mpsBonus ?? 0) * (gameState.upgrades[u.id] ?? 0);
   }
   const skinOp = getSkinOp();
-  gameState.mokuPerSecond = mps * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinMpsMult') * getPrestigeBonus('shinAllMult') * (skinOp.mps ?? 1);
+  const baseMps = skinOp.baseMps ?? 0;
+  gameState.mokuPerSecond = (mps + baseMps) * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinMpsMult') * getPrestigeBonus('shinAllMult') * (skinOp.mps ?? 1);
   if (!Number.isFinite(gameState.mokuPerSecond)) {
     console.error('[mokuzu] recalcMPS: NaN/Infinityを検出。mokuPerSecond=0にフォールバック');
     gameState.mokuPerSecond = 0;
@@ -2474,13 +2506,12 @@ function renderUnlockedEventList() {
 // ========== ガチャ ==========
 
 function pullOnce(pitied = false, shinMode = false) {
-  const pool  = shinMode
-    ? GACHA_SKINS.filter(s => s.rarity === 'SSR' || s.rarity === 'UR')
-    : pitied ? GACHA_SKINS.filter(s => s.rarity !== 'N') : GACHA_SKINS;
-  const total = pool.reduce((s, x) => s + x.prob, 0);
-  let r = Math.random() * total;
-  for (const skin of pool) { r -= skin.prob; if (r <= 0) return skin; }
-  return pool[pool.length - 1];
+  const rates = shinMode ? RARITY_RATES.shin : pitied ? RARITY_RATES.pity : RARITY_RATES.normal;
+  let r = Math.random();
+  let rarity = Object.keys(rates).at(-1);
+  for (const [key, prob] of Object.entries(rates)) { r -= prob; if (r <= 0) { rarity = key; break; } }
+  const pool = GACHA_SKINS.filter(s => s.rarity === rarity);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function doGachaPull(count = 1, free = false, useShin = false) {
@@ -2552,9 +2583,14 @@ function equipSkin(skinId) {
 function renderGachaRates() {
   const container = document.getElementById('gacha-rates-table-container');
   if (!container) return;
-  const total = GACHA_SKINS.reduce((s, x) => s + x.prob, 0);
-  const rows = GACHA_SKINS.map(skin => {
-    const pct  = (skin.prob / total * 100).toFixed(2);
+  const counts = {};
+  for (const s of GACHA_SKINS) counts[s.rarity] = (counts[s.rarity] ?? 0) + 1;
+  const rates = RARITY_RATES.normal;
+  const RARITY_ORDER = { N: 0, R: 1, SR: 2, SSR: 3, UR: 4 };
+  const sorted = [...GACHA_SKINS].sort((a, b) => RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]);
+  const rows = sorted.map(skin => {
+    const rarityProb = rates[skin.rarity] ?? 0;
+    const pct  = (rarityProb / counts[skin.rarity] * 100).toFixed(3);
     const color = RARITY_COLOR[skin.rarity] ?? '#888';
     const op   = skin.op ? formatSkinOp(skin.op) : '—';
     return `<tr>
@@ -2576,7 +2612,8 @@ function renderSkinCollection() {
   if (!container) return;
   const stones = gameState.prestigeStones ?? 0;
 
-  container.innerHTML = GACHA_SKINS.map(skin => {
+  const RARITY_ORDER = { N: 0, R: 1, SR: 2, SSR: 3, UR: 4 };
+  container.innerHTML = [...GACHA_SKINS].sort((a, b) => RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]).map(skin => {
     const owned    = (gameState.ownedSkins ?? []).includes(skin.id);
     const equipped = gameState.equippedSkin === skin.id;
     const src      = IMAGE_CONFIG.character.suits[skin.suit];
