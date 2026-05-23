@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.12.0';
+const CURRENT_VERSION = '2.13.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.13.0',
+    date: '2026/05/23',
+    title: '💎 転生石上限強化II 拡張',
+    items: [
+      '💎 転生石上限強化IIを8段階まで拡張！最大上限が21,000→30,000石になりました',
+    ],
+  },
   {
     id: 'v2.12.0',
     date: '2026/05/23',
@@ -677,7 +685,7 @@ const PRESTIGE_SKILLS = [
   { id: 'pCritR2', name: 'クリティカルの極意',    desc: '恒久クリティカル率 +10%',  costs: [5000, 5000, 5000],  type: 'critRate', value: 0.10, maxLevel: 3, requirePrestige: 25 },
   { id: 'pCritM2', name: 'クリティカル倍率の極意', desc: '恒久クリティカル倍率 +2倍', costs: [4000, 8000, 16000], type: 'critMult', value: 2,    maxLevel: 3, requirePrestige: 25 },
   { id: 'pAll',       name: '社長の覇道',      desc: 'タップ＆MPS ×3倍',                             costs: [20000, 50000],             type: 'allMult',     value: 3,    maxLevel: 2, requirePrestige: 30 },
-  { id: 'pStoneCap2', name: '転生石上限強化II', desc: '転生石獲得上限 +3000（現在上限: {cap}石）',     costs: [5000,5000,5000,5000,5000], type: 'stoneCap2',   value: 3000, maxLevel: 5, requirePrestige: 30 },
+  { id: 'pStoneCap2', name: '転生石上限強化II', desc: '転生石獲得上限 +3000（現在上限: {cap}石）',     costs: [5000,5000,5000,5000,5000,5000,5000,5000], type: 'stoneCap2',   value: 3000, maxLevel: 8, requirePrestige: 30 },
   { id: 'shinTap',    name: '神話の力',         desc: '恒久タップ ×5倍',                              costs: [250, 500, 1000],           type: 'shinTapMult', value: 5,    maxLevel: 3, requirePrestige: 50, currencyType: 'shin' },
   { id: 'shinMps',    name: '神話の流れ',       desc: '恒久MPS ×5倍',                                 costs: [250, 500, 1000],           type: 'shinMpsMult', value: 5,    maxLevel: 3, requirePrestige: 50, currencyType: 'shin' },
   { id: 'shinAll',    name: '神話の覇道',       desc: 'タップ＆MPS ×3倍',                             costs: [250, 500, 1000],           type: 'shinAllMult', value: 3,    maxLevel: 3, requirePrestige: 75, currencyType: 'shin' },
