@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.14.0';
+const CURRENT_VERSION = '2.14.1';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -4258,6 +4258,23 @@ function initSlot() {
 
 // ========== シューティング ミニゲーム ==========
 
+function _stBeep(freq, endFreq, duration, gain, wave) {
+  if (!gameState.soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    const t   = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const vol = ctx.createGain();
+    osc.connect(vol); vol.connect(ctx.destination);
+    osc.type = wave ?? 'square';
+    osc.frequency.setValueAtTime(freq, t);
+    if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, t + duration);
+    vol.gain.setValueAtTime(gain ?? 0.15, t);
+    vol.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.start(t); osc.stop(t + duration);
+  } catch (_) {}
+}
+
 const ST_IMG_SRCS = {
   player:    'assets/characters/suit_black.png',
   algae:     'assets/employees/algae.png',
@@ -4423,8 +4440,8 @@ function _stUpdate(f) {
     const it = _stItems[i];
     it.y += it.vy * f;
     if (Math.abs(it.x - _stPlayer.x) < 28 && Math.abs(it.y - _stPlayer.y) < 28) {
-      if (it.type === 'heart') { _stHp = Math.min(5, _stHp + 1); beepAt(0, 660, 0.12, 0.18, 'sine'); }
-      else { _stStones++; _stCheckVer(); beepAt(0, 880, 0.08, 0.12, 'triangle'); }
+      if (it.type === 'heart') { _stHp = Math.min(5, _stHp + 1); _stBeep(660, 800, 0.12, 0.15, 'sine'); }
+      else { _stStones++; _stCheckVer(); _stBeep(880, 1100, 0.1, 0.15, 'triangle'); }
       _stItems.splice(i, 1); _stUpdateHud(); continue;
     }
     if (it.y > _stCanvas.height + 30) _stItems.splice(i, 1);
@@ -4464,7 +4481,7 @@ function _stSpawnEnemy() {
 
 function _stTakeDamage() {
   _stHp--;
-  beepAt(0, 220, 0.15, 0.2, 'sawtooth');
+  _stBeep(220, 150, 0.2, 0.2, 'sawtooth');
   _stUpdateHud();
   if (_stHp <= 0) _stGameOver();
 }
@@ -4473,9 +4490,9 @@ function _stCheckVer() {
   const next = ST_VERSIONS[_stVerIdx + 1];
   if (!next || _stStones < next.stonesNeeded) return;
   _stVerIdx++;
-  beepAt(0, 440, 0.1, 0.05, 'sine');
-  beepAt(0.06, 660, 0.1, 0.1, 'sine');
-  beepAt(0.13, 880, 0.12, 0.15, 'sine');
+  _stBeep(440, 550, 0.08, 0.12, 'sine');
+  setTimeout(() => _stBeep(660, 770, 0.08, 0.13, 'sine'), 80);
+  setTimeout(() => _stBeep(880, 1000, 0.12, 0.15, 'sine'), 160);
   _stUpdateHud();
 }
 
