@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.14.3';
+const CURRENT_VERSION = '2.14.4';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -4421,6 +4421,9 @@ function _stUpdate(f) {
           if (Math.random() < 0.12) _stItems.push({ x: e.x, y: e.y, type: 'heart', vy: 1.8 });
           if (Math.random() < 0.35) _stItems.push({ x: e.x, y: e.y, type: 'stone', vy: 2.2 });
           _stEnemies.splice(ei, 1); _stUpdateHud();
+          _stBeep(300, 120, 0.18, 0.18, 'sawtooth'); // 撃破音
+        } else {
+          _stBeep(800, 600, 0.04, 0.08, 'square'); // ヒット音
         }
         continue outer;
       }
