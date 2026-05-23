@@ -4001,3 +4001,65 @@ button,
   opacity: 1;
   filter: drop-shadow(0 0 6px #3dff7a88);
 }
+
+/* ========== シューティング ========== */
+#shooting-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#shooting-canvas {
+  display: block;
+  background: #04001a;
+  touch-action: none;
+}
+.shooting-hud {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.7);
+  box-sizing: border-box;
+}
+.shooting-hp { display: flex; gap: 2px; }
+.st-heart { width: 22px; height: 22px; object-fit: contain; }
+.shooting-hud-right { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; color: #ccc; }
+.shooting-ver-badge {
+  background: #0066cc; color: #fff; font-size: 0.7rem; font-weight: bold;
+  padding: 2px 6px; border-radius: 4px;
+}
+.shooting-ver-badge[data-lv="1"] { background: #007744; }
+.shooting-ver-badge[data-lv="2"] { background: #885500; }
+.shooting-ver-badge[data-lv="3"] { background: #770077; }
+.shooting-ver-badge[data-lv="4"] { background: #990000; }
+.shooting-stones-count { color: #ffcc00; }
+.shooting-score-count  { color: #aaffee; }
+
+.shooting-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(4,0,26,0.88);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; padding: 20px; box-sizing: border-box;
+  z-index: 10;
+}
+.shooting-overlay.hidden { display: none; }
+.shooting-overlay-title { font-size: 1.4rem; font-weight: bold; color: #00eeff; text-shadow: 0 0 12px #00eeff88; }
+.shooting-overlay-desc  { font-size: 0.82rem; color: #aaa; text-align: center; line-height: 1.6; }
+.shooting-ver-guide {
+  background: rgba(255,255,255,0.05); border: 1px solid #333;
+  border-radius: 8px; padding: 8px 14px; font-size: 0.75rem; color: #aaa; line-height: 1.8;
+}
+.shooting-action-btn {
+  margin-top: 6px; padding: 10px 32px;
+  background: linear-gradient(135deg, #0066cc, #00aaff);
+  color: #fff; font-size: 1rem; font-weight: bold;
+  border: none; border-radius: 8px; cursor: pointer;
+}
+.shooting-action-btn:active { transform: scale(0.95); }
+.shooting-result-row { font-size: 0.9rem; color: #ccc; }
+.shooting-result-val { font-size: 1.2rem; font-weight: bold; color: #ffdd44; }

@@ -559,6 +559,14 @@
           </div>
           <span class="mg-arrow">›</span>
         </button>
+        <button class="mg-card" data-game="shooting">
+          <span class="mg-icon">🚀</span>
+          <div class="mg-info">
+            <div class="mg-name">藻屑シューティング</div>
+            <div class="mg-desc">敵を倒してバージョンアップ！藻コイン獲得！</div>
+          </div>
+          <span class="mg-arrow">›</span>
+        </button>
       </div>
     </div>
 
@@ -813,6 +821,51 @@
       <button id="slot-spin-btn" class="slot-spin-btn" disabled>🎰 スピン！</button>
     </div>
 
+    <!-- シューティング ゲーム画面 -->
+    <div id="minigame-game-shooting" class="hidden">
+      <div class="mg-game-header">
+        <button id="shooting-back-btn" class="mg-back-btn">‹ 戻る</button>
+        <span class="mg-game-title">🚀 藻屑シューティング</span>
+      </div>
+
+      <div id="shooting-wrapper">
+        <!-- HUD -->
+        <div id="shooting-hud" class="shooting-hud hidden">
+          <div id="shooting-hp" class="shooting-hp"></div>
+          <div class="shooting-hud-right">
+            <div class="shooting-ver-badge" id="shooting-ver">v1.0</div>
+            <div class="shooting-stones-count">⭐<span id="shooting-stones">0/3</span></div>
+            <div class="shooting-score-count">スコア: <span id="shooting-score">0</span></div>
+          </div>
+        </div>
+
+        <!-- Canvas -->
+        <canvas id="shooting-canvas"></canvas>
+
+        <!-- スタート画面 -->
+        <div id="shooting-start" class="shooting-overlay">
+          <div class="shooting-overlay-title">🚀 藻屑シューティング</div>
+          <div class="shooting-overlay-desc">迫りくる敵を撃退して藻コインを稼げ！<br>アイテムを集めてバージョンアップ！</div>
+          <div class="shooting-ver-guide">
+            <div>v1.0 シングルショット</div>
+            <div>v1.1 ダブルショット（⭐3個）</div>
+            <div>v1.2 トリプルショット（⭐6個）</div>
+            <div>v2.0 スプレッド（⭐10個）</div>
+            <div>v2.1 ワイドスプレッド（⭐15個）</div>
+          </div>
+          <button id="shooting-start-btn" class="shooting-action-btn">START！</button>
+        </div>
+
+        <!-- ゲームオーバー画面 -->
+        <div id="shooting-result" class="shooting-overlay hidden">
+          <div class="shooting-overlay-title">GAME OVER</div>
+          <div class="shooting-result-row">スコア: <span id="shooting-result-score" class="shooting-result-val">0</span></div>
+          <div class="shooting-result-row">獲得コイン: <span id="shooting-result-reward" class="shooting-result-val">0</span> 🪙</div>
+          <button id="shooting-retry-btn" class="shooting-action-btn">もう一度！</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- タブナビゲーション（画面下部固定） -->
@@ -908,6 +961,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=2.13.0"></script>
+  <script type="module" src="script.js?v=2.14.0"></script>
 </body>
 </html>

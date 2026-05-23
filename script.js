@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.13.0';
+const CURRENT_VERSION = '2.14.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.14.0',
+    date: '2026/05/23',
+    title: '🚀 新ミニゲーム！藻屑シューティング追加！',
+    items: [
+      '🚀【新ミニゲーム】藻屑シューティング追加！敵を倒して藻コインをゲット！',
+      '⭐ アイテムを集めるとバージョンアップ！v1.0→v2.1まで5段階強化！',
+      '❤️ HPアイテムを拾って生き延びろ！スコア÷10の藻コイン獲得！',
+    ],
+  },
   {
     id: 'v2.13.0',
     date: '2026/05/23',
@@ -3237,7 +3247,8 @@ function showMinigame(gameId) {
   if (gameId === 'highlow')  { if (!_hlCard) initHighLow(); else _hlRender(); }
   if (gameId === 'roulette') initRoulette();
   if (gameId === 'slot')     initSlot();
-  if (gameId === 'yomogi')   initYomogi();
+  if (gameId === 'yomogi')    initYomogi();
+  if (gameId === 'shooting')  initShooting();
 }
 
 // ========== ハイロー ミニゲーム ==========
@@ -4245,6 +4256,303 @@ function initSlot() {
   slotRender();
 }
 
+// ========== シューティング ミニゲーム ==========
+
+const ST_IMG_SRCS = {
+  player:    'assets/characters/suit_black.png',
+  algae:     'assets/employees/algae.png',
+  coral:     'assets/employees/coral.png',
+  crab:      'assets/employees/crab.png',
+  jellyfish: 'assets/employees/jellyfish.png',
+  shark:     'assets/employees/shark.png',
+  heart:     'assets/items/mo_royalheart.png',
+  stone:     'assets/prestige/prestige_stone.png',
+};
+const ST_IMGS = {};
+
+const ST_ENEMY_DEF = {
+  algae:     { hp: 1, speed: 2.2, score: 10,  size: 34, shootInterval: 0   },
+  coral:     { hp: 2, speed: 1.3, score: 20,  size: 38, shootInterval: 0   },
+  crab:      { hp: 2, speed: 1.6, score: 30,  size: 38, shootInterval: 0   },
+  jellyfish: { hp: 1, speed: 0.9, score: 25,  size: 36, shootInterval: 150 },
+  shark:     { hp: 8, speed: 0.7, score: 100, size: 54, shootInterval: 80  },
+};
+
+const ST_VERSIONS = [
+  { ver: 'v1.0', stonesNeeded: 0,  pattern: 'single' },
+  { ver: 'v1.1', stonesNeeded: 3,  pattern: 'double' },
+  { ver: 'v1.2', stonesNeeded: 6,  pattern: 'triple' },
+  { ver: 'v2.0', stonesNeeded: 10, pattern: 'spread' },
+  { ver: 'v2.1', stonesNeeded: 15, pattern: 'wide'   },
+];
+
+let _stState = 'idle';
+let _stCanvas, _stCtx;
+let _stPlayer, _stEnemies, _stBullets, _stItems, _stStars;
+let _stScore, _stHp, _stStones, _stVerIdx;
+let _stShootCd, _stSpawnCd, _stDifficulty, _stWaveCd;
+let _stRafId = null, _stLastTs = 0;
+let _stImgsLoaded = false;
+
+function _stLoadImgs() {
+  if (_stImgsLoaded) return Promise.resolve();
+  return Promise.all(Object.entries(ST_IMG_SRCS).map(([k, src]) => new Promise(res => {
+    const img = new Image(); img.onload = img.onerror = res; img.src = src; ST_IMGS[k] = img;
+  }))).then(() => { _stImgsLoaded = true; });
+}
+
+function initShooting() {
+  _stCanvas = document.getElementById('shooting-canvas');
+  _stCtx = _stCanvas.getContext('2d');
+  const wrapper = document.getElementById('shooting-wrapper');
+  _stCanvas.width  = Math.min(wrapper.clientWidth, 400);
+  _stCanvas.height = Math.min(window.innerHeight - 160, 560);
+
+  _stShowOverlay('start');
+  _stLoadImgs();
+
+  _stCanvas.addEventListener('mousemove', e => {
+    if (_stState !== 'playing') return;
+    const r = _stCanvas.getBoundingClientRect();
+    _stPlayer.x = Math.max(24, Math.min(_stCanvas.width - 24, e.clientX - r.left));
+  });
+  _stCanvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (_stState !== 'playing') return;
+    const r = _stCanvas.getBoundingClientRect();
+    _stPlayer.x = Math.max(24, Math.min(_stCanvas.width - 24, e.touches[0].clientX - r.left));
+  }, { passive: false });
+}
+
+function _stShowOverlay(name) {
+  document.getElementById('shooting-start').classList.toggle('hidden', name !== 'start');
+  document.getElementById('shooting-result').classList.toggle('hidden', name !== 'result');
+  document.getElementById('shooting-hud').classList.toggle('hidden', name !== 'hud');
+}
+
+function _stStartGame() {
+  _stState   = 'playing';
+  _stScore   = 0; _stHp = 3; _stStones = 0; _stVerIdx = 0;
+  _stShootCd = 0; _stSpawnCd = 60; _stDifficulty = 1; _stWaveCd = 600;
+  _stPlayer  = { x: _stCanvas.width / 2, y: _stCanvas.height - 52, w: 48, h: 48 };
+  _stEnemies = []; _stBullets = []; _stItems = [];
+  _stStars   = Array.from({ length: 50 }, () => ({
+    x: Math.random() * _stCanvas.width, y: Math.random() * _stCanvas.height,
+    r: Math.random() * 1.5 + 0.3, s: Math.random() * 0.4 + 0.2,
+  }));
+  _stShowOverlay('hud');
+  _stUpdateHud();
+  if (_stRafId) cancelAnimationFrame(_stRafId);
+  _stLastTs = performance.now();
+  _stRafId = requestAnimationFrame(_stLoop);
+}
+
+function _stLoop(ts) {
+  const dt = Math.min((ts - _stLastTs) / 1000, 0.05);
+  _stLastTs = ts;
+  if (_stState !== 'playing') return;
+  _stUpdate(dt * 60);
+  _stDraw();
+  _stRafId = requestAnimationFrame(_stLoop);
+}
+
+function _stUpdate(f) {
+  // shoot
+  _stShootCd -= f;
+  if (_stShootCd <= 0) { _stFire(); _stShootCd = 18; }
+
+  // spawn
+  _stSpawnCd -= f;
+  if (_stSpawnCd <= 0) { _stSpawnEnemy(); _stSpawnCd = Math.max(25, 80 - _stDifficulty * 4); }
+
+  // difficulty ramp
+  _stWaveCd -= f;
+  if (_stWaveCd <= 0) { _stDifficulty++; _stWaveCd = 600; }
+
+  // move bullets
+  for (let i = _stBullets.length - 1; i >= 0; i--) {
+    const b = _stBullets[i];
+    b.x += b.vx * f; b.y += b.vy * f;
+    if (b.y < -20 || b.y > _stCanvas.height + 20 || b.x < -20 || b.x > _stCanvas.width + 20)
+      _stBullets.splice(i, 1);
+  }
+
+  // move enemies
+  for (let i = _stEnemies.length - 1; i >= 0; i--) {
+    const e = _stEnemies[i];
+    e.y += e.speed * f;
+    if (e.hspd) { e.x += e.hspd * f; if (e.x < 20 || e.x > _stCanvas.width - 20) e.hspd *= -1; }
+    if (e.shootInterval) {
+      e.sCd = (e.sCd ?? e.shootInterval) - f;
+      if (e.sCd <= 0) { e.sCd = e.shootInterval; _stBullets.push({ x: e.x, y: e.y + e.size / 2, vx: 0, vy: 3, friendly: false }); }
+    }
+    if (e.y > _stCanvas.height + e.size) { _stEnemies.splice(i, 1); _stTakeDamage(); continue; }
+    if (Math.abs(e.x - _stPlayer.x) < (e.size + 30) / 2 && Math.abs(e.y - _stPlayer.y) < (e.size + 30) / 2)
+      { _stEnemies.splice(i, 1); _stTakeDamage(); }
+  }
+
+  // bullet-enemy collision
+  outer: for (let bi = _stBullets.length - 1; bi >= 0; bi--) {
+    const b = _stBullets[bi];
+    if (!b.friendly) continue;
+    for (let ei = _stEnemies.length - 1; ei >= 0; ei--) {
+      const e = _stEnemies[ei];
+      if (Math.abs(b.x - e.x) < e.size / 2 && Math.abs(b.y - e.y) < e.size / 2) {
+        _stBullets.splice(bi, 1); e.hp--;
+        if (e.hp <= 0) {
+          _stScore += e.score;
+          if (Math.random() < 0.12) _stItems.push({ x: e.x, y: e.y, type: 'heart', vy: 1.8 });
+          if (Math.random() < 0.35) _stItems.push({ x: e.x, y: e.y, type: 'stone', vy: 2.2 });
+          _stEnemies.splice(ei, 1); _stUpdateHud();
+        }
+        continue outer;
+      }
+    }
+  }
+
+  // enemy bullets hit player
+  for (let i = _stBullets.length - 1; i >= 0; i--) {
+    const b = _stBullets[i];
+    if (b.friendly) continue;
+    if (Math.abs(b.x - _stPlayer.x) < 20 && Math.abs(b.y - _stPlayer.y) < 20)
+      { _stBullets.splice(i, 1); _stTakeDamage(); }
+  }
+
+  // move items & pickup
+  for (let i = _stItems.length - 1; i >= 0; i--) {
+    const it = _stItems[i];
+    it.y += it.vy * f;
+    if (Math.abs(it.x - _stPlayer.x) < 28 && Math.abs(it.y - _stPlayer.y) < 28) {
+      if (it.type === 'heart') { _stHp = Math.min(5, _stHp + 1); beepAt(0, 660, 0.12, 0.18, 'sine'); }
+      else { _stStones++; _stCheckVer(); beepAt(0, 880, 0.08, 0.12, 'triangle'); }
+      _stItems.splice(i, 1); _stUpdateHud(); continue;
+    }
+    if (it.y > _stCanvas.height + 30) _stItems.splice(i, 1);
+  }
+
+  // scroll stars
+  for (const s of _stStars) { s.y += s.s * f; if (s.y > _stCanvas.height) s.y = 0; }
+}
+
+function _stFire() {
+  const pat = ST_VERSIONS[_stVerIdx].pattern;
+  const configs = {
+    single: [[0, 0, -8]],
+    double: [[-9, 0, -8], [9, 0, -8]],
+    triple: [[-13, 0, -8], [0, 0, -8], [13, 0, -8]],
+    spread: [[-18, -0.8, -7.5], [-9, -0.3, -8], [0, 0, -8], [9, -0.3, -8], [18, -0.8, -7.5]],
+    wide:   [[-22, -1.2, -7], [-12, -0.5, -7.8], [0, 0, -8], [12, -0.5, -7.8], [22, -1.2, -7], [-6, 0.3, -6], [6, 0.3, -6]],
+  };
+  for (const [ox, vx, vy] of configs[pat] ?? configs.single)
+    _stBullets.push({ x: _stPlayer.x + ox, y: _stPlayer.y - 24, vx, vy, friendly: true });
+}
+
+function _stSpawnEnemy() {
+  const pool = ['algae', 'algae', 'coral', 'crab', 'jellyfish'];
+  if (_stDifficulty >= 3 && Math.random() < 0.08 + _stDifficulty * 0.01) pool.push('shark');
+  const type = pool[Math.floor(Math.random() * pool.length)];
+  const def = ST_ENEMY_DEF[type];
+  _stEnemies.push({
+    x: Math.random() * (_stCanvas.width - 60) + 30, y: -def.size / 2,
+    type, size: def.size,
+    hp: def.hp + Math.floor(_stDifficulty / 3),
+    speed: def.speed * (1 + _stDifficulty * 0.04),
+    score: def.score, shootInterval: def.shootInterval,
+    hspd: type === 'jellyfish' ? (Math.random() < 0.5 ? 0.7 : -0.7) : 0,
+  });
+}
+
+function _stTakeDamage() {
+  _stHp--;
+  beepAt(0, 220, 0.15, 0.2, 'sawtooth');
+  _stUpdateHud();
+  if (_stHp <= 0) _stGameOver();
+}
+
+function _stCheckVer() {
+  const next = ST_VERSIONS[_stVerIdx + 1];
+  if (!next || _stStones < next.stonesNeeded) return;
+  _stVerIdx++;
+  beepAt(0, 440, 0.1, 0.05, 'sine');
+  beepAt(0.06, 660, 0.1, 0.1, 'sine');
+  beepAt(0.13, 880, 0.12, 0.15, 'sine');
+  _stUpdateHud();
+}
+
+function _stGameOver() {
+  _stState = 'gameover';
+  cancelAnimationFrame(_stRafId); _stRafId = null;
+  const reward = Math.floor(_stScore / 10);
+  gameState.mokoins = (gameState.mokoins ?? 0) + reward;
+  saveGame(); updateDisplay();
+  document.getElementById('shooting-result-score').textContent  = _stScore.toLocaleString();
+  document.getElementById('shooting-result-reward').textContent = reward.toLocaleString();
+  _stShowOverlay('result');
+}
+
+function _stUpdateHud() {
+  const hp = document.getElementById('shooting-hp');
+  if (hp) hp.innerHTML = Array.from({ length: 5 }, (_, i) =>
+    `<img src="${i < _stHp ? 'assets/items/mo_royalheart.png' : 'assets/items/royalheart.png'}" class="st-heart" alt="♥">`
+  ).join('');
+  const sc = document.getElementById('shooting-score');
+  if (sc) sc.textContent = _stScore.toLocaleString();
+  const ver = document.getElementById('shooting-ver');
+  if (ver) { ver.textContent = ST_VERSIONS[_stVerIdx].ver; ver.dataset.lv = _stVerIdx; }
+  const st = document.getElementById('shooting-stones');
+  const next = ST_VERSIONS[_stVerIdx + 1];
+  if (st) st.textContent = next ? `${_stStones}/${next.stonesNeeded}` : 'MAX';
+}
+
+function _stDraw() {
+  const ctx = _stCtx, W = _stCanvas.width, H = _stCanvas.height;
+  ctx.fillStyle = '#04001a'; ctx.fillRect(0, 0, W, H);
+
+  // stars
+  ctx.fillStyle = '#ffffff';
+  for (const s of _stStars) { ctx.globalAlpha = 0.5 + s.r * 0.3; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); }
+  ctx.globalAlpha = 1;
+
+  // enemy bullets
+  for (const b of _stBullets) {
+    if (b.friendly) continue;
+    ctx.fillStyle = '#ff4455'; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // player bullets
+  for (const b of _stBullets) {
+    if (!b.friendly) continue;
+    ctx.fillStyle = '#00eeff';
+    ctx.fillRect(b.x - 2, b.y - 7, 5, 14);
+  }
+
+  // items
+  for (const it of _stItems) {
+    const img = ST_IMGS[it.type]; const sz = 26;
+    if (img?.complete && img.naturalWidth) ctx.drawImage(img, it.x - sz / 2, it.y - sz / 2, sz, sz);
+    else { ctx.fillStyle = it.type === 'heart' ? '#ff66aa' : '#ffcc00'; ctx.beginPath(); ctx.arc(it.x, it.y, sz / 2, 0, Math.PI * 2); ctx.fill(); }
+  }
+
+  // enemies
+  for (const e of _stEnemies) {
+    const img = ST_IMGS[e.type];
+    if (img?.complete && img.naturalWidth) ctx.drawImage(img, e.x - e.size / 2, e.y - e.size / 2, e.size, e.size);
+    else { ctx.fillStyle = '#ff6600'; ctx.fillRect(e.x - e.size / 2, e.y - e.size / 2, e.size, e.size); }
+    const def = ST_ENEMY_DEF[e.type];
+    const maxHp = def.hp + Math.floor(_stDifficulty / 3);
+    if (maxHp > 1) {
+      const bw = e.size; const bx = e.x - bw / 2; const by = e.y - e.size / 2 - 7;
+      ctx.fillStyle = '#333'; ctx.fillRect(bx, by, bw, 4);
+      ctx.fillStyle = '#ff4444'; ctx.fillRect(bx, by, bw * (e.hp / maxHp), 4);
+    }
+  }
+
+  // player
+  const p = _stPlayer, pImg = ST_IMGS.player;
+  if (pImg?.complete && pImg.naturalWidth) ctx.drawImage(pImg, p.x - p.w / 2, p.y - p.h / 2, p.w, p.h);
+  else { ctx.fillStyle = '#4488ff'; ctx.fillRect(p.x - 18, p.y - 24, 36, 48); }
+}
+
 // ========== タブ切り替え ==========
 
 function initTabs() {
@@ -4568,6 +4876,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // スロット
   document.getElementById('slot-back-btn')?.addEventListener('click', showMinigameLobby);
+
+  // シューティング
+  document.getElementById('shooting-back-btn')?.addEventListener('click', () => {
+    _stState = 'idle';
+    if (_stRafId) { cancelAnimationFrame(_stRafId); _stRafId = null; }
+    showMinigameLobby();
+  });
+  document.getElementById('shooting-start-btn')?.addEventListener('click', _stStartGame);
+  document.getElementById('shooting-retry-btn')?.addEventListener('click', _stStartGame);
   document.getElementById('slot-spin-btn')?.addEventListener('click', slotSpin);
   document.querySelectorAll('.slot-bet-preset').forEach(btn => {
     btn.addEventListener('click', () => {
