@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.14.1';
+const CURRENT_VERSION = '2.14.2';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -4438,8 +4438,12 @@ function _stUpdate(f) {
   // move items & pickup
   for (let i = _stItems.length - 1; i >= 0; i--) {
     const it = _stItems[i];
-    it.y += it.vy * f;
-    if (Math.abs(it.x - _stPlayer.x) < 28 && Math.abs(it.y - _stPlayer.y) < 28) {
+    // 120px以内に入ったら磁力でプレイヤーに引き寄せる
+    const dx = _stPlayer.x - it.x, dy = _stPlayer.y - it.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 120) { it.x += (dx / dist) * 3 * f; it.y += (dy / dist) * 3 * f; }
+    else { it.y += it.vy * f; }
+    if (dist < 40) {
       if (it.type === 'heart') { _stHp = Math.min(5, _stHp + 1); _stBeep(660, 800, 0.12, 0.15, 'sine'); }
       else { _stStones++; _stCheckVer(); _stBeep(880, 1100, 0.1, 0.15, 'triangle'); }
       _stItems.splice(i, 1); _stUpdateHud(); continue;
