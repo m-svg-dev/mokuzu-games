@@ -4077,6 +4077,29 @@ button,
 .shooting-rank-badge[data-rank="C"]  { color: #aaaaaa; }
 .shooting-rank-badge[data-rank="D"]  { color: #666666; }
 .st-inline-icon { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
+.shooting-laser-btn {
+  position: absolute;
+  bottom: 22px; right: 10px;
+  width: 62px; height: 62px;
+  border-radius: 50%;
+  background: rgba(0,30,60,0.85);
+  color: #446688; font-size: 0.6rem; font-weight: bold;
+  border: 2px solid #224466;
+  cursor: pointer; z-index: 6;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+  pointer-events: none;
+}
+.shooting-laser-btn.ready {
+  background: rgba(0,80,120,0.92);
+  border-color: #00ffee; color: #00ffee;
+  box-shadow: 0 0 14px #00ffee88, 0 0 4px #00ffeeaa inset;
+  pointer-events: auto;
+  animation: laser-btn-pulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes laser-btn-pulse {
+  from { box-shadow: 0 0 10px #00ffee66; }
+  to   { box-shadow: 0 0 22px #00ffeecc, 0 0 6px #00ffeeaa inset; }
+}
 .shooting-combo-hud {
   font-size: 0.75rem; font-weight: bold;
   transition: color 0.2s, opacity 0.3s;

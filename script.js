@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.15.2';
+const CURRENT_VERSION = '2.15.3';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -4328,6 +4328,7 @@ let _stBoss = null, _stBossSpawned = false;
 let _stParticles, _stFlash, _stShake, _stVerAnim, _stCombo, _stComboCd, _stInvincible;
 let _stComboAnim = null, _stFrame = 0, _stMaxCombo = 0, _stKills = 0, _stDamaged = 0;
 let _stWarnAnim = null;
+let _stGauge = 0, _stLaser = null;
 let _stRafId = null, _stLastTs = 0;
 let _stImgsLoaded = false;
 
@@ -4359,6 +4360,14 @@ function initShooting() {
     const r = _stCanvas.getBoundingClientRect();
     _stPlayer.x = Math.max(24, Math.min(_stCanvas.width - 24, e.touches[0].clientX - r.left));
   }, { passive: false });
+
+  if (!initShooting._keyAdded) {
+    initShooting._keyAdded = true;
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && _stState === 'playing') { e.preventDefault(); _stFireLaser(); }
+    });
+  }
+  document.getElementById('shooting-laser-btn')?.addEventListener('click', _stFireLaser);
 }
 
 function _stShowOverlay(name) {
@@ -4379,6 +4388,7 @@ function _stStartGame() {
   _stVerAnim = null; _stCombo = 0; _stComboCd = 0; _stInvincible = 0;
   _stComboAnim = null; _stFrame = 0; _stMaxCombo = 0; _stKills = 0; _stDamaged = 0;
   _stWarnAnim = null;
+  _stGauge = 0; _stLaser = null;
   _stStars   = Array.from({ length: 50 }, () => ({
     x: Math.random() * _stCanvas.width, y: Math.random() * _stCanvas.height,
     r: Math.random() * 1.5 + 0.3, s: Math.random() * 0.4 + 0.2,
@@ -4472,8 +4482,10 @@ function _stUpdate(f) {
           _stBeep(300, 120, 0.18, 0.18, 'sawtooth');
           // コンボ＆スコア
           _stKills++;
+          _stGauge = Math.min(100, _stGauge + 3);
           _stCombo++; _stComboCd = 150;
           if (_stCombo > _stMaxCombo) _stMaxCombo = _stCombo;
+          if (_stCombo > 0 && _stCombo % 10 === 0) _stGauge = Math.min(100, _stGauge + 10);
           const mult = Math.min(1 + Math.floor(_stCombo / 5) * 0.5, 3.0);
           _stScore += Math.floor(e.score * mult);
           // コンボ節目演出
@@ -4541,6 +4553,48 @@ function _stUpdate(f) {
   if (_stInvincible > 0) _stInvincible -= f;
   if (_stComboAnim) { _stComboAnim.timer -= f; if (_stComboAnim.timer <= 0) _stComboAnim = null; }
   if (_stWarnAnim)  { _stWarnAnim.timer  -= f; if (_stWarnAnim.timer  <= 0) _stWarnAnim  = null; }
+
+  // レーザー処理
+  if (_stLaser) {
+    _stLaser.timer -= f;
+    if (_stLaser.phase === 'charge' && _stLaser.timer <= 0) {
+      _stLaser.phase = 'fire'; _stLaser.timer = 180;
+      _stFlash = 30; _stShake.timer = 20; _stShake.intensity = 12;
+      _stBeep(55, 660, 0.15, 0.3, 'sawtooth');
+      setTimeout(() => _stBeep(440, 110, 2.5, 0.22, 'sine'), 150);
+    } else if (_stLaser.phase === 'fire') {
+      const lx = _stPlayer.x, lw = 80;
+      for (let i = _stEnemies.length - 1; i >= 0; i--) {
+        const e = _stEnemies[i];
+        if (Math.abs(e.x - lx) < lw / 2 + e.size / 2) {
+          _stLaser.hitCount++; _stKills++; _stScore += e.score;
+          const col = '#00ffcc';
+          for (let pi = 0; pi < 8; pi++) {
+            const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 4;
+            _stParticles.push({ x: e.x, y: e.y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 25 + Math.random()*15, color: col, r: 2 + Math.random()*4 });
+          }
+          _stEnemies.splice(i, 1);
+        }
+      }
+      for (let i = _stBullets.length - 1; i >= 0; i--) {
+        if (!_stBullets[i].friendly && Math.abs(_stBullets[i].x - lx) < lw / 2 + 10)
+          _stBullets.splice(i, 1);
+      }
+      if (!_stLaser.bossDmgDone && _stBoss && !_stBoss.dying) {
+        _stLaser.bossDmgDone = true;
+        _stBoss.hp -= 20;
+        _stShake.timer = 15; _stShake.intensity = 8;
+        if (_stBoss.hp <= 0) {
+          _stBoss.dying = true; _stBoss.dyingTimer = 100;
+          _stInvincible = Math.max(_stInvincible, 200);
+          _stShake.timer = 100; _stShake.intensity = 7;
+          _stBeep(80, 40, 1.0, 0.3, 'sawtooth');
+        }
+      }
+      if (_stLaser.timer <= 0) { _stLaser = null; _stUpdateHud(); }
+    }
+  }
+
   _stFrame++;
 }
 
@@ -4579,6 +4633,7 @@ function _stSpawnEnemy() {
 function _stTakeDamage() {
   if (_stInvincible > 0) return;
   _stDamaged++;
+  _stGauge = Math.min(100, _stGauge + 15);
   _stHp--;
   _stBeep(220, 150, 0.2, 0.2, 'sawtooth');
   _stFlash = 20;
@@ -4586,6 +4641,16 @@ function _stTakeDamage() {
   _stCombo = 0; _stComboCd = 0;
   _stUpdateHud();
   if (_stHp <= 0) _stGameOver();
+}
+
+function _stFireLaser() {
+  if (_stGauge < 100 || _stLaser) return;
+  _stGauge = 0;
+  _stLaser = { phase: 'charge', timer: 18, hitCount: 0, bossDmgDone: false };
+  _stInvincible = Math.max(_stInvincible, 240);
+  _stShake.timer = 10; _stShake.intensity = 5;
+  _stBeep(110, 880, 0.3, 0.18, 'sine');
+  _stUpdateHud();
 }
 
 function _stCheckVer() {
@@ -4806,6 +4871,12 @@ function _stUpdateHud() {
       combo.style.opacity = '0';
     }
   }
+  const laserBtn = document.getElementById('shooting-laser-btn');
+  if (laserBtn) {
+    const ready = _stGauge >= 100 && !_stLaser;
+    laserBtn.classList.toggle('ready', ready);
+    laserBtn.disabled = !ready;
+  }
 }
 
 function _stDraw() {
@@ -4943,6 +5014,32 @@ function _stDraw() {
     ctx.globalAlpha = 1; ctx.textAlign = 'left';
   }
 
+  // 必殺ゲージ（最下部）
+  {
+    const gx = 8, gy = H - 13, gw = W - 16, gh = 7;
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = '#0a0a1e'; ctx.fillRect(gx, gy, gw, gh);
+    if (_stGauge > 0) {
+      const full = _stGauge >= 100;
+      const pulse = full ? 0.6 + 0.4 * Math.sin(_stFrame * 0.22) : 1;
+      ctx.globalAlpha = pulse;
+      const grad = ctx.createLinearGradient(gx, 0, gx + gw, 0);
+      grad.addColorStop(0, '#0044cc'); grad.addColorStop(0.5, '#00ccff'); grad.addColorStop(1, '#aaffee');
+      ctx.fillStyle = grad;
+      ctx.fillRect(gx, gy, gw * (_stGauge / 100), gh);
+    }
+    ctx.globalAlpha = 0.75;
+    ctx.font = 'bold 7px monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#99bbcc'; ctx.fillText('波動砲', gx + 1, gy - 2);
+    if (_stGauge >= 100 && !_stLaser) {
+      ctx.globalAlpha = 0.75 + 0.25 * Math.sin(_stFrame * 0.22);
+      ctx.fillStyle = '#00ffee'; ctx.textAlign = 'right';
+      ctx.fillText('READY! [Space]', gx + gw - 1, gy - 2);
+      ctx.textAlign = 'left';
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // 進化ゲージ（HUD直下）
   {
     const gy = 34, gh = 5, gx = 8, gw = W - 16;
@@ -4984,6 +5081,51 @@ function _stDraw() {
     ctx.fillStyle = t.col; ctx.fillText(t.text, 0, 0);
     ctx.restore();
     ctx.globalAlpha = 1;
+  }
+
+  // 藻屑波動砲レーザー
+  if (_stLaser) {
+    const lx = _stPlayer.x;
+    if (_stLaser.phase === 'charge') {
+      const prog = 1 - _stLaser.timer / 18;
+      for (let i = 0; i < 4; i++) {
+        const r = 15 + prog * 45 + i * 12;
+        ctx.globalAlpha = (1 - prog) * 0.45;
+        ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 3 - i * 0.5;
+        ctx.beginPath(); ctx.arc(lx, _stPlayer.y, r, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.globalAlpha = prog * 0.9;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(lx - 3, _stPlayer.y - H, 6, H);
+      ctx.globalAlpha = 1;
+    } else {
+      const fadeOut = _stLaser.timer < 20 ? _stLaser.timer / 20 : 1;
+      // 外側グロー
+      ctx.globalAlpha = 0.18 * fadeOut;
+      ctx.fillStyle = '#00aaff'; ctx.fillRect(lx - 65, 0, 130, H);
+      // 中間層
+      const midW = 44 + 8 * Math.sin(_stFrame * 0.35);
+      ctx.globalAlpha = 0.55 * fadeOut;
+      ctx.fillStyle = '#aaffee'; ctx.fillRect(lx - midW / 2, 0, midW, H);
+      // コア
+      const coreW = 14 + 5 * Math.sin(_stFrame * 0.5);
+      ctx.globalAlpha = 0.98 * fadeOut;
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(lx - coreW / 2, 0, coreW, H);
+      ctx.globalAlpha = 1;
+      // 「藻屑波動砲!!」テキスト
+      const tFade = _stLaser.timer > 150 ? (180 - _stLaser.timer) / 30 : fadeOut;
+      ctx.globalAlpha = Math.min(tFade, 1);
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 26px monospace';
+      ctx.strokeStyle = '#003333'; ctx.lineWidth = 6;
+      ctx.strokeText('藻屑波動砲!!', W / 2, H / 2 - 22);
+      ctx.fillStyle = '#00ffcc'; ctx.fillText('藻屑波動砲!!', W / 2, H / 2 - 22);
+      ctx.font = 'bold 15px monospace';
+      ctx.strokeStyle = '#001111'; ctx.lineWidth = 4;
+      ctx.strokeText(`HIT: ${_stLaser.hitCount}`, W / 2, H / 2 + 8);
+      ctx.fillStyle = '#ffff66'; ctx.fillText(`HIT: ${_stLaser.hitCount}`, W / 2, H / 2 + 8);
+      ctx.globalAlpha = 1; ctx.textAlign = 'left';
+    }
   }
 
   // サメ WARNING
