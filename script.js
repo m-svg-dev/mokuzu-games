@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.14.2';
+const CURRENT_VERSION = '2.14.3';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -25,7 +25,7 @@ const UPDATE_LOG = [
     title: '🚀 新ミニゲーム！藻屑シューティング追加！',
     items: [
       '🚀【新ミニゲーム】藻屑シューティング追加！敵を倒して藻コインをゲット！',
-      '⭐ アイテムを集めるとバージョンアップ！v1.0→v2.1まで5段階強化！',
+      '💎 転生石を累計集めるとバージョンアップ！v1.0→v2.1まで5段階強化！',
       '❤️ HPアイテムを拾って生き延びろ！スコア÷10の藻コイン獲得！',
     ],
   },

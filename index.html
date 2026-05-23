@@ -834,7 +834,7 @@
           <div id="shooting-hp" class="shooting-hp"></div>
           <div class="shooting-hud-right">
             <div class="shooting-ver-badge" id="shooting-ver">v1.0</div>
-            <div class="shooting-stones-count">⭐<span id="shooting-stones">0/3</span></div>
+            <div class="shooting-stones-count"><img src="assets/prestige/prestige_stone.png" class="st-inline-icon"><span id="shooting-stones">0/3</span></div>
             <div class="shooting-score-count">スコア: <span id="shooting-score">0</span></div>
           </div>
         </div>
@@ -845,13 +845,13 @@
         <!-- スタート画面 -->
         <div id="shooting-start" class="shooting-overlay">
           <div class="shooting-overlay-title">🚀 藻屑シューティング</div>
-          <div class="shooting-overlay-desc">迫りくる敵を撃退して藻コインを稼げ！<br>⭐を<b>規定数集める</b>とバージョンアップ！</div>
+          <div class="shooting-overlay-desc">迫りくる敵を撃退して藻コインを稼げ！<br><img src="assets/prestige/prestige_stone.png" class="st-inline-icon">を<b>規定数集める</b>とバージョンアップ！</div>
           <div class="shooting-ver-guide">
             <div>v1.0 シングルショット（初期）</div>
-            <div>v1.1 ダブルショット（⭐累計3個）</div>
-            <div>v1.2 トリプルショット（⭐累計6個）</div>
-            <div>v2.0 スプレッド（⭐累計10個）</div>
-            <div>v2.1 ワイドスプレッド（⭐累計15個）</div>
+            <div>v1.1 ダブルショット（<img src="assets/prestige/prestige_stone.png" class="st-inline-icon">累計3個）</div>
+            <div>v1.2 トリプルショット（<img src="assets/prestige/prestige_stone.png" class="st-inline-icon">累計6個）</div>
+            <div>v2.0 スプレッド（<img src="assets/prestige/prestige_stone.png" class="st-inline-icon">累計10個）</div>
+            <div>v2.1 ワイドスプレッド（<img src="assets/prestige/prestige_stone.png" class="st-inline-icon">累計15個）</div>
           </div>
           <button id="shooting-start-btn" class="shooting-action-btn">START！</button>
         </div>
@@ -860,7 +860,7 @@
         <div id="shooting-result" class="shooting-overlay hidden">
           <div class="shooting-overlay-title">GAME OVER</div>
           <div class="shooting-result-row">スコア: <span id="shooting-result-score" class="shooting-result-val">0</span></div>
-          <div class="shooting-result-row">獲得コイン: <span id="shooting-result-reward" class="shooting-result-val">0</span> 🪙</div>
+          <div class="shooting-result-row">獲得藻コイン: <span id="shooting-result-reward" class="shooting-result-val">0</span> <img src="assets/ui/mocoin.png" class="st-inline-icon"></div>
           <button id="shooting-retry-btn" class="shooting-action-btn">もう一度！</button>
         </div>
       </div>
@@ -961,6 +961,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=2.14.2"></script>
+  <script type="module" src="script.js?v=2.14.3"></script>
 </body>
 </html>
