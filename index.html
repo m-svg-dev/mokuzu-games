@@ -860,16 +860,28 @@
         <!-- ゲームクリア画面 -->
         <div id="shooting-clear" class="shooting-overlay hidden">
           <div class="shooting-overlay-title" style="color:#ffdd44;text-shadow:0 0 16px #ffdd4488">🎉 GAME CLEAR！</div>
-          <div class="shooting-result-row">スコア: <span id="shooting-clear-score" class="shooting-result-val">0</span></div>
-          <div class="shooting-result-row">獲得藻コイン: <span id="shooting-clear-reward" class="shooting-result-val" style="color:#ffaa00">5000</span> <img src="assets/ui/mocoin.png" class="st-inline-icon"></div>
+          <div id="shooting-clear-rank" class="shooting-rank-badge">S</div>
+          <div class="shooting-result-grid">
+            <div class="shooting-result-row">スコア: <span id="shooting-clear-score" class="shooting-result-val">0</span></div>
+            <div class="shooting-result-row">獲得藻コイン: <span id="shooting-clear-reward" class="shooting-result-val" style="color:#ffaa00">5000</span> <img src="assets/ui/mocoin.png" class="st-inline-icon"></div>
+            <div class="shooting-result-row">最大コンボ: <span id="shooting-clear-combo" class="shooting-result-val">0</span></div>
+            <div class="shooting-result-row">撃破数: <span id="shooting-clear-kills" class="shooting-result-val">0</span>体</div>
+            <div class="shooting-result-row">到達ver: <span id="shooting-clear-ver" class="shooting-result-val">v1.0</span></div>
+          </div>
           <button id="shooting-clear-btn" class="shooting-action-btn" style="background:linear-gradient(135deg,#aa6600,#ffcc00)">もう一度！</button>
         </div>
 
         <!-- ゲームオーバー画面 -->
         <div id="shooting-result" class="shooting-overlay hidden">
           <div class="shooting-overlay-title">GAME OVER</div>
-          <div class="shooting-result-row">スコア: <span id="shooting-result-score" class="shooting-result-val">0</span></div>
-          <div class="shooting-result-row">獲得藻コイン: <span id="shooting-result-reward" class="shooting-result-val">0</span> <img src="assets/ui/mocoin.png" class="st-inline-icon"></div>
+          <div id="shooting-result-rank" class="shooting-rank-badge">C</div>
+          <div class="shooting-result-grid">
+            <div class="shooting-result-row">スコア: <span id="shooting-result-score" class="shooting-result-val">0</span></div>
+            <div class="shooting-result-row">獲得藻コイン: <span id="shooting-result-reward" class="shooting-result-val">0</span> <img src="assets/ui/mocoin.png" class="st-inline-icon"></div>
+            <div class="shooting-result-row">最大コンボ: <span id="shooting-result-combo" class="shooting-result-val">0</span></div>
+            <div class="shooting-result-row">撃破数: <span id="shooting-result-kills" class="shooting-result-val">0</span>体</div>
+            <div class="shooting-result-row">到達ver: <span id="shooting-result-ver" class="shooting-result-val">v1.0</span></div>
+          </div>
           <button id="shooting-retry-btn" class="shooting-action-btn">もう一度！</button>
         </div>
       </div>

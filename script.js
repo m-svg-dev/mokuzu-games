@@ -4326,6 +4326,8 @@ let _stScore, _stHp, _stStones, _stVerIdx;
 let _stShootCd, _stSpawnCd, _stDifficulty, _stWaveCd;
 let _stBoss = null, _stBossSpawned = false;
 let _stParticles, _stFlash, _stShake, _stVerAnim, _stCombo, _stComboCd, _stInvincible;
+let _stComboAnim = null, _stFrame = 0, _stMaxCombo = 0, _stKills = 0, _stDamaged = 0;
+let _stWarnAnim = null;
 let _stRafId = null, _stLastTs = 0;
 let _stImgsLoaded = false;
 
@@ -4375,6 +4377,8 @@ function _stStartGame() {
   _stBoss = null; _stBossSpawned = false;
   _stParticles = []; _stFlash = 0; _stShake = { timer: 0, intensity: 0 };
   _stVerAnim = null; _stCombo = 0; _stComboCd = 0; _stInvincible = 0;
+  _stComboAnim = null; _stFrame = 0; _stMaxCombo = 0; _stKills = 0; _stDamaged = 0;
+  _stWarnAnim = null;
   _stStars   = Array.from({ length: 50 }, () => ({
     x: Math.random() * _stCanvas.width, y: Math.random() * _stCanvas.height,
     r: Math.random() * 1.5 + 0.3, s: Math.random() * 0.4 + 0.2,
@@ -4443,7 +4447,12 @@ function _stUpdate(f) {
         _stBoss.hp--;
         _stBeep(800, 600, 0.04, 0.08, 'square');
         _stShake.timer = 6; _stShake.intensity = 4;
-        if (_stBoss.hp <= 0) { _stGameClear(); return; }
+        if (_stBoss.hp <= 0 && !_stBoss.dying) {
+          _stBoss.dying = true; _stBoss.dyingTimer = 100;
+          _stInvincible = 200;
+          _stShake.timer = 100; _stShake.intensity = 7;
+          _stBeep(80, 40, 1.0, 0.3, 'sawtooth');
+        }
       }
     }
   }
@@ -4462,9 +4471,18 @@ function _stUpdate(f) {
           _stEnemies.splice(ei, 1);
           _stBeep(300, 120, 0.18, 0.18, 'sawtooth');
           // コンボ＆スコア
+          _stKills++;
           _stCombo++; _stComboCd = 150;
+          if (_stCombo > _stMaxCombo) _stMaxCombo = _stCombo;
           const mult = Math.min(1 + Math.floor(_stCombo / 5) * 0.5, 3.0);
           _stScore += Math.floor(e.score * mult);
+          // コンボ節目演出
+          if (_stCombo === 5 || _stCombo === 10 || _stCombo === 20 || _stCombo === 30) {
+            const bang = _stCombo >= 30 ? '!!!' : _stCombo >= 20 ? '!!' : _stCombo >= 10 ? '!' : '';
+            const col  = _stCombo >= 30 ? '#ff4444' : _stCombo >= 20 ? '#ff8800' : _stCombo >= 10 ? '#ffff44' : '#aaffee';
+            _stComboAnim = { text: `${_stCombo} COMBO${bang}`, timer: 90, col };
+            if (_stCombo >= 10) _stBeep(660 + (_stCombo - 10) * 8, 1000, 0.2, 0.18, 'sine');
+          }
           // 爆発パーティクル
           const col = { algae:'#00ff88', coral:'#ff6688', crab:'#ff8844', jellyfish:'#88aaff', shark:'#ff4444' }[e.type] ?? '#ff8800';
           for (let pi = 0; pi < 12; pi++) {
@@ -4521,6 +4539,9 @@ function _stUpdate(f) {
   if (_stVerAnim) { _stVerAnim.timer -= f; if (_stVerAnim.timer <= 0) _stVerAnim = null; }
   if (_stComboCd > 0) { _stComboCd -= f; if (_stComboCd <= 0) { _stCombo = 0; _stUpdateHud(); } }
   if (_stInvincible > 0) _stInvincible -= f;
+  if (_stComboAnim) { _stComboAnim.timer -= f; if (_stComboAnim.timer <= 0) _stComboAnim = null; }
+  if (_stWarnAnim)  { _stWarnAnim.timer  -= f; if (_stWarnAnim.timer  <= 0) _stWarnAnim  = null; }
+  _stFrame++;
 }
 
 function _stFire() {
@@ -4540,6 +4561,10 @@ function _stSpawnEnemy() {
   const pool = ['algae', 'algae', 'coral', 'crab', 'jellyfish'];
   if (_stDifficulty >= 3 && Math.random() < 0.08 + _stDifficulty * 0.01) pool.push('shark');
   const type = pool[Math.floor(Math.random() * pool.length)];
+  if (type === 'shark') {
+    _stWarnAnim = { timer: 90 };
+    _stBeep(55, 45, 0.5, 0.2, 'sawtooth');
+  }
   const def = ST_ENEMY_DEF[type];
   _stEnemies.push({
     x: Math.random() * (_stCanvas.width - 60) + 30, y: -def.size / 2,
@@ -4553,6 +4578,7 @@ function _stSpawnEnemy() {
 
 function _stTakeDamage() {
   if (_stInvincible > 0) return;
+  _stDamaged++;
   _stHp--;
   _stBeep(220, 150, 0.2, 0.2, 'sawtooth');
   _stFlash = 20;
@@ -4591,6 +4617,22 @@ function _stSpawnBoss() {
 
 function _stUpdateBoss(f) {
   const b = _stBoss, W = _stCanvas.width;
+
+  // 撃破後爆発演出
+  if (b.dying) {
+    b.dyingTimer -= f;
+    if (Math.floor(b.dyingTimer) % 10 < f * 1.5) {
+      const ox = (Math.random() - 0.5) * b.w, oy = (Math.random() - 0.5) * b.h;
+      for (let pi = 0; pi < 10; pi++) {
+        const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 5;
+        _stParticles.push({ x: b.x + ox, y: b.y + oy, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+          life: 35 + Math.random()*25, color: ['#ff4400','#ff8800','#ffff00','#ffffff'][Math.floor(Math.random()*4)], r: 3 + Math.random()*6 });
+      }
+      _stBeep(100 + Math.random()*300, 60, 0.12, 0.1, 'sawtooth');
+    }
+    if (b.dyingTimer <= 0) _stGameClear();
+    return;
+  }
 
   // 登場演出
   if (b.entering) {
@@ -4632,7 +4674,7 @@ function _stBossShoot(pattern) {
   const bx = _stBoss.x, by = _stBoss.y + _stBoss.h / 2;
 
   // パターンごとに弾速を変えて緩急をつける
-  const speeds = { spread5: 2.5, ring: 3.5, aimed: 5.5, spread3aimed: 4.0, doubleAimed: 5.0, burstSpread: 3.0 };
+  const speeds = { spread5: 2.0, ring: 2.8, aimed: 3.5, spread3aimed: 2.8, doubleAimed: 3.0, burstSpread: 2.2 };
   const spd = speeds[pattern] ?? 3;
 
   const aimed = (s) => {
@@ -4685,6 +4727,27 @@ function _stBossShoot(pattern) {
   _stBeep(180, 140, 0.1, 0.06, 'square');
 }
 
+function _stCalcRank(cleared) {
+  if (cleared) {
+    if (_stMaxCombo >= 20 && _stDamaged === 0) return 'SS';
+    if (_stMaxCombo >= 15 || _stDamaged <= 1)  return 'S';
+    if (_stMaxCombo >= 10)                      return 'A';
+    return 'B';
+  }
+  if (_stScore >= 1500) return 'C';
+  return 'D';
+}
+
+function _stSetResultStats(prefix, cleared) {
+  const rank = _stCalcRank(cleared);
+  const badge = document.getElementById(`shooting-${prefix}-rank`);
+  if (badge) { badge.textContent = rank; badge.dataset.rank = rank; }
+  const el = id => document.getElementById(`shooting-${prefix}-${id}`);
+  if (el('combo')) el('combo').textContent = _stMaxCombo;
+  if (el('kills')) el('kills').textContent = _stKills;
+  if (el('ver'))   el('ver').textContent   = ST_VERSIONS[_stVerIdx].ver;
+}
+
 function _stGameClear() {
   _stState = 'clear';
   cancelAnimationFrame(_stRafId); _stRafId = null;
@@ -4692,11 +4755,12 @@ function _stGameClear() {
   const reward = 5000;
   gameState.mokuCoins = (gameState.mokuCoins ?? 0) + reward;
   saveGame(); updateDisplay();
-  // クリアファンファーレ
   _stBeep(523, 659, 0.15, 0.2, 'sine');
   setTimeout(() => _stBeep(659, 784, 0.15, 0.2, 'sine'), 160);
   setTimeout(() => _stBeep(784, 1047, 0.3, 0.25, 'sine'), 320);
-  document.getElementById('shooting-clear-score').textContent = _stScore.toLocaleString();
+  document.getElementById('shooting-clear-score').textContent  = _stScore.toLocaleString();
+  document.getElementById('shooting-clear-reward').textContent = reward.toLocaleString();
+  _stSetResultStats('clear', true);
   _stShowOverlay('clear');
 }
 
@@ -4708,6 +4772,7 @@ function _stGameOver() {
   saveGame(); updateDisplay();
   document.getElementById('shooting-result-score').textContent  = _stScore.toLocaleString();
   document.getElementById('shooting-result-reward').textContent = reward.toLocaleString();
+  _stSetResultStats('result', false);
   _stShowOverlay('result');
 }
 
@@ -4795,12 +4860,38 @@ function _stDraw() {
   // boss
   if (_stBoss) {
     const boss = _stBoss;
+
+    // オーラ（フェーズで色変化）
+    if (!boss.entering) {
+      const phase3 = boss.hp <= boss.maxHp * 0.2;
+      const phase2 = !phase3 && boss.hp <= boss.maxHp / 2;
+      const auraCol = phase3 ? [255, 30, 30] : phase2 ? [255, 140, 0] : [80, 120, 255];
+      for (let i = 0; i < 3; i++) {
+        const angle = _stFrame * 0.05 + i * (Math.PI * 2 / 3);
+        const r = 52 + 18 * Math.sin(_stFrame * 0.07 + i * 2.1);
+        ctx.globalAlpha = 0.18 + 0.10 * Math.sin(_stFrame * 0.09 + i);
+        ctx.strokeStyle = `rgb(${auraCol.join(',')})`;
+        ctx.lineWidth = 4 + 2 * Math.sin(angle);
+        ctx.beginPath(); ctx.arc(boss.x, boss.y, r, 0, Math.PI * 2); ctx.stroke();
+      }
+      // 中心グロー
+      const glow = ctx.createRadialGradient(boss.x, boss.y, 10, boss.x, boss.y, 70);
+      glow.addColorStop(0, `rgba(${auraCol.join(',')},${(0.20 + 0.10 * Math.sin(_stFrame * 0.08)).toFixed(2)})`);
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = glow;
+      ctx.fillRect(boss.x - 70, boss.y - 70, 140, 140);
+    }
+
     const bImg = ST_IMGS.boss;
-    if (bImg?.complete && bImg.naturalWidth) ctx.drawImage(bImg, boss.x - boss.w / 2, boss.y - boss.h / 2, boss.w, boss.h);
-    else { ctx.fillStyle = '#cc0000'; ctx.fillRect(boss.x - boss.w / 2, boss.y - boss.h / 2, boss.w, boss.h); }
+    const showBoss = !boss.dying || Math.floor(_stFrame / 3) % 2 === 0;
+    if (showBoss) {
+      if (bImg?.complete && bImg.naturalWidth) ctx.drawImage(bImg, boss.x - boss.w / 2, boss.y - boss.h / 2, boss.w, boss.h);
+      else { ctx.fillStyle = '#cc0000'; ctx.fillRect(boss.x - boss.w / 2, boss.y - boss.h / 2, boss.w, boss.h); }
+    }
 
     // ボスHPバー（画面上部固定）
-    if (!boss.entering) {
+    if (!boss.entering && !boss.dying) {
       const bw = W - 20, bx2 = 10, by2 = 4;
       ctx.fillStyle = '#331111'; ctx.fillRect(bx2, by2, bw, 10);
       const ratio = boss.hp / boss.maxHp;
@@ -4850,6 +4941,77 @@ function _stDraw() {
     ctx.strokeText(ST_VERSIONS[_stVerIdx].ver, W/2, H/2 + 12);
     ctx.fillStyle = '#aaffee'; ctx.fillText(ST_VERSIONS[_stVerIdx].ver, W/2, H/2 + 12);
     ctx.globalAlpha = 1; ctx.textAlign = 'left';
+  }
+
+  // 進化ゲージ（HUD直下）
+  {
+    const gy = 34, gh = 5, gx = 8, gw = W - 16;
+    const next = ST_VERSIONS[_stVerIdx + 1];
+    if (next) {
+      const prev = ST_VERSIONS[_stVerIdx];
+      const span = next.stonesNeeded - prev.stonesNeeded;
+      const cur  = _stStones - prev.stonesNeeded;
+      const ratio = Math.min(cur / span, 1);
+      const oneAway = (next.stonesNeeded - _stStones) === 1;
+      const pulse = oneAway ? 0.55 + 0.45 * Math.sin(_stFrame * 0.18) : 1;
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = '#1a1a2e'; ctx.fillRect(gx, gy, gw, gh);
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = oneAway ? '#ffff44' : '#0088ff';
+      ctx.fillRect(gx, gy, gw * ratio, gh);
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.globalAlpha = 0.7;
+      ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffaa00'; ctx.fillText('── MAX ──', W / 2, gy + gh);
+      ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+    }
+  }
+
+  // コンボ節目大テキスト
+  if (_stComboAnim) {
+    const t = _stComboAnim;
+    const fade = t.timer < 25 ? t.timer / 25 : 1;
+    const pop  = t.timer > 75 ? 1 + (90 - t.timer) / 90 * 0.6 : 1;
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.translate(W / 2, H * 0.38);
+    ctx.scale(pop, pop);
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 30px monospace';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
+    ctx.strokeText(t.text, 0, 0);
+    ctx.fillStyle = t.col; ctx.fillText(t.text, 0, 0);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // サメ WARNING
+  if (_stWarnAnim) {
+    const t = _stWarnAnim.timer;
+    const fade = t < 20 ? t / 20 : 1;
+    const pulse = 0.7 + 0.3 * Math.sin(_stFrame * 0.3);
+    ctx.globalAlpha = fade * pulse;
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 22px monospace';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+    ctx.strokeText('⚠ WARNING ⚠', W / 2, H / 2 - 40);
+    ctx.fillStyle = '#ff2222'; ctx.fillText('⚠ WARNING ⚠', W / 2, H / 2 - 40);
+    ctx.font = 'bold 13px monospace';
+    ctx.strokeText('SHARK INCOMING!', W / 2, H / 2 - 18);
+    ctx.fillStyle = '#ffaa44'; ctx.fillText('SHARK INCOMING!', W / 2, H / 2 - 18);
+    ctx.globalAlpha = 1; ctx.textAlign = 'left';
+  }
+
+  // 瀕死ビネット（HP=1）
+  if (_stHp === 1) {
+    const pulse = 0.12 + 0.10 * Math.sin(_stFrame * 0.09);
+    const grad = ctx.createRadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, H * 0.85);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, `rgba(200,0,0,${pulse.toFixed(3)})`);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
   }
 }
 
