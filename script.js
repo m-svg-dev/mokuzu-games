@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.15.3';
+const CURRENT_VERSION = '2.15.4';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -4329,6 +4329,7 @@ let _stParticles, _stFlash, _stShake, _stVerAnim, _stCombo, _stComboCd, _stInvin
 let _stComboAnim = null, _stFrame = 0, _stMaxCombo = 0, _stKills = 0, _stDamaged = 0;
 let _stWarnAnim = null;
 let _stGauge = 0, _stLaser = null;
+let _stClearAnim = null;
 let _stRafId = null, _stLastTs = 0;
 let _stImgsLoaded = false;
 
@@ -4388,7 +4389,7 @@ function _stStartGame() {
   _stVerAnim = null; _stCombo = 0; _stComboCd = 0; _stInvincible = 0;
   _stComboAnim = null; _stFrame = 0; _stMaxCombo = 0; _stKills = 0; _stDamaged = 0;
   _stWarnAnim = null;
-  _stGauge = 0; _stLaser = null;
+  _stGauge = 0; _stLaser = null; _stClearAnim = null;
   _stStars   = Array.from({ length: 50 }, () => ({
     x: Math.random() * _stCanvas.width, y: Math.random() * _stCanvas.height,
     r: Math.random() * 1.5 + 0.3, s: Math.random() * 0.4 + 0.2,
@@ -4458,8 +4459,8 @@ function _stUpdate(f) {
         _stBeep(800, 600, 0.04, 0.08, 'square');
         _stShake.timer = 6; _stShake.intensity = 4;
         if (_stBoss.hp <= 0 && !_stBoss.dying) {
-          _stBoss.dying = true; _stBoss.dyingTimer = 100;
-          _stInvincible = 200;
+          _stBoss.dying = true; _stBoss.dyingTimer = 200;
+          _stInvincible = 400;
           _stShake.timer = 100; _stShake.intensity = 7;
           _stBeep(80, 40, 1.0, 0.3, 'sawtooth');
         }
@@ -4553,6 +4554,19 @@ function _stUpdate(f) {
   if (_stInvincible > 0) _stInvincible -= f;
   if (_stComboAnim) { _stComboAnim.timer -= f; if (_stComboAnim.timer <= 0) _stComboAnim = null; }
   if (_stWarnAnim)  { _stWarnAnim.timer  -= f; if (_stWarnAnim.timer  <= 0) _stWarnAnim  = null; }
+  if (_stClearAnim) {
+    _stClearAnim.timer -= f;
+    // お祝いパーティクルをランダムに散らす
+    if (Math.random() < 0.4) {
+      const cols = ['#ffdd44','#ff88aa','#44ffcc','#aaaaff','#ff8844'];
+      _stParticles.push({
+        x: Math.random() * _stCanvas.width, y: Math.random() * _stCanvas.height * 0.7,
+        vx: (Math.random()-0.5)*3, vy: (Math.random()-0.5)*3,
+        life: 40 + Math.random()*30, color: cols[Math.floor(Math.random()*cols.length)], r: 3 + Math.random()*4
+      });
+    }
+    if (_stClearAnim.timer <= 0 && _stState === 'playing') _stGameClear();
+  }
 
   // レーザー処理
   if (_stLaser) {
@@ -4580,15 +4594,19 @@ function _stUpdate(f) {
         if (!_stBullets[i].friendly && Math.abs(_stBullets[i].x - lx) < lw / 2 + 10)
           _stBullets.splice(i, 1);
       }
-      if (!_stLaser.bossDmgDone && _stBoss && !_stBoss.dying) {
-        _stLaser.bossDmgDone = true;
-        _stBoss.hp -= 20;
-        _stShake.timer = 15; _stShake.intensity = 8;
-        if (_stBoss.hp <= 0) {
-          _stBoss.dying = true; _stBoss.dyingTimer = 100;
-          _stInvincible = Math.max(_stInvincible, 200);
-          _stShake.timer = 100; _stShake.intensity = 7;
-          _stBeep(80, 40, 1.0, 0.3, 'sawtooth');
+      if (_stBoss && !_stBoss.dying) {
+        _stLaser.bossHitCd -= f;
+        if (_stLaser.bossHitCd <= 0) {
+          _stLaser.bossHitCd = 9;
+          _stLaser.hitCount++;
+          _stBoss.hp--;
+          _stBeep(500 + _stLaser.hitCount * 8, 350, 0.05, 0.07, 'square');
+          if (_stBoss.hp <= 0 && !_stBoss.dying) {
+            _stBoss.dying = true; _stBoss.dyingTimer = 200;
+            _stInvincible = Math.max(_stInvincible, 400);
+            _stShake.timer = 100; _stShake.intensity = 7;
+            _stBeep(80, 40, 1.0, 0.3, 'sawtooth');
+          }
         }
       }
       if (_stLaser.timer <= 0) { _stLaser = null; _stUpdateHud(); }
@@ -4646,7 +4664,7 @@ function _stTakeDamage() {
 function _stFireLaser() {
   if (_stGauge < 100 || _stLaser) return;
   _stGauge = 0;
-  _stLaser = { phase: 'charge', timer: 18, hitCount: 0, bossDmgDone: false };
+  _stLaser = { phase: 'charge', timer: 18, hitCount: 0, bossHitCd: 0 };
   _stInvincible = Math.max(_stInvincible, 240);
   _stShake.timer = 10; _stShake.intensity = 5;
   _stBeep(110, 880, 0.3, 0.18, 'sine');
@@ -4695,7 +4713,13 @@ function _stUpdateBoss(f) {
       }
       _stBeep(100 + Math.random()*300, 60, 0.12, 0.1, 'sawtooth');
     }
-    if (b.dyingTimer <= 0) _stGameClear();
+    if (b.dyingTimer <= 0 && !_stClearAnim) {
+      _stClearAnim = { timer: 100 };
+      _stBeep(523, 659, 0.15, 0.22, 'sine');
+      setTimeout(() => _stBeep(659, 784, 0.15, 0.22, 'sine'), 160);
+      setTimeout(() => _stBeep(784, 1047, 0.25, 0.28, 'sine'), 320);
+      setTimeout(() => _stBeep(1047, 1320, 0.4, 0.3, 'sine'), 560);
+    }
     return;
   }
 
@@ -4820,9 +4844,7 @@ function _stGameClear() {
   const reward = 5000;
   gameState.mokuCoins = (gameState.mokuCoins ?? 0) + reward;
   saveGame(); updateDisplay();
-  _stBeep(523, 659, 0.15, 0.2, 'sine');
-  setTimeout(() => _stBeep(659, 784, 0.15, 0.2, 'sine'), 160);
-  setTimeout(() => _stBeep(784, 1047, 0.3, 0.25, 'sine'), 320);
+  _stBeep(1320, 1047, 0.3, 0.18, 'sine');
   document.getElementById('shooting-clear-score').textContent  = _stScore.toLocaleString();
   document.getElementById('shooting-clear-reward').textContent = reward.toLocaleString();
   _stSetResultStats('clear', true);
@@ -4961,17 +4983,31 @@ function _stDraw() {
       else { ctx.fillStyle = '#cc0000'; ctx.fillRect(boss.x - boss.w / 2, boss.y - boss.h / 2, boss.w, boss.h); }
     }
 
-    // ボスHPバー（画面上部固定）
+    // ボスHPバー（HUD直下）
     if (!boss.entering && !boss.dying) {
-      const bw = W - 20, bx2 = 10, by2 = 4;
-      ctx.fillStyle = '#331111'; ctx.fillRect(bx2, by2, bw, 10);
+      const bw = W - 16, bx2 = 8, by2 = 38, bh = 14;
+      // 背景
+      ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(bx2 - 2, by2 - 14, bw + 4, bh + 16);
+      // ラベル
+      ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
+      ctx.fillStyle = '#ff6666'; ctx.fillText('BOSS HP', bx2, by2 - 3);
       const ratio = boss.hp / boss.maxHp;
-      const col = ratio > 0.5 ? '#ff4444' : ratio > 0.25 ? '#ff8800' : '#ffff00';
-      ctx.fillStyle = col; ctx.fillRect(bx2, by2, bw * ratio, 10);
-      ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 1; ctx.strokeRect(bx2, by2, bw, 10);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
-      ctx.fillText('BOSS', W / 2, by2 + 9);
+      ctx.fillStyle = '#ff6666'; ctx.textAlign = 'right';
+      ctx.fillText(`${boss.hp} / ${boss.maxHp}`, bx2 + bw, by2 - 3);
       ctx.textAlign = 'left';
+      // トラック
+      ctx.fillStyle = '#2a0000'; ctx.fillRect(bx2, by2, bw, bh);
+      // バー本体（グラデ）
+      const col = ratio > 0.5 ? ['#ff2222','#ff6666'] : ratio > 0.2 ? ['#ff6600','#ffaa44'] : ['#ffdd00','#ffffff'];
+      const grad = ctx.createLinearGradient(bx2, by2, bx2, by2 + bh);
+      grad.addColorStop(0, col[1]); grad.addColorStop(1, col[0]);
+      ctx.fillStyle = grad; ctx.fillRect(bx2, by2, bw * ratio, bh);
+      // グロー
+      ctx.shadowColor = col[0]; ctx.shadowBlur = 8;
+      ctx.fillRect(bx2, by2, bw * ratio, bh);
+      ctx.shadowBlur = 0;
+      // 枠
+      ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 1.5; ctx.strokeRect(bx2, by2, bw, bh);
     }
   }
 
@@ -5012,6 +5048,31 @@ function _stDraw() {
     ctx.strokeText(ST_VERSIONS[_stVerIdx].ver, W/2, H/2 + 12);
     ctx.fillStyle = '#aaffee'; ctx.fillText(ST_VERSIONS[_stVerIdx].ver, W/2, H/2 + 12);
     ctx.globalAlpha = 1; ctx.textAlign = 'left';
+  }
+
+  // CLEARED!! 余韻演出
+  if (_stClearAnim) {
+    const t = _stClearAnim.timer;
+    const fade = t < 18 ? t / 18 : t > 75 ? (100 - t) / 25 : 1;
+    const pop  = t > 80 ? 1 + (100 - t) / 100 * 0.7 : 1;
+    // 背景暗転
+    ctx.globalAlpha = fade * 0.45;
+    ctx.fillStyle = '#000011'; ctx.fillRect(0, 0, W, H);
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.translate(W / 2, H / 2 - 20);
+    ctx.scale(pop, pop);
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 38px monospace';
+    ctx.strokeStyle = '#002222'; ctx.lineWidth = 8;
+    ctx.strokeText('CLEARED!!', 0, 0);
+    ctx.fillStyle = '#ffdd44'; ctx.fillText('CLEARED!!', 0, 0);
+    ctx.font = 'bold 16px monospace';
+    ctx.strokeStyle = '#001111'; ctx.lineWidth = 4;
+    ctx.strokeText('ボス撃破！', 0, 36);
+    ctx.fillStyle = '#aaffee'; ctx.fillText('ボス撃破！', 0, 36);
+    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
   // 必殺ゲージ（最下部）
