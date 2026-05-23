@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.14.4';
+const CURRENT_VERSION = '2.15.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,18 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.15.0',
+    date: '2026/05/23',
+    title: '🚀 シューティング演出・コンボ強化！',
+    items: [
+      '💥 敵撃破時に爆発エフェクト追加！敵の種類ごとに色が違う',
+      '🔴 被弾時に赤フラッシュ＋画面揺れ！ボス被弾でも揺れる',
+      '⚡ WEAPON EVOLUTION演出追加！バージョンアップ時に画面揺れも',
+      '🔥 コンボシステム追加！5連続撃破ごとにスコア倍率UP（最大3倍）',
+      '💎 転生石があと1個で「あと1個で進化！」と表示されるように',
+    ],
+  },
   {
     id: 'v2.14.0',
     date: '2026/05/23',
@@ -4284,7 +4296,11 @@ const ST_IMG_SRCS = {
   shark:     'assets/employees/shark.png',
   heart:     'assets/items/mo_royalheart.png',
   stone:     'assets/prestige/prestige_stone.png',
+  boss:      'assets/events/sea_god.png',
 };
+
+const ST_BOSS_MAX_HP  = 150;
+const ST_BOSS_SCORE   = 2000;
 const ST_IMGS = {};
 
 const ST_ENEMY_DEF = {
@@ -4308,6 +4324,8 @@ let _stCanvas, _stCtx;
 let _stPlayer, _stEnemies, _stBullets, _stItems, _stStars;
 let _stScore, _stHp, _stStones, _stVerIdx;
 let _stShootCd, _stSpawnCd, _stDifficulty, _stWaveCd;
+let _stBoss = null, _stBossSpawned = false;
+let _stParticles, _stFlash, _stShake, _stVerAnim, _stCombo, _stComboCd;
 let _stRafId = null, _stLastTs = 0;
 let _stImgsLoaded = false;
 
@@ -4342,9 +4360,10 @@ function initShooting() {
 }
 
 function _stShowOverlay(name) {
-  document.getElementById('shooting-start').classList.toggle('hidden', name !== 'start');
+  document.getElementById('shooting-start') .classList.toggle('hidden', name !== 'start');
   document.getElementById('shooting-result').classList.toggle('hidden', name !== 'result');
-  document.getElementById('shooting-hud').classList.toggle('hidden', name !== 'hud');
+  document.getElementById('shooting-clear') .classList.toggle('hidden', name !== 'clear');
+  document.getElementById('shooting-hud')  .classList.toggle('hidden', name !== 'hud');
 }
 
 function _stStartGame() {
@@ -4353,6 +4372,9 @@ function _stStartGame() {
   _stShootCd = 0; _stSpawnCd = 60; _stDifficulty = 1; _stWaveCd = 600;
   _stPlayer  = { x: _stCanvas.width / 2, y: _stCanvas.height - 52, w: 48, h: 48 };
   _stEnemies = []; _stBullets = []; _stItems = [];
+  _stBoss = null; _stBossSpawned = false;
+  _stParticles = []; _stFlash = 0; _stShake = { timer: 0, intensity: 0 };
+  _stVerAnim = null; _stCombo = 0; _stComboCd = 0;
   _stStars   = Array.from({ length: 50 }, () => ({
     x: Math.random() * _stCanvas.width, y: Math.random() * _stCanvas.height,
     r: Math.random() * 1.5 + 0.3, s: Math.random() * 0.4 + 0.2,
@@ -4378,13 +4400,16 @@ function _stUpdate(f) {
   _stShootCd -= f;
   if (_stShootCd <= 0) { _stFire(); _stShootCd = 18; }
 
-  // spawn
-  _stSpawnCd -= f;
-  if (_stSpawnCd <= 0) { _stSpawnEnemy(); _stSpawnCd = Math.max(25, 80 - _stDifficulty * 4); }
+  // ボス出現チェック
+  if (!_stBossSpawned && _stScore >= ST_BOSS_SCORE) _stSpawnBoss();
 
-  // difficulty ramp
-  _stWaveCd -= f;
-  if (_stWaveCd <= 0) { _stDifficulty++; _stWaveCd = 600; }
+  // ボス更新（ボス戦中は雑魚スポーン停止）
+  if (_stBoss) { _stUpdateBoss(f); } else {
+    _stSpawnCd -= f;
+    if (_stSpawnCd <= 0) { _stSpawnEnemy(); _stSpawnCd = Math.max(25, 80 - _stDifficulty * 4); }
+    _stWaveCd -= f;
+    if (_stWaveCd <= 0) { _stDifficulty++; _stWaveCd = 600; }
+  }
 
   // move bullets
   for (let i = _stBullets.length - 1; i >= 0; i--) {
@@ -4408,6 +4433,21 @@ function _stUpdate(f) {
       { _stEnemies.splice(i, 1); _stTakeDamage(); }
   }
 
+  // bullet-boss collision
+  if (_stBoss && !_stBoss.entering) {
+    for (let bi = _stBullets.length - 1; bi >= 0; bi--) {
+      const b = _stBullets[bi];
+      if (!b.friendly) continue;
+      if (Math.abs(b.x - _stBoss.x) < _stBoss.w / 2 && Math.abs(b.y - _stBoss.y) < _stBoss.h / 2) {
+        _stBullets.splice(bi, 1);
+        _stBoss.hp--;
+        _stBeep(800, 600, 0.04, 0.08, 'square');
+        _stShake.timer = 6; _stShake.intensity = 4;
+        if (_stBoss.hp <= 0) { _stGameClear(); return; }
+      }
+    }
+  }
+
   // bullet-enemy collision
   outer: for (let bi = _stBullets.length - 1; bi >= 0; bi--) {
     const b = _stBullets[bi];
@@ -4417,11 +4457,21 @@ function _stUpdate(f) {
       if (Math.abs(b.x - e.x) < e.size / 2 && Math.abs(b.y - e.y) < e.size / 2) {
         _stBullets.splice(bi, 1); e.hp--;
         if (e.hp <= 0) {
-          _stScore += e.score;
           if (Math.random() < 0.12) _stItems.push({ x: e.x, y: e.y, type: 'heart', vy: 1.8 });
           if (Math.random() < 0.35) _stItems.push({ x: e.x, y: e.y, type: 'stone', vy: 2.2 });
-          _stEnemies.splice(ei, 1); _stUpdateHud();
-          _stBeep(300, 120, 0.18, 0.18, 'sawtooth'); // 撃破音
+          _stEnemies.splice(ei, 1);
+          _stBeep(300, 120, 0.18, 0.18, 'sawtooth');
+          // コンボ＆スコア
+          _stCombo++; _stComboCd = 150;
+          const mult = Math.min(1 + Math.floor(_stCombo / 5) * 0.5, 3.0);
+          _stScore += Math.floor(e.score * mult);
+          // 爆発パーティクル
+          const col = { algae:'#00ff88', coral:'#ff6688', crab:'#ff8844', jellyfish:'#88aaff', shark:'#ff4444' }[e.type] ?? '#ff8800';
+          for (let pi = 0; pi < 12; pi++) {
+            const a = (pi / 12) * Math.PI * 2, sp = 1.5 + Math.random() * 2.5;
+            _stParticles.push({ x: e.x, y: e.y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 25 + Math.random()*20, color: col, r: 2 + Math.random()*3 });
+          }
+          _stUpdateHud();
         } else {
           _stBeep(800, 600, 0.04, 0.08, 'square'); // ヒット音
         }
@@ -4456,6 +4506,20 @@ function _stUpdate(f) {
 
   // scroll stars
   for (const s of _stStars) { s.y += s.s * f; if (s.y > _stCanvas.height) s.y = 0; }
+
+  // particles
+  for (let i = _stParticles.length - 1; i >= 0; i--) {
+    const p = _stParticles[i];
+    p.x += p.vx * f; p.y += p.vy * f; p.vy += 0.08 * f;
+    p.life -= f;
+    if (p.life <= 0) _stParticles.splice(i, 1);
+  }
+
+  // timers
+  if (_stFlash > 0) _stFlash -= f;
+  if (_stShake.timer > 0) _stShake.timer -= f;
+  if (_stVerAnim) { _stVerAnim.timer -= f; if (_stVerAnim.timer <= 0) _stVerAnim = null; }
+  if (_stComboCd > 0) { _stComboCd -= f; if (_stComboCd <= 0) { _stCombo = 0; _stUpdateHud(); } }
 }
 
 function _stFire() {
@@ -4489,6 +4553,9 @@ function _stSpawnEnemy() {
 function _stTakeDamage() {
   _stHp--;
   _stBeep(220, 150, 0.2, 0.2, 'sawtooth');
+  _stFlash = 20;
+  _stShake.timer = 15; _stShake.intensity = 8;
+  _stCombo = 0; _stComboCd = 0;
   _stUpdateHud();
   if (_stHp <= 0) _stGameOver();
 }
@@ -4500,7 +4567,135 @@ function _stCheckVer() {
   _stBeep(440, 550, 0.08, 0.12, 'sine');
   setTimeout(() => _stBeep(660, 770, 0.08, 0.13, 'sine'), 80);
   setTimeout(() => _stBeep(880, 1000, 0.12, 0.15, 'sine'), 160);
+  _stVerAnim = { timer: 120 };
+  _stShake.timer = 18; _stShake.intensity = 5;
   _stUpdateHud();
+}
+
+function _stSpawnBoss() {
+  _stBossSpawned = true;
+  _stEnemies = []; // 残存雑魚を一掃
+  _stBoss = {
+    x: _stCanvas.width / 2, y: -90,
+    targetY: 90, w: 90, h: 90,
+    hp: ST_BOSS_MAX_HP, maxHp: ST_BOSS_MAX_HP,
+    hDir: 1, hSpd: 1.2,
+    shootCd: 0, patternCd: 0, patternIdx: 0,
+    entering: true,
+  };
+  // ボス登場警告音
+  _stBeep(110, 55, 0.8, 0.25, 'sawtooth');
+}
+
+function _stUpdateBoss(f) {
+  const b = _stBoss, W = _stCanvas.width;
+
+  // 登場演出
+  if (b.entering) {
+    b.y += 2 * f;
+    if (b.y >= b.targetY) { b.y = b.targetY; b.entering = false; }
+    return;
+  }
+
+  // 横移動
+  b.x += b.hDir * b.hSpd * f;
+  if (b.x > W - 60) { b.x = W - 60; b.hDir = -1; }
+  if (b.x < 60)     { b.x = 60;     b.hDir =  1; }
+
+  // フェーズ判定
+  const phase3 = b.hp <= b.maxHp * 0.2;
+  const phase2 = !phase3 && b.hp <= b.maxHp / 2;
+  if (phase2 || phase3) b.hSpd = Math.min(phase3 ? 3.5 : 2.5, b.hSpd + 0.001 * f);
+
+  // 弾幕
+  b.shootCd -= f;
+  if (b.shootCd <= 0) {
+    const patterns = phase3
+      ? ['spread5', 'ring', 'aimed', 'spread3aimed', 'doubleAimed', 'burstSpread']
+      : phase2
+      ? ['spread5', 'ring', 'aimed', 'spread3aimed']
+      : ['spread5', 'aimed', 'spread3aimed'];
+    const pat = patterns[b.patternIdx % patterns.length];
+    b.patternIdx++;
+    _stBossShoot(pat);
+    b.shootCd = phase3 ? 20 : phase2 ? 28 : 42;
+  }
+
+  // プレイヤー接触ダメージ
+  if (Math.abs(b.x - _stPlayer.x) < (b.w + 30) / 2 && Math.abs(b.y - _stPlayer.y) < (b.h + 30) / 2)
+    _stTakeDamage();
+}
+
+function _stBossShoot(pattern) {
+  const bx = _stBoss.x, by = _stBoss.y + _stBoss.h / 2;
+
+  // パターンごとに弾速を変えて緩急をつける
+  const speeds = { spread5: 2.5, ring: 3.5, aimed: 5.5, spread3aimed: 4.0, doubleAimed: 5.0, burstSpread: 3.0 };
+  const spd = speeds[pattern] ?? 3;
+
+  const aimed = (s) => {
+    const dx = _stPlayer.x - bx, dy = _stPlayer.y - by;
+    const d = Math.sqrt(dx * dx + dy * dy) || 1;
+    return { vx: dx / d * s, vy: dy / d * s };
+  };
+
+  if (pattern === 'spread5') {
+    // 遅め・広範囲：避ける余裕はあるが弾数多い
+    for (let i = -2; i <= 2; i++)
+      _stBullets.push({ x: bx, y: by, vx: Math.sin(i * 0.35) * spd, vy: Math.cos(i * 0.35) * spd * 0.8 + 1, friendly: false });
+  } else if (pattern === 'ring') {
+    // 中速・全方位：フェーズ2でリング密度UP
+    const count = _stBoss.hp <= _stBoss.maxHp / 2 ? 16 : 12;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2;
+      _stBullets.push({ x: bx, y: by, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, friendly: false });
+    }
+  } else if (pattern === 'aimed') {
+    // 超高速・照準：直線的で避けにくい
+    const a = aimed(spd);
+    _stBullets.push({ x: bx, y: by, ...a, friendly: false });
+  } else if (pattern === 'spread3aimed') {
+    // 中高速・照準3way：aimed直後に来ると厄介
+    const a = aimed(spd);
+    const angle = Math.atan2(a.vy, a.vx);
+    for (const off of [-0.3, 0, 0.3])
+      _stBullets.push({ x: bx, y: by, vx: Math.cos(angle + off) * spd, vy: Math.sin(angle + off) * spd, friendly: false });
+  } else if (pattern === 'doubleAimed') {
+    // 高速・照準2連射（少しズレた2発）：ほぼ避けられない
+    const a = aimed(spd);
+    const angle = Math.atan2(a.vy, a.vx);
+    for (const off of [-0.15, 0.15]) {
+      _stBullets.push({ x: bx, y: by, vx: Math.cos(angle + off) * spd, vy: Math.sin(angle + off) * spd, friendly: false });
+    }
+    // 少し遅れてもう1セット
+    setTimeout(() => {
+      if (_stState !== 'playing' || !_stBoss) return;
+      const a2 = aimed(spd);
+      const ang2 = Math.atan2(a2.vy, a2.vx);
+      for (const off of [-0.15, 0.15])
+        _stBullets.push({ x: _stBoss.x, y: _stBoss.y + _stBoss.h / 2, vx: Math.cos(ang2 + off) * spd, vy: Math.sin(ang2 + off) * spd, friendly: false });
+    }, 200);
+  } else if (pattern === 'burstSpread') {
+    // 遅め・7way大拡散：画面を広く覆う
+    for (let i = -3; i <= 3; i++)
+      _stBullets.push({ x: bx, y: by, vx: Math.sin(i * 0.28) * spd, vy: Math.cos(i * 0.28) * spd * 0.7 + 0.8, friendly: false });
+  }
+  _stBeep(180, 140, 0.1, 0.06, 'square');
+}
+
+function _stGameClear() {
+  _stState = 'clear';
+  cancelAnimationFrame(_stRafId); _stRafId = null;
+  _stBoss = null;
+  const reward = 5000;
+  gameState.mokoins = (gameState.mokoins ?? 0) + reward;
+  saveGame(); updateDisplay();
+  // クリアファンファーレ
+  _stBeep(523, 659, 0.15, 0.2, 'sine');
+  setTimeout(() => _stBeep(659, 784, 0.15, 0.2, 'sine'), 160);
+  setTimeout(() => _stBeep(784, 1047, 0.3, 0.25, 'sine'), 320);
+  document.getElementById('shooting-clear-score').textContent = _stScore.toLocaleString();
+  _stShowOverlay('clear');
 }
 
 function _stGameOver() {
@@ -4525,12 +4720,36 @@ function _stUpdateHud() {
   if (ver) { ver.textContent = ST_VERSIONS[_stVerIdx].ver; ver.dataset.lv = _stVerIdx; }
   const st = document.getElementById('shooting-stones');
   const next = ST_VERSIONS[_stVerIdx + 1];
-  if (st) st.textContent = next ? `${_stStones}/${next.stonesNeeded}` : 'MAX';
+  if (st) {
+    if (!next) { st.textContent = 'MAX'; st.style.color = '#ff8800'; }
+    else {
+      const rem = next.stonesNeeded - _stStones;
+      st.textContent = rem === 1 ? 'あと1個で進化！' : `${_stStones}/${next.stonesNeeded}`;
+      st.style.color = rem === 1 ? '#ffff44' : '#ffcc00';
+    }
+  }
+  const combo = document.getElementById('shooting-combo');
+  if (combo) {
+    if (_stCombo >= 3) {
+      combo.textContent = `${_stCombo} COMBO!`;
+      combo.style.opacity = '1';
+      const cols = ['#ffff44','#ffaa00','#ff6600','#ff0066','#cc00ff'];
+      combo.style.color = cols[Math.min(Math.floor(_stCombo / 5), cols.length - 1)];
+    } else {
+      combo.style.opacity = '0';
+    }
+  }
 }
 
 function _stDraw() {
   const ctx = _stCtx, W = _stCanvas.width, H = _stCanvas.height;
   ctx.fillStyle = '#04001a'; ctx.fillRect(0, 0, W, H);
+
+  // 画面揺れ
+  if (_stShake.timer > 0) {
+    ctx.save();
+    ctx.translate((Math.random()-0.5)*_stShake.intensity, (Math.random()-0.5)*_stShake.intensity);
+  }
 
   // stars
   ctx.fillStyle = '#ffffff';
@@ -4571,10 +4790,65 @@ function _stDraw() {
     }
   }
 
+  // boss
+  if (_stBoss) {
+    const boss = _stBoss;
+    const bImg = ST_IMGS.boss;
+    if (bImg?.complete && bImg.naturalWidth) ctx.drawImage(bImg, boss.x - boss.w / 2, boss.y - boss.h / 2, boss.w, boss.h);
+    else { ctx.fillStyle = '#cc0000'; ctx.fillRect(boss.x - boss.w / 2, boss.y - boss.h / 2, boss.w, boss.h); }
+
+    // ボスHPバー（画面上部固定）
+    if (!boss.entering) {
+      const bw = W - 20, bx2 = 10, by2 = 4;
+      ctx.fillStyle = '#331111'; ctx.fillRect(bx2, by2, bw, 10);
+      const ratio = boss.hp / boss.maxHp;
+      const col = ratio > 0.5 ? '#ff4444' : ratio > 0.25 ? '#ff8800' : '#ffff00';
+      ctx.fillStyle = col; ctx.fillRect(bx2, by2, bw * ratio, 10);
+      ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 1; ctx.strokeRect(bx2, by2, bw, 10);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('BOSS', W / 2, by2 + 9);
+      ctx.textAlign = 'left';
+    }
+  }
+
   // player
   const p = _stPlayer, pImg = ST_IMGS.player;
   if (pImg?.complete && pImg.naturalWidth) ctx.drawImage(pImg, p.x - p.w / 2, p.y - p.h / 2, p.w, p.h);
   else { ctx.fillStyle = '#4488ff'; ctx.fillRect(p.x - 18, p.y - 24, 36, 48); }
+
+  // パーティクル
+  for (const pt of _stParticles) {
+    ctx.globalAlpha = Math.max(0, pt.life / 45);
+    ctx.fillStyle = pt.color;
+    ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // 揺れ終了
+  if (_stShake.timer > 0) ctx.restore();
+
+  // 被弾赤フラッシュ
+  if (_stFlash > 0) {
+    ctx.globalAlpha = (_stFlash / 20) * 0.4;
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+  }
+
+  // WEAPON EVOLUTION 演出
+  if (_stVerAnim) {
+    const t = _stVerAnim.timer;
+    ctx.globalAlpha = t > 90 ? 1 : t / 90;
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+    ctx.font = 'bold 18px monospace';
+    ctx.strokeText('WEAPON EVOLUTION!', W/2, H/2 - 12);
+    ctx.fillStyle = '#ffff44'; ctx.fillText('WEAPON EVOLUTION!', W/2, H/2 - 12);
+    ctx.font = 'bold 13px monospace';
+    ctx.strokeText(ST_VERSIONS[_stVerIdx].ver, W/2, H/2 + 12);
+    ctx.fillStyle = '#aaffee'; ctx.fillText(ST_VERSIONS[_stVerIdx].ver, W/2, H/2 + 12);
+    ctx.globalAlpha = 1; ctx.textAlign = 'left';
+  }
 }
 
 // ========== タブ切り替え ==========
@@ -4909,6 +5183,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('shooting-start-btn')?.addEventListener('click', _stStartGame);
   document.getElementById('shooting-retry-btn')?.addEventListener('click', _stStartGame);
+  document.getElementById('shooting-clear-btn')?.addEventListener('click', _stStartGame);
   document.getElementById('slot-spin-btn')?.addEventListener('click', slotSpin);
   document.querySelectorAll('.slot-bet-preset').forEach(btn => {
     btn.addEventListener('click', () => {

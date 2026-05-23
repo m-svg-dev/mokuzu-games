@@ -836,6 +836,7 @@
             <div class="shooting-ver-badge" id="shooting-ver">v1.0</div>
             <div class="shooting-stones-count"><img src="assets/prestige/prestige_stone.png" class="st-inline-icon"><span id="shooting-stones">0/3</span></div>
             <div class="shooting-score-count">スコア: <span id="shooting-score">0</span></div>
+            <div id="shooting-combo" class="shooting-combo-hud" style="opacity:0"></div>
           </div>
         </div>
 
@@ -854,6 +855,14 @@
             <div>v2.1 ワイドスプレッド（<img src="assets/prestige/prestige_stone.png" class="st-inline-icon">累計15個）</div>
           </div>
           <button id="shooting-start-btn" class="shooting-action-btn">START！</button>
+        </div>
+
+        <!-- ゲームクリア画面 -->
+        <div id="shooting-clear" class="shooting-overlay hidden">
+          <div class="shooting-overlay-title" style="color:#ffdd44;text-shadow:0 0 16px #ffdd4488">🎉 GAME CLEAR！</div>
+          <div class="shooting-result-row">スコア: <span id="shooting-clear-score" class="shooting-result-val">0</span></div>
+          <div class="shooting-result-row">獲得藻コイン: <span id="shooting-clear-reward" class="shooting-result-val" style="color:#ffaa00">5000</span> <img src="assets/ui/mocoin.png" class="st-inline-icon"></div>
+          <button id="shooting-clear-btn" class="shooting-action-btn" style="background:linear-gradient(135deg,#aa6600,#ffcc00)">もう一度！</button>
         </div>
 
         <!-- ゲームオーバー画面 -->
@@ -961,6 +970,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=2.14.4"></script>
+  <script type="module" src="script.js?v=2.15.0"></script>
 </body>
 </html>

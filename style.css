@@ -4064,3 +4064,8 @@ button,
 .shooting-result-row { font-size: 0.9rem; color: #ccc; }
 .shooting-result-val { font-size: 1.2rem; font-weight: bold; color: #ffdd44; }
 .st-inline-icon { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
+.shooting-combo-hud {
+  font-size: 0.75rem; font-weight: bold;
+  transition: color 0.2s, opacity 0.3s;
+  text-shadow: 0 0 6px currentColor;
+}
