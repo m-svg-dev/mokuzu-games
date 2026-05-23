@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.15.0';
+const CURRENT_VERSION = '2.15.1';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -4374,7 +4374,7 @@ function _stStartGame() {
   _stEnemies = []; _stBullets = []; _stItems = [];
   _stBoss = null; _stBossSpawned = false;
   _stParticles = []; _stFlash = 0; _stShake = { timer: 0, intensity: 0 };
-  _stVerAnim = null; _stCombo = 0; _stComboCd = 0;
+  _stVerAnim = null; _stCombo = 0; _stComboCd = 0; _stInvincible = 0;
   _stStars   = Array.from({ length: 50 }, () => ({
     x: Math.random() * _stCanvas.width, y: Math.random() * _stCanvas.height,
     r: Math.random() * 1.5 + 0.3, s: Math.random() * 0.4 + 0.2,
@@ -4520,6 +4520,7 @@ function _stUpdate(f) {
   if (_stShake.timer > 0) _stShake.timer -= f;
   if (_stVerAnim) { _stVerAnim.timer -= f; if (_stVerAnim.timer <= 0) _stVerAnim = null; }
   if (_stComboCd > 0) { _stComboCd -= f; if (_stComboCd <= 0) { _stCombo = 0; _stUpdateHud(); } }
+  if (_stInvincible > 0) _stInvincible -= f;
 }
 
 function _stFire() {
@@ -4551,6 +4552,7 @@ function _stSpawnEnemy() {
 }
 
 function _stTakeDamage() {
+  if (_stInvincible > 0) return;
   _stHp--;
   _stBeep(220, 150, 0.2, 0.2, 'sawtooth');
   _stFlash = 20;
@@ -4568,6 +4570,7 @@ function _stCheckVer() {
   setTimeout(() => _stBeep(660, 770, 0.08, 0.13, 'sine'), 80);
   setTimeout(() => _stBeep(880, 1000, 0.12, 0.15, 'sine'), 160);
   _stVerAnim = { timer: 120 };
+  _stInvincible = 90;
   _stShake.timer = 18; _stShake.intensity = 5;
   _stUpdateHud();
 }
@@ -4688,7 +4691,7 @@ function _stGameClear() {
   cancelAnimationFrame(_stRafId); _stRafId = null;
   _stBoss = null;
   const reward = 5000;
-  gameState.mokoins = (gameState.mokoins ?? 0) + reward;
+  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + reward;
   saveGame(); updateDisplay();
   // クリアファンファーレ
   _stBeep(523, 659, 0.15, 0.2, 'sine');
@@ -4702,7 +4705,7 @@ function _stGameOver() {
   _stState = 'gameover';
   cancelAnimationFrame(_stRafId); _stRafId = null;
   const reward = Math.floor(_stScore / 10);
-  gameState.mokoins = (gameState.mokoins ?? 0) + reward;
+  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + reward;
   saveGame(); updateDisplay();
   document.getElementById('shooting-result-score').textContent  = _stScore.toLocaleString();
   document.getElementById('shooting-result-reward').textContent = reward.toLocaleString();
