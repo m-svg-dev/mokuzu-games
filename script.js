@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.15.4';
+const CURRENT_VERSION = '2.15.5';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -904,6 +904,49 @@ function playSound(type) {
     case 'yg_result_bad':
       [400,300,220].forEach((f, i) =>
         beepAt(t + i * 0.11, f, f * 0.85, 0.18, 0.14, 'sine'));
+      break;
+
+    // ========== 限界トイレ ==========
+    case 'tl_jump':
+      beep(300, 420, 0.08, 0.1, 'sine');
+      break;
+    case 'tl_speedup':
+      beepAt(t,        440, 550, 0.1, 0.2, 'sawtooth');
+      beepAt(t + 0.1,  550, 660, 0.1, 0.2, 'sawtooth');
+      beepAt(t + 0.2,  880, 1100, 0.15, 0.22, 'sawtooth');
+      break;
+    case 'tl_hit':
+      noise(0.12, 0.18);
+      beep(120, 60, 0.15, 0.2, 'sawtooth');
+      break;
+    case 'tl_fart': {
+      // ぶりぃぃ sound: low sawtooth + LFO modulation + noise
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(110, t);
+      osc.frequency.linearRampToValueAtTime(48, t + 0.55);
+      const lfo = ctx.createOscillator();
+      const lfoMod = ctx.createGain();
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(38, t);
+      lfo.frequency.linearRampToValueAtTime(14, t + 0.55);
+      lfoMod.gain.value = 32;
+      lfo.connect(lfoMod); lfoMod.connect(osc.frequency);
+      oscGain.gain.setValueAtTime(0.4, t);
+      oscGain.gain.setValueAtTime(0.4, t + 0.08);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.58);
+      osc.connect(oscGain); oscGain.connect(ctx.destination);
+      lfo.start(t); lfo.stop(t + 0.58);
+      osc.start(t); osc.stop(t + 0.58);
+      noise(0.55, 0.14);
+      break;
+    }
+    case 'tl_clear':
+      beepAt(t,        523, 523, 0.12, 0.18, 'sine');
+      beepAt(t + 0.13, 659, 659, 0.12, 0.18, 'sine');
+      beepAt(t + 0.26, 784, 784, 0.12, 0.18, 'sine');
+      beepAt(t + 0.39, 1047, 1200, 0.25, 0.22, 'sine');
       break;
   }
 }
@@ -3261,6 +3304,7 @@ function showMinigame(gameId) {
   if (gameId === 'slot')     initSlot();
   if (gameId === 'yomogi')    initYomogi();
   if (gameId === 'shooting')  initShooting();
+  if (gameId === 'toilet')    initToilet();
 }
 
 // ========== ハイロー ミニゲーム ==========
@@ -4365,7 +4409,10 @@ function initShooting() {
   if (!initShooting._keyAdded) {
     initShooting._keyAdded = true;
     document.addEventListener('keydown', e => {
-      if (e.code === 'Space' && _stState === 'playing') { e.preventDefault(); _stFireLaser(); }
+      if (e.code === 'Space') {
+        if (_stState === 'playing') { e.preventDefault(); _stFireLaser(); }
+        if (_tlState === 'running') { e.preventDefault(); _tlDoJump(); }
+      }
     });
   }
   document.getElementById('shooting-laser-btn')?.addEventListener('click', _stFireLaser);
@@ -5551,6 +5598,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('shooting-start-btn')?.addEventListener('click', _stStartGame);
   document.getElementById('shooting-retry-btn')?.addEventListener('click', _stStartGame);
   document.getElementById('shooting-clear-btn')?.addEventListener('click', _stStartGame);
+
+  // 限界トイレ
+  document.getElementById('toilet-back-btn')?.addEventListener('click', () => {
+    _tlState = 'idle';
+    if (_tlRafId) { cancelAnimationFrame(_tlRafId); _tlRafId = null; }
+    showMinigameLobby();
+  });
+  document.getElementById('toilet-start-btn')?.addEventListener('click', _tlStartGame);
+  document.getElementById('toilet-retry-btn')?.addEventListener('click', _tlStartGame);
+  document.getElementById('toilet-result-back-btn')?.addEventListener('click', showMinigameLobby);
+  document.getElementById('toilet-clench-btn')?.addEventListener('click', _tlDoClench);
+  document.getElementById('toilet-scene')?.addEventListener('click', _tlDoJump);
   document.getElementById('slot-spin-btn')?.addEventListener('click', slotSpin);
   document.querySelectorAll('.slot-bet-preset').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -5917,6 +5976,335 @@ async function loadRanking() {
   }
 }
 
+
+// ========== 限界トイレ ミニゲーム ==========
+
+let _tlState = 'idle';
+let _tlRafId = null;
+let _tlFrame = 0;
+let _tlDist = 0;
+let _tlGauge = 0;
+let _tlCharY = 0;
+let _tlCharVY = 0;
+let _tlObstacles = [];
+let _tlSpawnCd = 0;
+let _tlClenchTimer = 0;
+let _tlClenchCd = 0;
+let _tlDramaShown = new Set();
+let _tlSpeedShown = new Set();
+let _tlAvoids = 0;
+let _tlHits = 0;
+let _tlDramaTimeout = null;
+
+function initToilet() {
+  _tlState = 'idle';
+  document.getElementById('toilet-lobby').classList.remove('hidden');
+  document.getElementById('toilet-game').classList.add('hidden');
+  document.getElementById('toilet-result').classList.add('hidden');
+}
+
+function _tlStartGame() {
+  if (_tlRafId) { cancelAnimationFrame(_tlRafId); _tlRafId = null; }
+  if (_tlDramaTimeout) { clearTimeout(_tlDramaTimeout); _tlDramaTimeout = null; }
+  document.getElementById('toilet-scene').querySelectorAll('.toilet-obstacle').forEach(el => el.remove());
+
+  _tlState = 'running';
+  _tlFrame = 0;
+  _tlDist = 0;
+  _tlGauge = 0;
+  _tlCharY = 0;
+  _tlCharVY = 0;
+  _tlObstacles = [];
+  _tlSpawnCd = 90;
+  _tlClenchTimer = 0;
+  _tlClenchCd = 0;
+  _tlDramaShown = new Set();
+  _tlSpeedShown = new Set();
+  _tlAvoids = 0;
+  _tlHits = 0;
+
+  document.getElementById('toilet-lobby').classList.add('hidden');
+  document.getElementById('toilet-result').classList.add('hidden');
+  document.getElementById('toilet-game').classList.remove('hidden');
+  document.getElementById('toilet-drama').classList.add('hidden');
+  document.getElementById('toilet-goal-icon').classList.add('hidden');
+
+  const charEl = document.getElementById('toilet-char');
+  charEl.classList.remove('jumping');
+  charEl.style.bottom = '44px';
+
+  const clenchBtn = document.getElementById('toilet-clench-btn');
+  clenchBtn.disabled = false;
+  clenchBtn.classList.remove('clenching');
+  clenchBtn.innerHTML = '😤<br>ケツ締め';
+
+  document.getElementById('toilet-gauge-fill').style.width = '0%';
+  document.getElementById('toilet-gauge-fill').style.background = '#2ecc71';
+  document.getElementById('toilet-gauge-pct').textContent = '0%';
+  document.getElementById('toilet-face').textContent = '😨';
+
+  _tlUpdateHud();
+  _tlRafId = requestAnimationFrame(_tlLoop);
+}
+
+function _tlLoop() {
+  if (_tlState !== 'running') return;
+  _tlFrame++;
+
+  const speed = _tlDist < 200 ? 3 : _tlDist < 400 ? 4 : _tlDist < 600 ? 5 : _tlDist < 800 ? 6 : 7;
+  _tlDist += speed * 0.026;
+  _tlCheckSpeedUp(speed);
+
+  if (_tlClenchTimer > 0) {
+    _tlClenchTimer--;
+    if (_tlClenchTimer === 0) {
+      const btn = document.getElementById('toilet-clench-btn');
+      btn.classList.remove('clenching');
+      btn.textContent = '😤 ケツ締め';
+    }
+  } else {
+    _tlGauge = Math.min(100, _tlGauge + 0.025);
+  }
+  if (_tlClenchCd > 0) _tlClenchCd--;
+
+  if (_tlCharY > 0 || _tlCharVY > 0) {
+    const grav = Math.abs(_tlCharVY) < 3 ? 0.3 : 0.85;
+    _tlCharVY -= grav;
+    _tlCharY += _tlCharVY;
+    if (_tlCharY <= 0) {
+      _tlCharY = 0;
+      _tlCharVY = 0;
+      document.getElementById('toilet-char').classList.remove('jumping');
+    }
+  }
+  document.getElementById('toilet-char').style.bottom = (44 + _tlCharY) + 'px';
+
+  const road = document.getElementById('toilet-road-bg');
+  road.style.animationDuration = Math.max(0.08, 0.4 / (speed / 3)) + 's';
+
+  // ゴールアイコン（800m〜）
+  const goalEl = document.getElementById('toilet-goal-icon');
+  if (_tlDist >= 800) {
+    const sceneW = document.getElementById('toilet-scene').offsetWidth || 340;
+    const goalX = 76 + (1000 - _tlDist) / 200 * (sceneW - 100);
+    goalEl.style.left = goalX + 'px';
+    goalEl.classList.remove('hidden');
+  } else {
+    goalEl.classList.add('hidden');
+  }
+
+  _tlSpawnCd--;
+  if (_tlSpawnCd <= 0 && _tlDist > 8) {
+    _tlSpawnObstacle(speed);
+    _tlSpawnCd = Math.max(28, Math.floor(50 + Math.random() * 55 - _tlDist / 120));
+  }
+
+  const removed = [];
+  for (const obs of _tlObstacles) {
+    obs.x -= speed;
+    obs.el.style.left = obs.x + 'px';
+    if (obs.x < -50) {
+      obs.el.remove();
+      removed.push(obs);
+      if (!obs.hit) {
+        _tlAvoids++;
+        _tlGauge = Math.max(0, _tlGauge - 8);
+        for (const t of [50, 70, 85, 95]) { if (_tlGauge < t) _tlDramaShown.delete(t); }
+      }
+    } else if (!obs.hit && _tlCollides(obs)) {
+      obs.hit = true;
+      _tlTakeHit();
+    }
+  }
+  if (removed.length) _tlObstacles = _tlObstacles.filter(o => !removed.includes(o));
+
+  _tlCheckDrama();
+  _tlUpdateHud();
+
+  if (_tlGauge >= 100) { _tlGameOver(); return; }
+  if (_tlDist >= 1000) { _tlGameClear(); return; }
+
+  _tlRafId = requestAnimationFrame(_tlLoop);
+}
+
+function _tlSpawnObstacle(speed) {
+  const scene = document.getElementById('toilet-scene');
+  const x = (scene.offsetWidth || 340) + 10;
+  const useAsa = _tlDist >= 600 && Math.random() < 0.55;
+  const flying = useAsa && Math.random() < 0.4;
+  const bottomY = flying ? (55 + Math.floor(Math.random() * 30)) : 0;
+  let el;
+  if (useAsa) {
+    const n = Math.floor(Math.random() * 10) + 1;
+    el = document.createElement('img');
+    el.className = 'toilet-obstacle toilet-asa-obs' + (flying ? ' toilet-asa-fly' : '');
+    el.src = `assets/yomogi/asa_${n}.png`;
+    el.alt = 'あさ';
+  } else {
+    const types = ['🐕', '🍌', '🚧'];
+    el = document.createElement('div');
+    el.className = 'toilet-obstacle';
+    el.textContent = types[Math.floor(Math.random() * types.length)];
+  }
+  el.style.left = x + 'px';
+  el.style.bottom = (44 + bottomY) + 'px';
+  scene.appendChild(el);
+  _tlObstacles.push({ el, x, hit: false, w: useAsa ? 34 : 28, h: useAsa ? 50 : 38, bottomY });
+}
+
+function _tlCollides(obs) {
+  const charLeft = 64, charRight = 92;
+  const obsLeft = obs.x + 2, obsRight = obs.x + (obs.w ?? 28);
+  const obsBottom = obs.bottomY ?? 0;
+  const xOverlap = charLeft < obsRight && charRight > obsLeft;
+  const yOverlap = _tlCharY < obsBottom + (obs.h ?? 38) && _tlCharY + 50 > obsBottom;
+  return xOverlap && yOverlap;
+}
+
+function _tlTakeHit() {
+  _tlHits++;
+  _tlGauge = Math.min(100, _tlGauge + 15);
+  playSound('tl_hit');
+  const scene = document.getElementById('toilet-scene');
+  scene.classList.add('shaking');
+  scene.addEventListener('animationend', () => scene.classList.remove('shaking'), { once: true });
+}
+
+function _tlCheckSpeedUp(speed) {
+  const milestones = { 200: '⚡ SPEED UP!!', 400: '⚡⚡ SPEED UP!!', 600: '🔥 FASTER!!', 800: '💀 MAX SPEED!!' };
+  for (const [dist, msg] of Object.entries(milestones)) {
+    if (!_tlSpeedShown.has(dist) && _tlDist >= Number(dist)) {
+      _tlSpeedShown.add(dist);
+      const el = document.getElementById('toilet-drama');
+      el.textContent = msg;
+      el.style.animation = 'none'; el.offsetHeight;
+      el.style.animation = 'toilet-drama-pulse 1.8s forwards';
+      el.classList.remove('hidden');
+      if (_tlDramaTimeout) clearTimeout(_tlDramaTimeout);
+      _tlDramaTimeout = setTimeout(() => el.classList.add('hidden'), 1800);
+      playSound('tl_speedup');
+      const road = document.getElementById('toilet-road-bg');
+      road.classList.add('toilet-road-flash');
+      setTimeout(() => road.classList.remove('toilet-road-flash'), 500);
+    }
+  }
+}
+
+function _tlCheckDrama() {
+  for (const t of [50, 70, 85, 95]) {
+    if (!_tlDramaShown.has(t) && _tlGauge >= t) {
+      _tlDramaShown.add(t);
+      _tlShowDrama(t);
+    }
+  }
+}
+
+function _tlShowDrama(pct) {
+  const msgs = { 50: '😰 もうやばい...', 70: '🤢 限界が近い！！', 85: '💦 もれそう！！！', 95: '🆘 アウトー！！！' };
+  const faces = { 50: '😰', 70: '🤢', 85: '😱', 95: '🤯' };
+  const el = document.getElementById('toilet-drama');
+  el.textContent = msgs[pct];
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'toilet-drama-pulse 2s forwards';
+  el.classList.remove('hidden');
+  if (_tlDramaTimeout) clearTimeout(_tlDramaTimeout);
+  _tlDramaTimeout = setTimeout(() => el.classList.add('hidden'), 2000);
+  const face = document.getElementById('toilet-face');
+  if (face) face.textContent = faces[pct] || '😨';
+}
+
+function _tlUpdateHud() {
+  const distEl = document.getElementById('toilet-dist-label');
+  if (distEl) distEl.textContent = Math.floor(_tlDist) + ' m';
+  const pct = Math.floor(_tlGauge);
+  const fill = document.getElementById('toilet-gauge-fill');
+  if (fill) {
+    fill.style.width = pct + '%';
+    fill.style.background = pct >= 85 ? '#e74c3c' : pct >= 70 ? '#e67e22' : pct >= 50 ? '#f39c12' : '#2ecc71';
+  }
+  const pctEl = document.getElementById('toilet-gauge-pct');
+  if (pctEl) pctEl.textContent = pct + '%';
+  const face = document.getElementById('toilet-face');
+  if (face) face.textContent = pct >= 95 ? '🤯' : pct >= 85 ? '😱' : pct >= 70 ? '🤢' : pct >= 50 ? '😰' : '😨';
+  const btn = document.getElementById('toilet-clench-btn');
+  if (btn && _tlClenchCd > 0 && _tlClenchTimer === 0) {
+    btn.disabled = true;
+    btn.textContent = `😤 CD:${Math.ceil(_tlClenchCd / 60)}s`;
+  }
+}
+
+function _tlDoClench() {
+  if (_tlState !== 'running' || _tlClenchTimer > 0 || _tlClenchCd > 0) return;
+  _tlClenchTimer = 180;
+  _tlClenchCd = 600;
+  const btn = document.getElementById('toilet-clench-btn');
+  btn.disabled = true;
+  btn.classList.add('clenching');
+  btn.textContent = '😤 締めてる！';
+}
+
+function _tlDoJump() {
+  if (_tlState !== 'running' || _tlCharY > 0) return;
+  playSound('tl_jump');
+  _tlCharVY = 14;
+  document.getElementById('toilet-char').classList.add('jumping');
+}
+
+function _tlCalcRank(cleared) {
+  if (!cleared) {
+    if (_tlDist >= 800) return 'B';
+    if (_tlDist >= 500) return 'C';
+    return 'D';
+  }
+  if (_tlHits === 0) return 'SS';
+  if (_tlHits <= 2) return 'S';
+  if (_tlHits <= 6) return 'A';
+  if (_tlHits <= 12) return 'B';
+  return 'C';
+}
+
+function _tlShowResult(cleared) {
+  const rank = _tlCalcRank(cleared);
+  const score = Math.floor(_tlDist * 10) + _tlAvoids * 100 + (cleared ? 5000 : 0);
+  const coins = Math.max(1, Math.floor(score / 80));
+  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coins;
+  document.getElementById('toilet-game').classList.add('hidden');
+  document.getElementById('toilet-result').classList.remove('hidden');
+  document.getElementById('toilet-result-icon').textContent = cleared ? '🚽' : '💩';
+  document.getElementById('toilet-result-title').textContent = cleared ? 'トイレ到達！！' : 'もれちゃった...';
+  const rankEl = document.getElementById('toilet-result-rank');
+  rankEl.textContent = rank;
+  rankEl.setAttribute('data-rank', rank);
+  document.getElementById('toilet-res-dist').textContent = Math.floor(_tlDist) + ' m';
+  document.getElementById('toilet-res-score').textContent = score;
+  document.getElementById('toilet-res-coins').textContent = `+${coins}枚`;
+  saveGame();
+}
+
+function _tlGameOver() {
+  _tlState = 'over';
+  if (_tlRafId) { cancelAnimationFrame(_tlRafId); _tlRafId = null; }
+  playSound('tl_fart');
+  const el = document.getElementById('toilet-drama');
+  el.textContent = '💩 もれちゃった...';
+  el.style.animation = 'none'; el.offsetHeight;
+  el.style.animation = 'toilet-drama-pulse 1.5s forwards';
+  el.classList.remove('hidden');
+  setTimeout(() => _tlShowResult(false), 1500);
+}
+
+function _tlGameClear() {
+  _tlState = 'clear';
+  if (_tlRafId) { cancelAnimationFrame(_tlRafId); _tlRafId = null; }
+  playSound('tl_clear');
+  const el = document.getElementById('toilet-drama');
+  el.textContent = '🚽 トイレ到達！！！';
+  el.style.animation = 'none'; el.offsetHeight;
+  el.style.animation = 'toilet-drama-pulse 2s forwards';
+  el.classList.remove('hidden');
+  setTimeout(() => _tlShowResult(true), 2000);
+}
 
 // ========== Service Worker 解除 ==========
 if ('serviceWorker' in navigator) {

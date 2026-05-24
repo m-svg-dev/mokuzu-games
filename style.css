@@ -4105,3 +4105,177 @@ button,
   transition: color 0.2s, opacity 0.3s;
   text-shadow: 0 0 6px currentColor;
 }
+
+/* ========== 限界トイレ ========== */
+.toilet-lobby {
+  text-align: center;
+  padding: 16px 12px;
+}
+.toilet-lobby-face { font-size: 52px; margin: 8px 0; }
+.toilet-lobby-desc { color: #eee; font-size: 14px; line-height: 1.7; margin: 8px 0 12px; }
+.toilet-rules {
+  list-style: none; padding: 0;
+  color: #bbb; font-size: 12px; line-height: 2;
+  text-align: left; display: inline-block;
+  margin: 0 auto 14px;
+}
+.toilet-lobby-note { color: #666; font-size: 11px; margin-top: 8px; }
+.toilet-action-btn {
+  padding: 10px 28px;
+  background: #e67e22; color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 16px; font-weight: bold;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.toilet-action-btn:hover { opacity: 0.85; }
+.toilet-action-btn:disabled { opacity: 0.4; cursor: default; }
+.toilet-action-back { background: #555; }
+
+/* HUD */
+.toilet-hud {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px; background: #1a1a1a;
+  font-size: 12px; white-space: nowrap;
+}
+.toilet-dist { font-size: 14px; font-weight: bold; color: #fff; min-width: 52px; }
+.toilet-gauge-wrap { flex: 1; display: flex; align-items: center; gap: 4px; }
+.toilet-gauge-label { color: #aaa; font-size: 10px; }
+.toilet-gauge-bg {
+  flex: 1; height: 10px; background: #333;
+  border-radius: 5px; overflow: hidden;
+}
+.toilet-gauge-fill {
+  height: 100%; width: 0%; background: #2ecc71;
+  border-radius: 5px; transition: background 0.3s;
+}
+.toilet-gauge-pct { color: #fff; min-width: 28px; text-align: right; font-size: 11px; }
+.toilet-clench-area {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; background: #111;
+}
+.toilet-clench-btn {
+  padding: 8px 18px; background: #8e44ad; color: #fff;
+  border: none; border-radius: 8px; font-size: 14px; font-weight: bold;
+  cursor: pointer; white-space: nowrap;
+}
+.toilet-clench-btn:disabled { opacity: 0.4; cursor: default; }
+.toilet-clench-btn.clenching { background: #e74c3c; }
+.toilet-clench-desc { color: #aaa; font-size: 11px; }
+
+/* Scene */
+.toilet-scene {
+  position: relative; width: 100%; height: 200px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #5bb3f5 0%, #87ceeb 65%, #c8a46a 65%, #b8924a 100%);
+}
+.toilet-road-bg {
+  position: absolute; bottom: 0; left: 0;
+  width: 300%; height: 44px;
+  background: repeating-linear-gradient(90deg, #666 0px, #666 38px, #888 38px, #888 76px);
+  animation: toilet-road 0.4s linear infinite;
+}
+@keyframes toilet-road {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-76px); }
+}
+.toilet-road-bg.toilet-road-flash {
+  filter: brightness(2);
+  transition: filter 0.5s;
+}
+
+/* Character */
+.toilet-char {
+  position: absolute; bottom: 44px; left: 60px;
+  display: flex; flex-direction: column; align-items: center;
+  width: 32px; transition: none;
+}
+.toilet-face { font-size: 22px; line-height: 1; user-select: none; }
+.toilet-body {
+  width: 18px; height: 18px;
+  background: #3498db; border-radius: 3px; margin-top: 1px;
+}
+.toilet-legs { display: flex; gap: 4px; margin-top: 1px; }
+.toilet-leg-l, .toilet-leg-r {
+  width: 7px; height: 12px;
+  background: #2c3e50; border-radius: 2px;
+  transform-origin: top center;
+}
+.toilet-leg-l { animation: toilet-run-l 0.25s infinite; }
+.toilet-leg-r { animation: toilet-run-r 0.25s infinite; }
+@keyframes toilet-run-l {
+  0%, 100% { transform: rotate(-22deg); }
+  50%       { transform: rotate(22deg); }
+}
+@keyframes toilet-run-r {
+  0%, 100% { transform: rotate(22deg); }
+  50%       { transform: rotate(-22deg); }
+}
+.toilet-char.jumping .toilet-leg-l,
+.toilet-char.jumping .toilet-leg-r { animation: none; transform: rotate(0deg); }
+
+/* Goal icon */
+.toilet-goal-icon {
+  position: absolute; bottom: 44px;
+  font-size: 40px; line-height: 1;
+  z-index: 4; pointer-events: none;
+  filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 12px #ffe066);
+}
+
+/* Obstacles */
+.toilet-obstacle {
+  position: absolute; bottom: 44px;
+  font-size: 30px; line-height: 1;
+  user-select: none; pointer-events: none;
+}
+.toilet-asa-obs {
+  width: auto; height: 52px;
+  image-rendering: pixelated;
+}
+.toilet-asa-fly {
+  filter: drop-shadow(0 6px 4px rgba(0,0,0,0.5));
+  animation: toilet-asa-bob 0.6s ease-in-out infinite alternate;
+}
+@keyframes toilet-asa-bob {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-5px); }
+}
+
+/* Drama */
+.toilet-drama {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: bold;
+  color: #fff; text-shadow: 0 0 10px #000, 0 0 4px #000;
+  pointer-events: none; z-index: 10;
+  animation: toilet-drama-pulse 2s forwards;
+}
+@keyframes toilet-drama-pulse {
+  0%   { opacity: 0; transform: scale(0.8); }
+  15%  { opacity: 1; transform: scale(1.05); }
+  80%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+@keyframes toilet-shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-5px); }
+  40%       { transform: translateX(5px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+.toilet-scene.shaking { animation: toilet-shake 0.35s ease; }
+
+/* Result */
+.toilet-result { text-align: center; padding: 20px 12px; }
+.toilet-result-icon { font-size: 48px; margin: 4px 0; }
+.toilet-result-title {
+  font-size: 20px; font-weight: bold;
+  color: #f39c12; margin: 4px 0 10px;
+}
+.toilet-result-stats {
+  margin: 10px auto; max-width: 200px;
+}
+.toilet-stat {
+  display: flex; justify-content: space-between;
+  padding: 5px 0; border-bottom: 1px solid #333; font-size: 13px;
+}
+.toilet-result-btns { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }

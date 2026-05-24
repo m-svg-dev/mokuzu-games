@@ -567,6 +567,82 @@
           </div>
           <span class="mg-arrow">›</span>
         </button>
+        <button class="mg-card" data-game="toilet">
+          <span class="mg-icon">🚽</span>
+          <div class="mg-info">
+            <div class="mg-name">限界トイレ</div>
+            <div class="mg-desc">限界まで我慢して1000m先のトイレへ走れ！</div>
+          </div>
+          <span class="mg-arrow">›</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 限界トイレ ゲーム画面 -->
+    <div id="minigame-game-toilet" class="hidden">
+      <div class="mg-game-header">
+        <button id="toilet-back-btn" class="mg-back-btn">‹ 戻る</button>
+        <span class="mg-game-title">🚽 限界トイレ</span>
+      </div>
+
+      <!-- ロビー -->
+      <div id="toilet-lobby" class="toilet-lobby">
+        <div class="toilet-lobby-face">😨</div>
+        <p class="toilet-lobby-desc">限界まで我慢しながら<br>1000m先のトイレへ走れ！</p>
+        <ul class="toilet-rules">
+          <li>🐕🍌🚧 障害物を飛び越えろ</li>
+          <li>💥 被弾で限界ゲージ+15%</li>
+          <li>😤 ケツ締めでゲージ上昇を3秒抑制（10秒CD）</li>
+          <li>💀 ゲージ100%でゲームオーバー</li>
+        </ul>
+        <button id="toilet-start-btn" class="toilet-action-btn">走り出す！</button>
+        <p class="toilet-lobby-note">タップ or スペースでジャンプ</p>
+      </div>
+
+      <!-- ゲーム中 -->
+      <div id="toilet-game" class="hidden">
+        <div class="toilet-hud">
+          <span id="toilet-dist-label" class="toilet-dist">0 m</span>
+          <div class="toilet-gauge-wrap">
+            <span class="toilet-gauge-label">限界</span>
+            <div class="toilet-gauge-bg">
+              <div id="toilet-gauge-fill" class="toilet-gauge-fill"></div>
+            </div>
+            <span id="toilet-gauge-pct" class="toilet-gauge-pct">0%</span>
+          </div>
+        </div>
+        <div id="toilet-scene" class="toilet-scene">
+          <div id="toilet-road-bg" class="toilet-road-bg"></div>
+          <div id="toilet-char" class="toilet-char">
+            <div id="toilet-face" class="toilet-face">😨</div>
+            <div class="toilet-body"></div>
+            <div class="toilet-legs">
+              <div class="toilet-leg-l"></div>
+              <div class="toilet-leg-r"></div>
+            </div>
+          </div>
+        </div>
+        <div id="toilet-goal-icon" class="toilet-goal-icon hidden">🚽</div>
+        <div id="toilet-drama" class="toilet-drama hidden"></div>
+        <div class="toilet-clench-area">
+          <button id="toilet-clench-btn" class="toilet-clench-btn">😤 ケツ締め</button>
+          <span class="toilet-clench-desc">ゲージ上昇を3秒止める（CD:10秒）</span>
+        </div>
+      </div>
+
+      <!-- リザルト -->
+      <div id="toilet-result" class="hidden toilet-result">
+        <div id="toilet-result-icon" class="toilet-result-icon">🚽</div>
+        <div id="toilet-result-title" class="toilet-result-title">トイレ到達！！</div>
+        <div id="toilet-result-rank" class="shooting-rank-badge" data-rank="A">A</div>
+        <div class="toilet-result-stats">
+          <div class="toilet-stat"><span>距離</span><span id="toilet-res-dist">0m</span></div>
+          <div class="toilet-stat"><span>スコア</span><span id="toilet-res-score">0</span></div>
+          <div class="toilet-stat"><span>獲得コイン</span><span id="toilet-res-coins">+0枚</span></div>
+        </div>
+        <div class="toilet-result-btns">
+          <button id="toilet-retry-btn" class="toilet-action-btn">もう一度</button>
+        </div>
       </div>
     </div>
 
@@ -985,6 +1061,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=2.15.4"></script>
+  <script type="module" src="script.js?v=2.15.5"></script>
 </body>
 </html>
