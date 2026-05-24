@@ -6108,7 +6108,7 @@ function _tlLoop() {
   _tlSpawnCd--;
   if (_tlSpawnCd <= 0 && _tlDist > 8) {
     _tlSpawnObstacle(speed);
-    _tlSpawnCd = Math.max(28, Math.floor(50 + Math.random() * 55 - _tlDist / 120));
+    _tlSpawnCd = Math.max(45, Math.floor(60 + Math.random() * 55 - _tlDist / 150));
   }
 
   const removed = [];
@@ -6141,7 +6141,7 @@ function _tlLoop() {
 
 function _tlSpawnObstacle(speed) {
   const scene = document.getElementById('toilet-scene');
-  const x = (scene.offsetWidth || 340) + 10;
+  const x = (scene.offsetWidth || 340) + 80;
   const useAsa = _tlDist >= 600 && Math.random() < 0.55;
   const flying = useAsa && Math.random() < 0.4;
   const bottomY = flying ? (55 + Math.floor(Math.random() * 30)) : 0;
@@ -6240,9 +6240,17 @@ function _tlUpdateHud() {
   const face = document.getElementById('toilet-face');
   if (face) face.textContent = pct >= 95 ? '🤯' : pct >= 85 ? '😱' : pct >= 70 ? '🤢' : pct >= 50 ? '😰' : '😨';
   const btn = document.getElementById('toilet-clench-btn');
-  if (btn && _tlClenchCd > 0 && _tlClenchTimer === 0) {
-    btn.disabled = true;
-    btn.textContent = `😤 CD:${Math.ceil(_tlClenchCd / 60)}s`;
+  if (btn) {
+    if (_tlClenchTimer > 0) {
+      btn.disabled = true;
+    } else if (_tlClenchCd > 0) {
+      btn.disabled = true;
+      btn.textContent = `😤 CD:${Math.ceil(_tlClenchCd / 60)}s`;
+    } else {
+      btn.disabled = false;
+      btn.classList.remove('clenching');
+      btn.textContent = '😤 ケツ締め';
+    }
   }
 }
 
