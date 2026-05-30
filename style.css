@@ -4496,8 +4496,8 @@ button,
 .dg-floor { font-size:13px; font-weight:bold; color:#f39c12; }
 .dg-stat { color:#ccc; }
 .dg-bottom-controls { display:flex; gap:8px; background:#0d0d0d; padding:4px 8px; justify-content:space-between; align-items:center; }
-.dg-equip-bar { display:flex; flex-direction:column; gap:4px; width:180px; min-width:180px; justify-content:center; }
-.dg-equip-slot { width:56px; height:56px; background:#1a0a0a; border:2px solid #333; border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2px; }
+.dg-equip-bar { display:flex; flex-direction:column; gap:4px; justify-content:center; height:180px; }
+.dg-equip-slot { width:60px; height:56px; background:#1a0a0a; border:2px solid #333; border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2px; }
 .dg-equip-slot.equipped { border-color:#4a9eff; background:#1a1520; }
 .dg-slot-icon { width:32px; height:32px; background-size:contain; background-repeat:no-repeat; background-position:center; image-rendering:pixelated; }
 .dg-slot-label { font-size:8px; color:#777; margin-top:1px; }
@@ -4508,8 +4508,8 @@ button,
 .dungeon-log { background:#0a0505; padding:4px 8px; min-height:80px; max-height:80px; overflow-y:auto; overflow-x:hidden; }
 .dungeon-log p { color:#aaa; font-size:10px; margin:0.5px 0; line-height:1.4; word-break:break-word; }
 .dungeon-log p:first-child { color:#fff; font-weight:bold; }
-.dungeon-dpad { display:flex; flex-direction:column; align-items:center; gap:2px; width:180px; min-width:180px; }
-.dungeon-joystick { display:none; flex-direction:column; align-items:center; gap:4px; width:180px; min-width:180px; }
+.dungeon-dpad { display:flex; flex-direction:column; align-items:center; gap:2px; height:180px; justify-content:center; }
+.dungeon-joystick { display:none; flex-direction:column; align-items:center; gap:4px; height:180px; justify-content:center; }
 .dg-control-mode-buttons .dungeon-joystick { display:none !important; }
 .dg-control-mode-buttons .dpad-buttons { display:flex !important; }
 .dg-control-mode-stick .dungeon-joystick { display:flex !important; }
