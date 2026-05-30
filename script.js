@@ -7652,6 +7652,7 @@ function _dgRender() {
     const mon=_dgMonsters.find(m=>m.x===mx&&m.y===my&&m.hp>0);
     if (mon) {
       const isBoss = mon.type === 'boss';
+      if (isBoss) console.log('Boss rendering at', sx, sy, 'type:', mon.type);
       const im=_dgImages[mon.sprite]; if(im?.complete) ctx.drawImage(im,sx,sy,T,T);
       if (isBoss) {
         ctx.save();
