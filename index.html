@@ -575,6 +575,14 @@
           </div>
           <span class="mg-arrow">›</span>
         </button>
+        <button class="mg-card" data-game="dungeon">
+          <span class="mg-icon">⚔️</span>
+          <div class="mg-info">
+            <div class="mg-name">藻屑ダンジョン</div>
+            <div class="mg-desc">地下迷宮に潜りボスを倒して脱出せよ！</div>
+          </div>
+          <span class="mg-arrow">›</span>
+        </button>
         <button class="mg-card" data-game="memory">
           <span class="mg-icon">💕</span>
           <div class="mg-info">
@@ -758,6 +766,105 @@
         <div class="toilet-result-btns">
           <button id="toilet-retry-btn" class="toilet-action-btn">もう一度</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 藻屑ダンジョン ゲーム画面 -->
+    <div id="minigame-game-dungeon" class="hidden">
+      <div class="mg-game-header">
+        <button id="dungeon-back-btn" class="mg-back-btn">‹ 戻る</button>
+        <span class="mg-game-title">⚔️ 藻屑ダンジョン</span>
+      </div>
+      <!-- ロビー -->
+      <div id="dungeon-lobby" class="dungeon-lobby">
+        <p class="dungeon-lobby-desc">地下3階に潜む黄金ドラゴンを倒して<br>藻コインを持ち帰れ！</p>
+        <ul class="dungeon-rules">
+          <li>矢印キー / Dパッドで移動</li>
+          <li>敵に隣接すると自動攻撃</li>
+          <li>階段に乗ると次の階へ</li>
+          <li>ボスを倒してから脱出しよう</li>
+        </ul>
+        <button id="dungeon-start-btn" class="dungeon-action-btn">冒険開始</button>
+      </div>
+      <!-- ゲーム中 -->
+      <div id="dungeon-game" class="hidden">
+        <div id="dungeon-hud" class="dungeon-hud">
+          <span id="dg-hp" class="dg-hp">❤️25/25</span>
+          <span id="dg-floor" class="dg-floor">B1F</span>
+          <span id="dg-atk" class="dg-stat">⚔️5</span>
+          <span id="dg-def" class="dg-stat">🛡0</span>
+          <span id="dg-gold" class="dg-stat">💰0</span>
+        </div>
+        <div class="dg-equip-bar">
+          <div class="dg-equip-slot" id="dg-slot-weapon" data-slot="weapon">
+            <div class="dg-slot-icon"></div>
+            <div class="dg-slot-label">武器</div>
+          </div>
+          <div class="dg-equip-slot" id="dg-slot-shield" data-slot="shield">
+            <div class="dg-slot-icon"></div>
+            <div class="dg-slot-label">盾</div>
+          </div>
+          <div class="dg-equip-slot" id="dg-slot-ring" data-slot="ring">
+            <div class="dg-slot-icon"></div>
+            <div class="dg-slot-label">指輪</div>
+          </div>
+        </div>
+        <canvas id="dungeon-canvas" width="288" height="288"></canvas>
+        <div id="dungeon-log" class="dungeon-log"></div>
+        <div class="dungeon-dpad">
+          <div class="dpad-row"><button class="dungeon-dpad-btn" data-dir="up">↑</button></div>
+          <div class="dpad-row">
+            <button class="dungeon-dpad-btn" data-dir="left">←</button>
+            <button class="dungeon-dpad-btn dpad-wait" data-dir="wait">·</button>
+            <button class="dungeon-dpad-btn" data-dir="right">→</button>
+          </div>
+          <div class="dpad-row"><button class="dungeon-dpad-btn" data-dir="down">↓</button></div>
+          <button id="dungeon-inv-btn" class="dungeon-inv-btn">📦 装備</button>
+        </div>
+      </div>
+      <!-- インベントリ画面 -->
+      <div id="dungeon-inventory" class="hidden dungeon-inventory">
+        <div class="dungeon-inv-header">
+          <button id="dungeon-inv-close" class="dg-inv-close-btn">× 閉じる</button>
+          <span class="dg-inv-title">装備管理</span>
+        </div>
+        <div id="dungeon-inv-list" class="dungeon-inv-list"></div>
+      </div>
+      <!-- 装備比較ポップアップ -->
+      <div id="dungeon-equip-popup" class="hidden dg-equip-popup">
+        <div class="dg-popup-content">
+          <div class="dg-popup-title">装備を発見！</div>
+          <div class="dg-popup-compare">
+            <div class="dg-compare-item" id="dg-compare-current">
+              <div class="dg-compare-label">現在の装備</div>
+              <div class="dg-compare-icon"></div>
+              <div class="dg-compare-name"></div>
+              <div class="dg-compare-stats"></div>
+            </div>
+            <div class="dg-compare-arrow">→</div>
+            <div class="dg-compare-item" id="dg-compare-new">
+              <div class="dg-compare-label">新しい装備</div>
+              <div class="dg-compare-icon"></div>
+              <div class="dg-compare-name"></div>
+              <div class="dg-compare-stats"></div>
+            </div>
+          </div>
+          <div class="dg-popup-actions">
+            <button id="dg-popup-equip" class="dg-popup-btn dg-popup-btn-equip">装備する</button>
+            <button id="dg-popup-bag" class="dg-popup-btn dg-popup-btn-bag">バッグへ</button>
+          </div>
+        </div>
+      </div>
+      <!-- リザルト -->
+      <div id="dungeon-result" class="hidden dungeon-result">
+        <div id="dg-result-icon" class="dg-result-icon">💀</div>
+        <div id="dg-result-title" class="dg-result-title">冒険失敗...</div>
+        <div id="dg-result-rank" class="shooting-rank-badge" data-rank="C">C</div>
+        <div class="dg-result-stats">
+          <div class="dg-stat-row"><span>到達階層</span><span id="dg-res-floor">B1F</span></div>
+          <div class="dg-stat-row"><span>獲得藻コイン</span><span id="dg-res-coins">+0枚</span></div>
+        </div>
+        <button id="dungeon-retry-btn" class="dungeon-action-btn">再挑戦</button>
       </div>
     </div>
 
@@ -1176,6 +1283,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=2.16.0"></script>
+  <script type="module" src="script.js?v=2.17.0"></script>
 </body>
 </html>

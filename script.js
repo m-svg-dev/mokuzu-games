@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.16.0';
+const CURRENT_VERSION = '2.17.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -3352,6 +3352,7 @@ function showMinigame(gameId) {
   if (gameId === 'shooting')  initShooting();
   if (gameId === 'toilet')    initToilet();
   if (gameId === 'memory')    initMemory();
+  if (gameId === 'dungeon')   initDungeon();
 }
 
 // ========== ハイロー ミニゲーム ==========
@@ -5658,6 +5659,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toilet-clench-btn')?.addEventListener('click', _tlDoClench);
   document.getElementById('toilet-scene')?.addEventListener('click', _tlDoJump);
 
+  // 藻屑ダンジョン
+  document.getElementById('dungeon-back-btn')?.addEventListener('click', () => { _dgCleanup(); showMinigameLobby(); });
+  document.getElementById('dungeon-start-btn')?.addEventListener('click', _dgStartGame);
+  document.getElementById('dungeon-retry-btn')?.addEventListener('click', _dgStartGame);
+  document.getElementById('dungeon-inv-btn')?.addEventListener('click', _dgShowInventory);
+  document.getElementById('dungeon-inv-close')?.addEventListener('click', _dgHideInventory);
+  document.getElementById('dg-popup-equip')?.addEventListener('click', _dgEquipPending);
+  document.getElementById('dg-popup-bag')?.addEventListener('click', _dgBagPending);
+  document.querySelectorAll('.dungeon-dpad-btn').forEach(btn => {
+    btn.addEventListener('click', () => _dgHandleDir(btn.dataset.dir));
+  });
+
   // 藻屑メモリアル
   document.getElementById('memory-back-btn')?.addEventListener('click', () => {
     _mrState = 'idle';
@@ -7321,6 +7334,597 @@ function _mrRenderEnding(endId) {
   document.getElementById('memory-end-coins').textContent = `+${coins}枚`;
 
   playSound(e.sound);
+  saveGame();
+}
+
+// ========== 藻屑ダンジョン RPG ==========
+
+const _DG_TILE = 32;
+const _DG_VIEW = 9;
+const _DG_W = 28;
+const _DG_H = 28;
+const _DG_FLOORS = 3;
+const _DG_VIS = 4;
+const _DG_WALL = 0, _DG_FLOOR = 1, _DG_STAIRS = 2;
+
+const _DG_IMGS_SRC = {
+  floor:    'assets/RPG/dungeon/floor/limestone_0.png',
+  wall:     'assets/RPG/dungeon/wall/stone_2_dark0.png',
+  player:   'assets/RPG/player/base/kobold_male.png',
+  stairs:   'assets/RPG/dungeon/gateways/sealed_stairs_down.png',
+  gold:     'assets/RPG/item/gold/gold_pile_1.png',
+  potion:   'assets/RPG/item/potion/brilliant_blue.png',
+  jelly:    'assets/RPG/monster/amorphous/jelly.png',
+  bat:      'assets/RPG/monster/animals/bat.png',
+  skeleton: 'assets/RPG/monster/undead/skeletons/skeleton_humanoid_small.png',
+  devil:    'assets/RPG/monster/demons/blue_devil.png',
+  boss:     'assets/RPG/monster/dragons/golden_dragon.png',
+  dagger:      'assets/RPG/item/weapon/dagger.png',
+  shortsword:  'assets/RPG/item/weapon/long_sword_1.png',
+  longsword:   'assets/RPG/item/weapon/long_sword_5.png',
+  mace:        'assets/RPG/item/weapon/mace_1.png',
+  battleaxe:   'assets/RPG/item/weapon/battle_axe_4.png',
+  buckler:     'assets/RPG/item/armor/shields/buckler_2.png',
+  roundshield: 'assets/RPG/item/armor/shields/shield_2.png',
+  towershield: 'assets/RPG/item/armor/shields/large_shield_2.png',
+  ring_ruby:   'assets/RPG/item/ring/ruby.png',
+  ring_tourmaline: 'assets/RPG/item/ring/tourmaline.png',
+};
+
+const _DG_MON_DEF = {
+  jelly:    { name:'スライム',       sprite:'jelly',    hp:8,  atk:1,  def:0, gold:2  },
+  bat:      { name:'コウモリ',       sprite:'bat',      hp:6,  atk:2,  def:0, gold:1  },
+  skeleton: { name:'スケルトン',     sprite:'skeleton', hp:14, atk:5,  def:2, gold:5  },
+  devil:    { name:'ブルーデビル',   sprite:'devil',    hp:22, atk:8,  def:3, gold:10 },
+  boss:     { name:'黄金ドラゴン',   sprite:'boss',     hp:50, atk:12, def:5, gold:50 },
+};
+
+const _DG_EQUIP_DEF = {
+  dagger:      { name:'短剣',         slot:'weapon', sprite:'dagger',      atk:[2,4],   def:0, hp:0 },
+  shortsword:  { name:'ショートソード', slot:'weapon', sprite:'shortsword',  atk:[3,6],   def:0, hp:0 },
+  longsword:   { name:'ロングソード',   slot:'weapon', sprite:'longsword',   atk:[5,9],   def:0, hp:0 },
+  mace:        { name:'メイス',       slot:'weapon', sprite:'mace',        atk:[4,7],   def:0, hp:0 },
+  battleaxe:   { name:'バトルアックス', slot:'weapon', sprite:'battleaxe',   atk:[6,11],  def:0, hp:0 },
+  buckler:     { name:'バックラー',    slot:'shield', sprite:'buckler',     atk:0, def:[1,2],   hp:0 },
+  roundshield: { name:'ラウンドシールド', slot:'shield', sprite:'roundshield', atk:0, def:[2,4],   hp:0 },
+  towershield: { name:'タワーシールド',  slot:'shield', sprite:'towershield', atk:0, def:[3,6],   hp:0 },
+  ring_str:    { name:'力の指輪',      slot:'ring',   sprite:'ring_ruby',   atk:[1,3],   def:0, hp:0 },
+  ring_def:    { name:'守りの指輪',    slot:'ring',   sprite:'ring_tourmaline', atk:0, def:[1,2],   hp:0 },
+  ring_hp:     { name:'生命の指輪',    slot:'ring',   sprite:'ring_ruby',   atk:0, def:0, hp:[3,8] },
+};
+const _DG_RARITY = { common:{ name:'コモン', color:'#aaa', mult:1.0 }, rare:{ name:'レア', color:'#4a9eff', mult:1.3 }, epic:{ name:'エピック', color:'#a335ee', mult:1.6 } };
+
+const _DG_FLOOR_MONSTERS = [
+  ['jelly','jelly','bat','bat'],
+  ['jelly','bat','skeleton','skeleton'],
+  ['skeleton','devil','devil','boss'],
+];
+const _DG_FLOOR_EQUIP_POOL = [
+  ['dagger','shortsword','buckler','ring_str','ring_hp'],
+  ['shortsword','longsword','mace','roundshield','ring_str','ring_def','ring_hp'],
+  ['longsword','mace','battleaxe','roundshield','towershield','ring_str','ring_def','ring_hp'],
+];
+
+let _dgState = 'idle';
+let _dgCanvas = null, _dgCtx = null;
+let _dgFloor = 1;
+let _dgMap = [], _dgExplored = [], _dgVisible = [];
+let _dgPlayer = null;
+let _dgMonsters = [], _dgItems = [];
+let _dgMsgs = [];
+let _dgTotalGold = 0;
+let _dgImages = {};
+let _dgImgReady = false;
+let _dgKeyFn = null;
+let _dgRooms = [];
+let _dgBossDefeated = false;
+let _dgEquipped = { weapon:null, shield:null, ring:null };
+let _dgInventory = [];
+let _dgPendingEquip = null;
+
+function initDungeon() {
+  _dgState = 'idle';
+  document.getElementById('dungeon-lobby').classList.remove('hidden');
+  document.getElementById('dungeon-game').classList.add('hidden');
+  document.getElementById('dungeon-result').classList.add('hidden');
+  if (!_dgImgReady) {
+    let loaded = 0;
+    const keys = Object.keys(_DG_IMGS_SRC);
+    keys.forEach(k => {
+      const img = new Image();
+      img.onload = img.onerror = () => { if (++loaded === keys.length) _dgImgReady = true; };
+      img.src = _DG_IMGS_SRC[k];
+      _dgImages[k] = img;
+    });
+  }
+}
+
+function _dgStartGame() {
+  _dgState = 'playing';
+  _dgFloor = 1;
+  _dgTotalGold = 0;
+  _dgBossDefeated = false;
+  _dgMsgs = [];
+  _dgPlayer = { x:0, y:0, hp:25, maxHp:25, baseAtk:3, baseDef:0 };
+  _dgEquipped = { weapon:null, shield:null, ring:null };
+  _dgInventory = [];
+  _dgPendingEquip = null;
+  document.getElementById('dungeon-lobby').classList.add('hidden');
+  document.getElementById('dungeon-result').classList.add('hidden');
+  document.getElementById('dungeon-game').classList.remove('hidden');
+  _dgCanvas = document.getElementById('dungeon-canvas');
+  _dgCtx = _dgCanvas.getContext('2d');
+  _dgGenFloor();
+  _dgMsg('冒険を開始した！矢印キーかDパッドで移動');
+  _dgUpdate();
+  if (!_dgKeyFn) {
+    _dgKeyFn = e => {
+      const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+                    w:'up', s:'down', a:'left', d:'right', '.':'wait', ' ':'wait', i:'inventory' };
+      if (map[e.key]) { e.preventDefault(); _dgHandleDir(map[e.key]); }
+    };
+    document.addEventListener('keydown', _dgKeyFn);
+  }
+}
+
+function _dgCleanup() {
+  _dgState = 'idle';
+  if (_dgKeyFn) { document.removeEventListener('keydown', _dgKeyFn); _dgKeyFn = null; }
+  document.getElementById('dungeon-inventory')?.classList.add('hidden');
+  document.getElementById('dungeon-equip-popup')?.classList.add('hidden');
+  _dgPendingEquip = null;
+}
+
+function _dgGenFloor() {
+  _dgMap = Array.from({length:_DG_H}, () => Array(_DG_W).fill(_DG_WALL));
+  _dgExplored = Array.from({length:_DG_H}, () => Array(_DG_W).fill(false));
+  _dgVisible = Array.from({length:_DG_H}, () => Array(_DG_W).fill(false));
+  _dgMonsters = []; _dgItems = []; _dgRooms = [];
+  const numRooms = 8 + Math.floor(Math.random() * 5);
+  for (let t = 0; t < 100 && _dgRooms.length < numRooms; t++) {
+    const w = 4 + Math.floor(Math.random() * 5);
+    const h = 4 + Math.floor(Math.random() * 4);
+    const x = 1 + Math.floor(Math.random() * (_DG_W - w - 2));
+    const y = 1 + Math.floor(Math.random() * (_DG_H - h - 2));
+    if (_dgRooms.some(r => x < r.x+r.w+2 && x+w+2 > r.x && y < r.y+r.h+2 && y+h+2 > r.y)) continue;
+    for (let ry = y; ry < y+h; ry++) for (let rx = x; rx < x+w; rx++) _dgMap[ry][rx] = _DG_FLOOR;
+    _dgRooms.push({ x, y, w, h, cx: x+Math.floor(w/2), cy: y+Math.floor(h/2) });
+  }
+  for (let i = 1; i < _dgRooms.length; i++) {
+    const a = _dgRooms[i-1], b = _dgRooms[i];
+    let cx = a.cx, cy = a.cy;
+    while (cx !== b.cx) { _dgMap[cy][cx] = _DG_FLOOR; cx += cx < b.cx ? 1 : -1; }
+    while (cy !== b.cy) { _dgMap[cy][cx] = _DG_FLOOR; cy += cy < b.cy ? 1 : -1; }
+  }
+  _dgPlayer.x = _dgRooms[0].cx; _dgPlayer.y = _dgRooms[0].cy;
+  const last = _dgRooms[_dgRooms.length-1];
+  _dgMap[last.cy][last.cx] = _DG_STAIRS;
+  const monTypes = _DG_FLOOR_MONSTERS[_dgFloor-1];
+  const numMon = 3 + _dgFloor * 2;
+  const startRoom = _dgRooms[0];
+  for (let i = 0; i < numMon; i++) {
+    const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
+    const type = (_dgFloor === 3 && i === 0) ? 'boss' : monTypes[Math.floor(Math.random() * monTypes.length)];
+    const def = _DG_MON_DEF[type];
+    let mx, my;
+    do {
+      mx = room.cx + Math.floor(Math.random()*3)-1;
+      my = room.cy + Math.floor(Math.random()*3)-1;
+    } while (Math.abs(mx - startRoom.cx) <= 2 && Math.abs(my - startRoom.cy) <= 2);
+    _dgMonsters.push({ x: mx, y: my,
+      type, name: def.name, sprite: def.sprite, hp: def.hp, maxHp: def.hp, atk: def.atk, def: def.def, gold: def.gold });
+  }
+  const equipPool = _DG_FLOOR_EQUIP_POOL[_dgFloor-1];
+  const numEquip = 3 + _dgFloor;
+  for (let i = 0; i < numEquip; i++) {
+    const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
+    const ox = room.x + 1 + Math.floor(Math.random() * (room.w-2));
+    const oy = room.y + 1 + Math.floor(Math.random() * (room.h-2));
+    const eqId = equipPool[Math.floor(Math.random() * equipPool.length)];
+    _dgItems.push(_dgGenEquip(eqId, ox, oy));
+  }
+  for (let i = 0; i < 2; i++) {
+    const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
+    const ox = room.x + 1 + Math.floor(Math.random() * (room.w-2));
+    const oy = room.y + 1 + Math.floor(Math.random() * (room.h-2));
+    _dgItems.push({ x: ox, y: oy, type: 'gold', sprite: 'gold', category: 'consumable' });
+  }
+  const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
+  _dgItems.push({ x: room.cx, y: room.cy, type: 'potion', sprite: 'potion', category: 'consumable' });
+}
+
+function _dgGenEquip(eqId, x, y) {
+  const base = _DG_EQUIP_DEF[eqId];
+  const rarityRoll = Math.random();
+  const rarity = rarityRoll < 0.65 ? 'common' : rarityRoll < 0.90 ? 'rare' : 'epic';
+  const rarityData = _DG_RARITY[rarity];
+  const atk = Array.isArray(base.atk) ? Math.round((base.atk[0] + Math.random()*(base.atk[1]-base.atk[0])) * rarityData.mult) : base.atk;
+  const def = Array.isArray(base.def) ? Math.round((base.def[0] + Math.random()*(base.def[1]-base.def[0])) * rarityData.mult) : base.def;
+  const hp = Array.isArray(base.hp) ? Math.round((base.hp[0] + Math.random()*(base.hp[1]-base.hp[0])) * rarityData.mult) : base.hp;
+  return { x, y, category: 'equip', eqId, name: base.name, slot: base.slot, sprite: base.sprite, rarity, atk, def, hp };
+}
+
+function _dgCalcStats() {
+  const p = _dgPlayer;
+  let atk = p.baseAtk, def = p.baseDef, maxHp = 25;
+  for (const slot of ['weapon','shield','ring']) {
+    const eq = _dgEquipped[slot];
+    if (eq) { atk += eq.atk; def += eq.def; maxHp += eq.hp; }
+  }
+  p.maxHp = maxHp;
+  if (p.hp > p.maxHp) p.hp = p.maxHp;
+  return { atk, def };
+}
+
+function _dgCalcVis() {
+  _dgVisible = Array.from({length:_DG_H}, () => Array(_DG_W).fill(false));
+  const px = _dgPlayer.x, py = _dgPlayer.y, r = _DG_VIS;
+  for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+    if (dx*dx+dy*dy > r*r+1) continue;
+    const tx = px+dx, ty = py+dy;
+    if (tx<0||tx>=_DG_W||ty<0||ty>=_DG_H) continue;
+    if (_dgLOS(px,py,tx,ty)) { _dgVisible[ty][tx]=true; _dgExplored[ty][tx]=true; }
+  }
+}
+
+function _dgLOS(x0,y0,x1,y1) {
+  let dx=Math.abs(x1-x0), dy=Math.abs(y1-y0), sx=x0<x1?1:-1, sy=y0<y1?1:-1, err=dx-dy, x=x0, y=y0;
+  while(x!==x1||y!==y1) {
+    if(_dgMap[y][x]===_DG_WALL) return false;
+    const e2=2*err; if(e2>-dy){err-=dy;x+=sx;} if(e2<dx){err+=dx;y+=sy;}
+  }
+  return true;
+}
+
+function _dgRender() {
+  if (!_dgCtx || !_dgCanvas) return;
+  const ctx = _dgCtx, T = _DG_TILE, V = _DG_VIEW;
+  const px = _dgPlayer.x, py = _dgPlayer.y, half = Math.floor(V/2);
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,T*V,T*V);
+  for (let dy=0;dy<V;dy++) for (let dx=0;dx<V;dx++) {
+    const mx=px-half+dx, my=py-half+dy, sx=dx*T, sy=dy*T;
+    if (mx<0||mx>=_DG_W||my<0||my>=_DG_H) continue;
+    if (!_dgExplored[my][mx]) continue;
+    const tile=_dgMap[my][mx], vis=_dgVisible[my][mx];
+    const floorImg = _dgImages.floor, wallImg = _dgImages.wall;
+    if (tile===_DG_WALL) { if(wallImg?.complete) ctx.drawImage(wallImg,sx,sy,T,T); }
+    else { if(floorImg?.complete) ctx.drawImage(floorImg,sx,sy,T,T); }
+    if (!vis) {
+      if (tile===_DG_STAIRS) { const im=_dgImages.stairs; if(im?.complete) ctx.drawImage(im,sx,sy,T,T); }
+      const item=_dgItems.find(i=>i.x===mx&&i.y===my);
+      if (item) { const im=_dgImages[item.sprite]; if(im?.complete) ctx.drawImage(im,sx,sy,T,T); }
+      ctx.fillStyle='rgba(0,0,0,0.58)'; ctx.fillRect(sx,sy,T,T);
+      continue;
+    }
+    if (tile===_DG_STAIRS) { const im=_dgImages.stairs; if(im?.complete) ctx.drawImage(im,sx,sy,T,T); }
+    const item=_dgItems.find(i=>i.x===mx&&i.y===my);
+    if (item) { const im=_dgImages[item.sprite]; if(im?.complete) ctx.drawImage(im,sx,sy,T,T); }
+    const mon=_dgMonsters.find(m=>m.x===mx&&m.y===my&&m.hp>0);
+    if (mon) {
+      const im=_dgImages[mon.sprite]; if(im?.complete) ctx.drawImage(im,sx,sy,T,T);
+      ctx.fillStyle='#600'; ctx.fillRect(sx,sy,T,6);
+      ctx.fillStyle='#0d0'; ctx.fillRect(sx,sy,Math.round(T*mon.hp/mon.maxHp),6);
+    }
+  }
+  const im=_dgImages.player; if(im?.complete) ctx.drawImage(im,half*T,half*T,T,T);
+}
+
+function _dgUpdate() {
+  _dgCalcVis(); _dgRender(); _dgUpdateHUD();
+}
+
+function _dgUpdateHUD() {
+  const p=_dgPlayer;
+  const stats = _dgCalcStats();
+  const hp=document.getElementById('dg-hp'); if(hp) hp.textContent=`❤️${p.hp}/${p.maxHp}`;
+  const fl=document.getElementById('dg-floor'); if(fl) fl.textContent=`B${_dgFloor}F`;
+  const atk=document.getElementById('dg-atk'); if(atk) atk.textContent=`⚔️${stats.atk}`;
+  const def=document.getElementById('dg-def'); if(def) def.textContent=`🛡${stats.def}`;
+  const gd=document.getElementById('dg-gold'); if(gd) gd.textContent=`💰${_dgTotalGold}`;
+  for (const slot of ['weapon','shield','ring']) {
+    const el = document.getElementById(`dg-slot-${slot}`);
+    if (!el) continue;
+    const eq = _dgEquipped[slot];
+    if (eq) {
+      el.classList.add('equipped');
+      const icon = el.querySelector('.dg-slot-icon');
+      const img = _dgImages[eq.sprite];
+      if (icon && img?.complete) icon.style.backgroundImage = `url(${img.src})`;
+      const rarity = _DG_RARITY[eq.rarity];
+      el.style.borderColor = rarity.color;
+    } else {
+      el.classList.remove('equipped');
+      const icon = el.querySelector('.dg-slot-icon');
+      if (icon) icon.style.backgroundImage = '';
+      el.style.borderColor = '#333';
+    }
+  }
+}
+
+function _dgMsg(text) {
+  _dgMsgs.push(text);
+  if (_dgMsgs.length > 8) _dgMsgs.shift();
+  const log=document.getElementById('dungeon-log');
+  if (log) log.innerHTML = _dgMsgs.map(m=>`<p>${m}</p>`).join('');
+}
+
+function _dgHandleDir(dir) {
+  if (_dgState !== 'playing') return;
+  const invOpen = !document.getElementById('dungeon-inventory')?.classList.contains('hidden');
+  const popupOpen = !document.getElementById('dungeon-equip-popup')?.classList.contains('hidden');
+  if (invOpen || popupOpen) return;
+  if (dir === 'inventory') { _dgShowInventory(); return; }
+  const moves = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0], wait:[0,0] };
+  const d = moves[dir]; if (!d) return;
+  _dgPlayerMove(d[0], d[1]);
+}
+
+function _dgShowInventory() {
+  document.getElementById('dungeon-inventory').classList.remove('hidden');
+  _dgRenderInventory();
+}
+
+function _dgHideInventory() {
+  document.getElementById('dungeon-inventory').classList.add('hidden');
+}
+
+function _dgRenderInventory() {
+  const list = document.getElementById('dungeon-inv-list');
+  if (!list) return;
+  let html = '';
+  for (const slot of ['weapon','shield','ring']) {
+    const eq = _dgEquipped[slot];
+    if (eq) {
+      const rc = _DG_RARITY[eq.rarity].color;
+      const img = _dgImages[eq.sprite];
+      const statsText = [eq.atk>0?`⚔️+${eq.atk}`:'', eq.def>0?`🛡+${eq.def}`:'', eq.hp>0?`❤️+${eq.hp}`:''].filter(s=>s).join(' ');
+      html += `<div class="dg-inv-item equipped">
+        <div class="dg-inv-icon" style="background-image:url(${img?.src||''})"></div>
+        <div class="dg-inv-info">
+          <div class="dg-inv-name" style="color:${rc}">${eq.name} [装備中]</div>
+          <div class="dg-inv-stats">${statsText}</div>
+        </div>
+        <div class="dg-inv-actions">
+          <button class="dg-inv-btn-unequip" onclick="_dgUnequip('${slot}')">外す</button>
+        </div>
+      </div>`;
+    }
+  }
+  for (let i = 0; i < _dgInventory.length; i++) {
+    const item = _dgInventory[i];
+    const rc = _DG_RARITY[item.rarity].color;
+    const img = _dgImages[item.sprite];
+    const statsText = [item.atk>0?`⚔️+${item.atk}`:'', item.def>0?`🛡+${item.def}`:'', item.hp>0?`❤️+${item.hp}`:''].filter(s=>s).join(' ');
+    html += `<div class="dg-inv-item">
+      <div class="dg-inv-icon" style="background-image:url(${img?.src||''})"></div>
+      <div class="dg-inv-info">
+        <div class="dg-inv-name" style="color:${rc}">${item.name}</div>
+        <div class="dg-inv-stats">${statsText}</div>
+      </div>
+      <div class="dg-inv-actions">
+        <button class="dg-inv-btn-equip" onclick="_dgEquipFromInv(${i})">装備</button>
+      </div>
+    </div>`;
+  }
+  if (html === '') html = '<p style="color:#777; text-align:center; padding:20px;">装備がありません</p>';
+  list.innerHTML = html;
+}
+
+function _dgEquipFromInv(idx) {
+  const item = _dgInventory[idx];
+  const slot = item.slot;
+  const current = _dgEquipped[slot];
+  if (current) _dgInventory.push(current);
+  _dgEquipped[slot] = item;
+  _dgInventory.splice(idx, 1);
+  _dgCalcStats();
+  _dgRenderInventory();
+  _dgUpdate();
+}
+
+function _dgUnequip(slot) {
+  const item = _dgEquipped[slot];
+  if (!item) return;
+  _dgInventory.push(item);
+  _dgEquipped[slot] = null;
+  _dgCalcStats();
+  _dgRenderInventory();
+  _dgUpdate();
+}
+
+function _dgPlayerMove(dx, dy) {
+  const p = _dgPlayer;
+  if (dx===0 && dy===0) { _dgMonsterTurns(); _dgUpdate(); return; }
+  const nx=p.x+dx, ny=p.y+dy;
+  if (nx<0||nx>=_DG_W||ny<0||ny>=_DG_H) return;
+  if (_dgMap[ny][nx]===_DG_WALL) return;
+  const mi=_dgMonsters.findIndex(m=>m.x===nx&&m.y===ny&&m.hp>0);
+  if (mi>=0) { _dgAttack(mi); _dgMonsterTurns(); _dgUpdate(); return; }
+  p.x=nx; p.y=ny;
+  const ii=_dgItems.findIndex(i=>i.x===nx&&i.y===ny);
+  if (ii>=0) {
+    _dgPickup(ii);
+    if (_dgPendingEquip) { _dgUpdate(); return; }
+  }
+  if (_dgMap[ny][nx]===_DG_STAIRS) {
+    if (_dgFloor < _DG_FLOORS) { _dgNextFloor(); return; }
+    else {
+      const bossAlive=_dgMonsters.some(m=>m.type==='boss'&&m.hp>0);
+      if (!bossAlive) { _dgWin(); return; }
+      else _dgMsg('ボスを倒してから脱出せよ！');
+    }
+  }
+  _dgMonsterTurns(); _dgUpdate();
+}
+
+function _dgAttack(mi) {
+  const p=_dgPlayer, m=_dgMonsters[mi];
+  const stats = _dgCalcStats();
+  const dmg=Math.max(1, stats.atk - m.def);
+  m.hp-=dmg;
+  _dgMsg(`${m.name}に${dmg}ダメージ！（残HP:${Math.max(0,m.hp)}）`);
+  _dgFlashRed();
+  if (m.hp<=0) {
+    _dgMsg(`${m.name}を倒した！💰+${m.gold}`);
+    _dgTotalGold+=m.gold;
+    if (m.type==='boss') { _dgBossDefeated=true; _dgMsg('🏆 ボスを倒した！階段から脱出せよ！'); }
+  }
+}
+
+function _dgFlashRed() {
+  if (!_dgCtx || !_dgCanvas) return;
+  const T = _DG_TILE, V = _DG_VIEW;
+  _dgCtx.fillStyle='rgba(255,0,0,0.35)';
+  _dgCtx.fillRect(0,0,T*V,T*V);
+  setTimeout(() => _dgRender(), 100);
+}
+
+function _dgPickup(ii) {
+  const item=_dgItems[ii]; _dgItems.splice(ii,1);
+  if (item.category === 'consumable') {
+    if (item.type==='gold') { const g=3+Math.floor(Math.random()*5); _dgTotalGold+=g; _dgMsg(`💰 金貨+${g}枚`); }
+    else if (item.type==='potion') { const h=Math.min(_dgPlayer.maxHp, _dgPlayer.hp+12); _dgPlayer.hp=h; _dgMsg(`🧪 HP回復！（${h}/${_dgPlayer.maxHp}）`); }
+  } else if (item.category === 'equip') {
+    const slot = item.slot;
+    const current = _dgEquipped[slot];
+    if (!current) {
+      _dgEquipped[slot] = item;
+      const rc = _DG_RARITY[item.rarity].color;
+      _dgMsg(`<span style="color:${rc}">${item.name}</span> を装備した！`);
+      _dgCalcStats();
+    } else {
+      _dgPendingEquip = item;
+      _dgShowEquipPopup(current, item);
+    }
+  }
+}
+
+function _dgShowEquipPopup(current, newItem) {
+  const popup = document.getElementById('dungeon-equip-popup');
+  if (!popup) return;
+  const currentEl = document.getElementById('dg-compare-current');
+  const newEl = document.getElementById('dg-compare-new');
+
+  const currentImg = _dgImages[current.sprite];
+  const newImg = _dgImages[newItem.sprite];
+  const currentRc = _DG_RARITY[current.rarity].color;
+  const newRc = _DG_RARITY[newItem.rarity].color;
+
+  const currentStats = [current.atk>0?`⚔️+${current.atk}`:'', current.def>0?`🛡+${current.def}`:'', current.hp>0?`❤️+${current.hp}`:''].filter(s=>s).join(' ');
+
+  const atkDiff = newItem.atk - current.atk;
+  const defDiff = newItem.def - current.def;
+  const hpDiff = newItem.hp - current.hp;
+  const diffColor = (v) => v > 0 ? '#5c5' : v < 0 ? '#e55' : '#aaa';
+  const diffPrefix = (v) => v > 0 ? '+' : '';
+  let newStatsHtml = [];
+  if (newItem.atk > 0) newStatsHtml.push(`⚔️+${newItem.atk} <span style="color:${diffColor(atkDiff)}">(${diffPrefix(atkDiff)}${atkDiff})</span>`);
+  if (newItem.def > 0) newStatsHtml.push(`🛡+${newItem.def} <span style="color:${diffColor(defDiff)}">(${diffPrefix(defDiff)}${defDiff})</span>`);
+  if (newItem.hp > 0) newStatsHtml.push(`❤️+${newItem.hp} <span style="color:${diffColor(hpDiff)}">(${diffPrefix(hpDiff)}${hpDiff})</span>`);
+
+  currentEl.querySelector('.dg-compare-icon').style.backgroundImage = `url(${currentImg?.src||''})`;
+  currentEl.querySelector('.dg-compare-name').textContent = current.name;
+  currentEl.querySelector('.dg-compare-name').style.color = currentRc;
+  currentEl.querySelector('.dg-compare-stats').textContent = currentStats;
+  currentEl.style.borderColor = currentRc;
+
+  newEl.querySelector('.dg-compare-icon').style.backgroundImage = `url(${newImg?.src||''})`;
+  newEl.querySelector('.dg-compare-name').textContent = newItem.name;
+  newEl.querySelector('.dg-compare-name').style.color = newRc;
+  newEl.querySelector('.dg-compare-stats').innerHTML = newStatsHtml.join(' ');
+  newEl.style.borderColor = newRc;
+
+  popup.classList.remove('hidden');
+}
+
+function _dgHideEquipPopup() {
+  document.getElementById('dungeon-equip-popup')?.classList.add('hidden');
+  _dgPendingEquip = null;
+}
+
+function _dgEquipPending() {
+  if (!_dgPendingEquip) return;
+  const item = _dgPendingEquip;
+  const slot = item.slot;
+  const current = _dgEquipped[slot];
+  if (current) _dgInventory.push(current);
+  _dgEquipped[slot] = item;
+  _dgCalcStats();
+  const rc = _DG_RARITY[item.rarity].color;
+  _dgMsg(`<span style="color:${rc}">${item.name}</span> を装備した！`);
+  _dgHideEquipPopup();
+  _dgMonsterTurns();
+  _dgUpdate();
+}
+
+function _dgBagPending() {
+  if (!_dgPendingEquip) return;
+  _dgInventory.push(_dgPendingEquip);
+  const rc = _DG_RARITY[_dgPendingEquip.rarity].color;
+  _dgMsg(`<span style="color:${rc}">${_dgPendingEquip.name}</span> をバッグに入れた`);
+  _dgHideEquipPopup();
+  _dgMonsterTurns();
+  _dgUpdate();
+}
+
+function _dgMonsterTurns() {
+  const p=_dgPlayer;
+  const stats = _dgCalcStats();
+  for (const m of _dgMonsters) {
+    if (m.hp<=0) continue;
+    const dist=Math.abs(m.x-p.x)+Math.abs(m.y-p.y);
+    if (dist>10) continue;
+    if (dist===1) {
+      const dmg=Math.max(1, m.atk-stats.def);
+      p.hp=Math.max(0, p.hp-dmg);
+      _dgMsg(`${m.name}の攻撃！-${dmg}HP（残:${p.hp}）`);
+      _dgFlashRed();
+      if (p.hp<=0) { _dgDie(); return; }
+    } else {
+      let bx=m.x, by=m.y;
+      if (Math.abs(p.x-m.x)>=Math.abs(p.y-m.y)) bx+=p.x>m.x?1:-1;
+      else by+=p.y>m.y?1:-1;
+      if (bx>=0&&bx<_DG_W&&by>=0&&by<_DG_H && _dgMap[by][bx]!==_DG_WALL &&
+          !(bx===p.x&&by===p.y) && !_dgMonsters.some(o=>o!==m&&o.hp>0&&o.x===bx&&o.y===by)) {
+        m.x=bx; m.y=by;
+      }
+    }
+  }
+}
+
+function _dgNextFloor() {
+  _dgFloor++;
+  _dgMsg(`──B${_dgFloor}Fへ降りた！──`);
+  _dgGenFloor();
+  _dgUpdate();
+}
+
+function _dgDie() {
+  _dgState='dead';
+  _dgMsg('⚰️ 力尽きた...');
+  _dgUpdate();
+  setTimeout(()=>_dgShowResult(false), 1200);
+}
+
+function _dgWin() {
+  _dgState='won';
+  _dgMsg('🎉 脱出成功！！');
+  _dgUpdate();
+  setTimeout(()=>_dgShowResult(true), 800);
+}
+
+function _dgShowResult(won) {
+  _dgCleanup();
+  document.getElementById('dungeon-game').classList.add('hidden');
+  document.getElementById('dungeon-result').classList.remove('hidden');
+  const coins=_dgTotalGold;
+  gameState.mokuCoins=(gameState.mokuCoins??0)+coins;
+  const rank=won ? (_dgFloor>=3?'SS':'S') : (_dgFloor>=2?'B':'C');
+  document.getElementById('dg-result-icon').textContent=won?'🏆':'💀';
+  document.getElementById('dg-result-title').textContent=won?'脱出成功！！':'力尽きた...';
+  const rk=document.getElementById('dg-result-rank'); rk.textContent=rank; rk.setAttribute('data-rank',rank);
+  document.getElementById('dg-res-floor').textContent=`B${_dgFloor}F`;
+  document.getElementById('dg-res-coins').textContent=`+${coins}枚`;
   saveGame();
 }
 
