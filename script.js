@@ -7581,11 +7581,11 @@ function _dgGenEquip(eqId, x, y) {
   const rarityRoll = Math.random();
   let rarity;
   if (_dgFloor === 1) {
-    rarity = rarityRoll < 0.50 ? 'common' : rarityRoll < 0.85 ? 'rare' : 'epic';
+    rarity = rarityRoll < 0.50 ? 'common' : rarityRoll < 0.85 ? 'rare' : rarityRoll < 0.97 ? 'epic' : 'legendary';
   } else if (_dgFloor === 2) {
-    rarity = rarityRoll < 0.30 ? 'common' : rarityRoll < 0.75 ? 'rare' : 'epic';
+    rarity = rarityRoll < 0.30 ? 'common' : rarityRoll < 0.70 ? 'rare' : rarityRoll < 0.92 ? 'epic' : 'legendary';
   } else {
-    rarity = rarityRoll < 0.15 ? 'common' : rarityRoll < 0.60 ? 'rare' : 'epic';
+    rarity = rarityRoll < 0.10 ? 'common' : rarityRoll < 0.45 ? 'rare' : rarityRoll < 0.85 ? 'epic' : 'legendary';
   }
   const rarityData = _DG_RARITY[rarity];
   const atk = Array.isArray(base.atk) ? Math.round((base.atk[0] + Math.random()*(base.atk[1]-base.atk[0])) * rarityData.mult) : base.atk;
