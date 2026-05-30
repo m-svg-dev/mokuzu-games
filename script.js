@@ -5692,12 +5692,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedMode = localStorage.getItem('dgControlMode') || 'stick';
   if (bottomControls) bottomControls.className = `dg-bottom-controls dg-control-mode-${savedMode}`;
   if (switchBtn) {
-    switchBtn.textContent = savedMode === 'stick' ? '🎮' : '➕';
+    switchBtn.innerHTML = savedMode === 'stick' ? '🎮<br>スティック' : '➕<br>ボタン';
     switchBtn.addEventListener('click', () => {
       const currentMode = bottomControls.classList.contains('dg-control-mode-stick') ? 'stick' : 'buttons';
       const newMode = currentMode === 'stick' ? 'buttons' : 'stick';
       bottomControls.className = `dg-bottom-controls dg-control-mode-${newMode}`;
-      switchBtn.textContent = newMode === 'stick' ? '🎮' : '➕';
+      switchBtn.innerHTML = newMode === 'stick' ? '🎮<br>スティック' : '➕<br>ボタン';
       localStorage.setItem('dgControlMode', newMode);
     });
   }
