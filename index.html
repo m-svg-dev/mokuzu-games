@@ -796,31 +796,33 @@
           <span id="dg-def" class="dg-stat">🛡0</span>
           <span id="dg-gold" class="dg-stat">💰0</span>
         </div>
-        <div class="dg-equip-bar">
-          <div class="dg-equip-slot" id="dg-slot-weapon" data-slot="weapon">
-            <div class="dg-slot-icon"></div>
-            <div class="dg-slot-label">武器</div>
-          </div>
-          <div class="dg-equip-slot" id="dg-slot-shield" data-slot="shield">
-            <div class="dg-slot-icon"></div>
-            <div class="dg-slot-label">盾</div>
-          </div>
-          <div class="dg-equip-slot" id="dg-slot-ring" data-slot="ring">
-            <div class="dg-slot-icon"></div>
-            <div class="dg-slot-label">指輪</div>
-          </div>
-        </div>
         <canvas id="dungeon-canvas" width="288" height="288"></canvas>
         <div id="dungeon-log" class="dungeon-log"></div>
-        <div class="dungeon-dpad">
-          <div class="dpad-row"><button class="dungeon-dpad-btn" data-dir="up">↑</button></div>
-          <div class="dpad-row">
-            <button class="dungeon-dpad-btn" data-dir="left">←</button>
-            <button class="dungeon-dpad-btn dpad-wait" data-dir="wait">·</button>
-            <button class="dungeon-dpad-btn" data-dir="right">→</button>
+        <div class="dg-bottom-controls">
+          <div class="dg-equip-bar">
+            <div class="dg-equip-slot" id="dg-slot-weapon" data-slot="weapon">
+              <div class="dg-slot-icon"></div>
+              <div class="dg-slot-label">武器</div>
+            </div>
+            <div class="dg-equip-slot" id="dg-slot-shield" data-slot="shield">
+              <div class="dg-slot-icon"></div>
+              <div class="dg-slot-label">盾</div>
+            </div>
+            <div class="dg-equip-slot" id="dg-slot-ring" data-slot="ring">
+              <div class="dg-slot-icon"></div>
+              <div class="dg-slot-label">指輪</div>
+            </div>
           </div>
-          <div class="dpad-row"><button class="dungeon-dpad-btn" data-dir="down">↓</button></div>
-          <button id="dungeon-inv-btn" class="dungeon-inv-btn">📦 装備</button>
+          <div class="dungeon-dpad">
+            <div class="dpad-row"><button class="dungeon-dpad-btn" data-dir="up">↑</button></div>
+            <div class="dpad-row">
+              <button class="dungeon-dpad-btn" data-dir="left">←</button>
+              <button class="dungeon-dpad-btn dpad-wait" data-dir="wait">·</button>
+              <button class="dungeon-dpad-btn" data-dir="right">→</button>
+            </div>
+            <div class="dpad-row"><button class="dungeon-dpad-btn" data-dir="down">↓</button></div>
+            <button id="dungeon-inv-btn" class="dungeon-inv-btn">📦 装備</button>
+          </div>
         </div>
       </div>
       <!-- インベントリ画面 -->
