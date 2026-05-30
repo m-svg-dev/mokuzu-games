@@ -7516,6 +7516,7 @@ function _dgGenFloor() {
   const monTypes = _DG_FLOOR_MONSTERS[_dgFloor-1];
   const numMon = 3 + _dgFloor * 2;
   const startRoom = _dgRooms[0];
+  let bossSpawned = false;
   for (let i = 0; i < numMon; i++) {
     const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
     const type = (_dgFloor === 3 && i === 0) ? 'boss' : monTypes[Math.floor(Math.random() * monTypes.length)];
@@ -7527,6 +7528,10 @@ function _dgGenFloor() {
     } while (Math.abs(mx - startRoom.cx) <= 2 && Math.abs(my - startRoom.cy) <= 2);
     _dgMonsters.push({ x: mx, y: my,
       type, name: def.name, sprite: def.sprite, hp: def.hp, maxHp: def.hp, atk: def.atk, def: def.def, gold: def.gold });
+    if (type === 'boss') bossSpawned = true;
+  }
+  if (bossSpawned && _dgFloor === 3) {
+    setTimeout(() => _dgMsg('🐲 強大な気配を感じる... BOSS出現！'), 800);
   }
   const equipPool = _DG_FLOOR_EQUIP_POOL[_dgFloor-1];
   const numEquip = 5 + _dgFloor * 2;
@@ -7617,9 +7622,25 @@ function _dgRender() {
     if (item) { const im=_dgImages[item.sprite]; if(im?.complete) ctx.drawImage(im,sx,sy,T,T); }
     const mon=_dgMonsters.find(m=>m.x===mx&&m.y===my&&m.hp>0);
     if (mon) {
+      const isBoss = mon.type === 'boss';
+      if (isBoss) {
+        const time = Date.now() / 300;
+        const glow = Math.sin(time) * 0.3 + 0.7;
+        ctx.strokeStyle = `rgba(255, 215, 0, ${glow})`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(sx-2, sy-2, T+4, T+4);
+      }
       const im=_dgImages[mon.sprite]; if(im?.complete) ctx.drawImage(im,sx,sy,T,T);
-      ctx.fillStyle='#600'; ctx.fillRect(sx,sy,T,6);
-      ctx.fillStyle='#0d0'; ctx.fillRect(sx,sy,Math.round(T*mon.hp/mon.maxHp),6);
+      if (isBoss) {
+        ctx.fillStyle='#1a0a00'; ctx.fillRect(sx,sy,T,8);
+        ctx.fillStyle='#8b0000'; ctx.fillRect(sx,sy,Math.round(T*mon.hp/mon.maxHp),8);
+        ctx.fillStyle='#ffd700'; ctx.fillRect(sx,sy,Math.round(T*mon.hp/mon.maxHp),4);
+        ctx.fillStyle='#ffd700'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('BOSS', sx+T/2, sy+T-2);
+      } else {
+        ctx.fillStyle='#600'; ctx.fillRect(sx,sy,T,6);
+        ctx.fillStyle='#0d0'; ctx.fillRect(sx,sy,Math.round(T*mon.hp/mon.maxHp),6);
+      }
     }
   }
   const im=_dgImages.player; if(im?.complete) ctx.drawImage(im,half*T,half*T,T,T);
