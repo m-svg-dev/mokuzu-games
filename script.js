@@ -7530,9 +7530,6 @@ function _dgGenFloor() {
       type, name: def.name, sprite: def.sprite, hp: def.hp, maxHp: def.hp, atk: def.atk, def: def.def, gold: def.gold });
     if (type === 'boss') bossSpawned = true;
   }
-  if (bossSpawned && _dgFloor === 3) {
-    setTimeout(() => _dgMsg('🐲 強大な気配を感じる... BOSS出現！'), 800);
-  }
   const equipPool = _DG_FLOOR_EQUIP_POOL[_dgFloor-1];
   const numEquip = 5 + _dgFloor * 2;
   for (let i = 0; i < numEquip; i++) {
@@ -7551,6 +7548,9 @@ function _dgGenFloor() {
   for (let i = 0; i < 2; i++) {
     const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
     _dgItems.push({ x: room.cx, y: room.cy, type: 'potion', sprite: 'potion', category: 'consumable' });
+  }
+  if (_dgFloor === 3) {
+    setTimeout(() => _dgMsg('🐲 強大な気配を感じる... BOSS出現！'), 500);
   }
 }
 
@@ -7624,19 +7624,21 @@ function _dgRender() {
     if (mon) {
       const isBoss = mon.type === 'boss';
       if (isBoss) {
-        const time = Date.now() / 300;
-        const glow = Math.sin(time) * 0.3 + 0.7;
-        ctx.strokeStyle = `rgba(255, 215, 0, ${glow})`;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(sx-2, sy-2, T+4, T+4);
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(sx-1, sy-1, T+2, T+2);
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 8;
+        ctx.strokeRect(sx-1, sy-1, T+2, T+2);
+        ctx.shadowBlur = 0;
       }
       const im=_dgImages[mon.sprite]; if(im?.complete) ctx.drawImage(im,sx,sy,T,T);
       if (isBoss) {
-        ctx.fillStyle='#1a0a00'; ctx.fillRect(sx,sy,T,8);
-        ctx.fillStyle='#8b0000'; ctx.fillRect(sx,sy,Math.round(T*mon.hp/mon.maxHp),8);
-        ctx.fillStyle='#ffd700'; ctx.fillRect(sx,sy,Math.round(T*mon.hp/mon.maxHp),4);
-        ctx.fillStyle='#ffd700'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center';
-        ctx.fillText('BOSS', sx+T/2, sy+T-2);
+        ctx.fillStyle='#1a0a00'; ctx.fillRect(sx,sy-10,T,8);
+        ctx.fillStyle='#8b0000'; ctx.fillRect(sx,sy-10,Math.round(T*mon.hp/mon.maxHp),8);
+        ctx.fillStyle='#ffd700'; ctx.fillRect(sx,sy-10,Math.round(T*mon.hp/mon.maxHp),4);
+        ctx.fillStyle='#ffd700'; ctx.font='bold 8px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('BOSS', sx+T/2, sy+T+8);
       } else {
         ctx.fillStyle='#600'; ctx.fillRect(sx,sy,T,6);
         ctx.fillStyle='#0d0'; ctx.fillRect(sx,sy,Math.round(T*mon.hp/mon.maxHp),6);
