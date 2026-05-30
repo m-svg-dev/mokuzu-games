@@ -7423,7 +7423,12 @@ const _DG_EQUIP_DEF = {
   ring_def:    { name:'守りの指輪',    slot:'ring',   sprite:'ring_tourmaline', atk:0, def:[1,2],   hp:0 },
   ring_hp:     { name:'生命の指輪',    slot:'ring',   sprite:'ring_ruby',   atk:0, def:0, hp:[3,8] },
 };
-const _DG_RARITY = { common:{ name:'コモン', color:'#aaa', mult:1.0 }, rare:{ name:'レア', color:'#4a9eff', mult:1.3 }, epic:{ name:'エピック', color:'#a335ee', mult:1.6 } };
+const _DG_RARITY = {
+  common:{ name:'コモン', color:'#aaa', mult:1.0 },
+  rare:{ name:'レア', color:'#4a9eff', mult:1.3 },
+  epic:{ name:'エピック', color:'#a335ee', mult:1.6 },
+  legendary:{ name:'レジェンダリー', color:'#ff8000', mult:2.0 }
+};
 
 const _DG_FLOOR_MONSTERS = [
   ['jelly','jelly','bat','bat'],
