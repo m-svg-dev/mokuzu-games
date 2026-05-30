@@ -7550,8 +7550,12 @@ function _dgGenFloor() {
     } while (Math.abs(mx - startRoom.cx) <= 2 && Math.abs(my - startRoom.cy) <= 2);
     _dgMonsters.push({ x: mx, y: my,
       type, name: def.name, sprite: def.sprite, hp: def.hp, maxHp: def.hp, atk: def.atk, def: def.def, gold: def.gold });
-    if (type === 'boss') bossSpawned = true;
+    if (type === 'boss') {
+      bossSpawned = true;
+      console.log('BOSS spawned at', mx, my, 'sprite:', def.sprite);
+    }
   }
+  if (_dgFloor === 3) console.log('All B3F monsters:', _dgMonsters.map(m => `${m.name}(${m.type})`));
   const equipPool = _DG_FLOOR_EQUIP_POOL[_dgFloor-1];
   const numEquip = 5 + _dgFloor * 2;
   for (let i = 0; i < numEquip; i++) {
