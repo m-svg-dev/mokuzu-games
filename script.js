@@ -7414,8 +7414,8 @@ const _DG_FLOOR_MONSTERS = [
   ['skeleton','devil','devil','boss'],
 ];
 const _DG_FLOOR_EQUIP_POOL = [
-  ['dagger','shortsword','buckler','ring_str','ring_hp'],
-  ['shortsword','longsword','mace','roundshield','ring_str','ring_def','ring_hp'],
+  ['dagger','shortsword','buckler','roundshield','ring_str','ring_def','ring_hp'],
+  ['shortsword','longsword','mace','roundshield','towershield','ring_str','ring_def','ring_hp'],
   ['longsword','mace','battleaxe','roundshield','towershield','ring_str','ring_def','ring_hp'],
 ];
 
@@ -7529,7 +7529,7 @@ function _dgGenFloor() {
       type, name: def.name, sprite: def.sprite, hp: def.hp, maxHp: def.hp, atk: def.atk, def: def.def, gold: def.gold });
   }
   const equipPool = _DG_FLOOR_EQUIP_POOL[_dgFloor-1];
-  const numEquip = 3 + _dgFloor;
+  const numEquip = 5 + _dgFloor * 2;
   for (let i = 0; i < numEquip; i++) {
     const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
     const ox = room.x + 1 + Math.floor(Math.random() * (room.w-2));
@@ -7543,14 +7543,16 @@ function _dgGenFloor() {
     const oy = room.y + 1 + Math.floor(Math.random() * (room.h-2));
     _dgItems.push({ x: ox, y: oy, type: 'gold', sprite: 'gold', category: 'consumable' });
   }
-  const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
-  _dgItems.push({ x: room.cx, y: room.cy, type: 'potion', sprite: 'potion', category: 'consumable' });
+  for (let i = 0; i < 2; i++) {
+    const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
+    _dgItems.push({ x: room.cx, y: room.cy, type: 'potion', sprite: 'potion', category: 'consumable' });
+  }
 }
 
 function _dgGenEquip(eqId, x, y) {
   const base = _DG_EQUIP_DEF[eqId];
   const rarityRoll = Math.random();
-  const rarity = rarityRoll < 0.65 ? 'common' : rarityRoll < 0.90 ? 'rare' : 'epic';
+  const rarity = rarityRoll < 0.50 ? 'common' : rarityRoll < 0.85 ? 'rare' : 'epic';
   const rarityData = _DG_RARITY[rarity];
   const atk = Array.isArray(base.atk) ? Math.round((base.atk[0] + Math.random()*(base.atk[1]-base.atk[0])) * rarityData.mult) : base.atk;
   const def = Array.isArray(base.def) ? Math.round((base.def[0] + Math.random()*(base.def[1]-base.def[0])) * rarityData.mult) : base.def;
