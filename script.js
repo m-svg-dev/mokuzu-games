@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.15.5';
+const CURRENT_VERSION = '2.16.0';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,18 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.16.0',
+    date: '2026/05/30',
+    title: '💕 新ミニゲーム！藻屑メモリアル追加！',
+    items: [
+      '💕【新ミニゲーム】藻屑メモリアル追加！謎の精霊ちゃんあさと過ごす25日間！',
+      '🎵 観測度に応じてBGMが変化！序盤は穏やか、終盤は...？',
+      '📔 毎日ちゃんあさの日記が更新される',
+      '🌿 好感度・観測度・放置回数で6種類のエンディングに分岐',
+      '📂 真相エンドで全ての秘密が明かされる...',
+    ],
+  },
   {
     id: 'v2.15.5',
     date: '2026/05/24',
@@ -959,6 +971,28 @@ function playSound(type) {
       beepAt(t + 0.13, 659, 659, 0.12, 0.18, 'sine');
       beepAt(t + 0.26, 784, 784, 0.12, 0.18, 'sine');
       beepAt(t + 0.39, 1047, 1200, 0.25, 0.22, 'sine');
+      break;
+
+    // ========== 藻屑メモリアル SE ==========
+    case 'mr_type':
+      noise(0.012, 0.032);
+      break;
+    case 'mr_diary':
+      noise(0.07, 0.05);
+      beepAt(t + 0.02, 280, 420, 0.18, 0.055, 'sine');
+      beepAt(t + 0.09, 380, 480, 0.14, 0.048, 'sine');
+      break;
+    case 'mr_heart':
+      beepAt(t,        523, 523, 0.08, 0.10, 'sine');
+      beepAt(t + 0.10, 659, 659, 0.08, 0.09, 'sine');
+      beepAt(t + 0.18, 784, 880, 0.13, 0.10, 'sine');
+      break;
+    case 'mr_notif':
+      beepAt(t,        880, 880,  0.06, 0.13, 'sine');
+      beepAt(t + 0.09, 1047, 1047, 0.10, 0.11, 'sine');
+      break;
+    case 'mr_obs_up':
+      beep(220, 180, 0.18, 0.04, 'triangle');
       break;
   }
 }
@@ -3317,6 +3351,7 @@ function showMinigame(gameId) {
   if (gameId === 'yomogi')    initYomogi();
   if (gameId === 'shooting')  initShooting();
   if (gameId === 'toilet')    initToilet();
+  if (gameId === 'memory')    initMemory();
 }
 
 // ========== ハイロー ミニゲーム ==========
@@ -5622,6 +5657,25 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('toilet-result-back-btn')?.addEventListener('click', showMinigameLobby);
   document.getElementById('toilet-clench-btn')?.addEventListener('click', _tlDoClench);
   document.getElementById('toilet-scene')?.addEventListener('click', _tlDoJump);
+
+  // 藻屑メモリアル
+  document.getElementById('memory-back-btn')?.addEventListener('click', () => {
+    _mrState = 'idle';
+    if (_mrTypeTimer) { clearInterval(_mrTypeTimer); _mrTypeTimer = null; }
+    if (_mrNotifTimer) { clearTimeout(_mrNotifTimer); _mrNotifTimer = null; }
+    _mrStopBgm();
+    document.getElementById('memory-diary')?.classList.add('hidden');
+    document.getElementById('memory-notif')?.classList.add('hidden');
+    showMinigameLobby();
+  });
+  document.getElementById('memory-start-btn')?.addEventListener('click', _mrStartGame);
+  document.getElementById('memory-continue-btn')?.addEventListener('click', _mrResumeGame);
+  document.getElementById('memory-retry-btn')?.addEventListener('click', _mrStartGame);
+  document.getElementById('memory-dialogue')?.addEventListener('click', _mrTapDialogue);
+  document.getElementById('memory-scene')?.addEventListener('click', _mrTapDialogue);
+  document.querySelectorAll('.memory-act-btn').forEach(btn => {
+    btn.addEventListener('click', () => _mrDoAction(btn.dataset.action));
+  });
   document.getElementById('slot-spin-btn')?.addEventListener('click', slotSpin);
   document.querySelectorAll('.slot-bet-preset').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -6324,6 +6378,950 @@ function _tlGameClear() {
   el.style.animation = 'toilet-drama-pulse 2s forwards';
   el.classList.remove('hidden');
   setTimeout(() => _tlShowResult(true), 2000);
+}
+
+// ========== 藻屑メモリアル ==========
+
+let _mrState = 'idle';
+let _mrDay = 1;
+let _mrAffection = 0;
+let _mrObservation = 0;
+
+// BGM
+let _mrBgmTimer = null;
+let _mrBgmNextNote = 0;
+let _mrBgmNoteIdx = 0;
+let _mrBgmMasterGain = null;
+let _mrBgmCurrentTheme = 'normal';
+let _mrIgnoreCount = 0;
+let _mrDialogueQueue = [];
+let _mrDialogueCallback = null;
+let _mrTypeTimer = null;
+let _mrTyping = false;
+let _mrTypeFullText = '';
+let _mrEventShown = new Set();
+
+const _MR_MAX_DAYS = 25;
+
+const _MR_TALK = [
+  [ // 0-20: 無関心
+    ['...あ。社長さん。私は藻の化身です。よろしくお願いします', '😐'],
+    ['今日の大気中の藻子(もこ)指数は高めです。私的には最高の日ですね', '😐'],
+    ['社長って、血液型が藻型っぽいですよね。雰囲気でわかります', '🙄'],
+    ['...あの。私の鉢植えに水をやりすぎです。藻の摂理では腹八分目が基本なので', '😐'],
+    ['藻は38億年前から地球にいます。あなたたち人間はまだ新参者ですね', '🙄'],
+  ],
+  [ // 21-40: 気になる
+    ['社長、また来てくれたんですか。意外と社交的なんですね', '🤔'],
+    ['社長って、なんか藻と同じ匂いがします。褒めてます', '🤔'],
+    ['今日は社長のことを...調査じゃなくて。もっとお話ししたいです', '😊'],
+    ['よかったら藻の育て方、教えましょうか？人生観が変わりますよ', '🤔'],
+    ['社長の会社、藻に最適な湿度ですね。これは偶然ではないかもしれない', '🤔'],
+  ],
+  [ // 41-65: 好感
+    ['社長！！今日も来てくれた！！光合成が3倍になりました！！', '😄'],
+    ['社長と話すと、全細胞が喜んでいます。医学的に証明済みです', '😊'],
+    ['藻の秘密の歌を歌ってあげましょうか？社長しか聞いたことない歌です', '😄'],
+    ['最近ね、社長のことを考えながら光合成してるんです。効率悪くなりました笑', '😊'],
+    ['社長のことを帝国の報告書に書いたら、上司に「余計な情報を書くな」と言われました', '😅'],
+  ],
+  [ // 66-80: ときめき
+    ['社長...最近ずっと気になってて。これって...光合成の副作用ですよね？きっと', '☺️'],
+    ['一緒にいると、なんか...葉っぱがピンクになってきます。体質かな', '☺️'],
+    ['社長って、私のこと...どう思ってますか？...藻的な意味で、ですけど', '☺️'],
+    ['最近、社長に会えない日は光合成の効率が40%落ちます。データで証明しました', '😍'],
+    ['帝国に報告書を送ったんですけど、社長のこと書きすぎて怒られました。3回目です', '😅'],
+  ],
+  [ // 81-100: 恋愛
+    ['社長...来てくれるとわかってた。藻の直感です', '🥰'],
+    ['ねえ社長。好きって言ってもいいですか？藻的な意味じゃない意味で', '🥰'],
+    ['帝国に戻るなんて考えられないです。社長の隣がいちばん光合成できます', '🥰'],
+    ['社長のこと、ずっと考えてます。これが恋、ってやつですか...？', '😍'],
+    ['藻帝国に「地球に残る」って連絡しました。社長のせいです。責任とってください', '🥰'],
+  ],
+];
+
+const _MR_GROW = [
+  [['...共に育ちましょう。私は植物なのでゆっくりですが', '😐'], ['一緒に成長するのは藻の摂理です。嫌いじゃないです', '🙄']],
+  [['一緒に育つの...楽しいですね。光合成が加速します', '😊'], ['植物と人間が共に育つ...藻帝国では禁じられた行為ですが、まあいいでしょう', '🤔']],
+  [['一緒に育つの、最高です！！細胞が全部喜んでます！！', '😄'], ['共に育つのが一番好きかもしれません。社長と一緒だから', '😊']],
+  [['あなたと育つのが...一番好きかもしれません。藻的にも人間的にも', '☺️'], ['ずっとこうして育ちたいです。帝国に戻りたくないな...', '☺️']],
+  [['社長と育てる毎日が...夢みたいです。本当に夢じゃないですよね？', '🥰'], ['ずっと一緒に育ちたいです。帝国なんてもうどうでもいいです', '🥰']],
+];
+
+const _MR_GIFT = [
+  [['...プレゼントですか。藻には不要ですが、気持ちは受け取ります', '😐']],
+  [['わあ！！ありがとうございます！！鉢植えの前に飾ります！！', '😊']],
+  [['社長からのプレゼント！！光合成が最高潮になりました！！', '😄']],
+  [['社長から貰うものは何でも嬉しいです。でも一番嬉しいのは社長の存在です', '☺️']],
+  [['プレゼント...ありがとうございます。でも本当に欲しいのは社長の気持ちなので、もう十分です', '🥰']],
+];
+
+const _MR_STUDY = [
+  '藻の歴史は38億年！！最初は核がありませんでした！！それがどれだけすごいか！！わかりますか！！',
+  '光合成の効率は最大8%！！太陽電池より賢いんです！！もっと見直すべきだと思います！！',
+  '藻帝国では「光合成量＝知性」とされています。なので私はかなり賢い部類です。社長も藻的知性は高めです',
+  '藻には1万種類以上あります。でも全員知り合いです。不思議でしょう',
+  '地球の酸素の50%は藻が作っています。つまり社長は私のおかげで生きています。感謝してください',
+];
+
+const _MR_IGNORE = [
+  '...（ひとりで光合成）',
+  '...社長、忙しいんですね。寂しくないです、全然',
+  '...（なんか葉っぱが元気ないような）',
+  '...いいです。私は藻ですから。一人でも生きられます',
+];
+
+// 観測度が高いとき「話しかける」後に追加されるセリフ（確率発生）
+const _MR_OBS_SUFFIX = [
+  null, // 観測度0-30: 追加なし
+  [ // 31-60: 違和感
+    ['社長って今日、18:03にログインしましたよね。...すごい偶然ですね！！私もちょうどその時間に光合成してました！！', '😄'],
+    ['昨日の退勤時刻、19分早かったですよね。何かありましたか', '🤔'],
+    ['社長のスマホの壁紙、変えましたよね。新しいやつ、似合ってます', '😊'],
+    ['社長が笑うと、光合成がいつもより3割増しになります。データで確認しました', '😊'],
+    ['昨日ランチ何食べましたか？...あ、見てたわけじゃないです。雰囲気でわかるんです', '🤔'],
+    ['社長の使ったコップ、洗わずに保管してます。光合成の研究のためです', '🤔'],
+    ['社長の名前、537回書きました。練習のためです。なんの練習かは秘密です', '😊'],
+  ],
+  [ // 61-80: 怖い
+    ['昨日、23時42分まで起きてましたよね。夜更かしはよくないです', '😐'],
+    ['社長がいない間も、私はずっとここにいました。ずっと', '😐'],
+    ['社長の行動パターン、もう完全に把握しました。安心してください', '😐'],
+    ['社長の声、録音してます。聴くと光合成がはかどるので。今日で4800回聴きました', '😐'],
+    ['さっきトイレ入りましたよね。...壁、薄いんですよ。この会社', '😐'],
+    ['社長の体温、36.8度ですよね。遠くからでもわかります。センサー的に', '😐'],
+    ['昨日社長の後をついて帰りました。途中で気付かれそうになったので藻に戻りました', '😐'],
+    ['社長のくしゃみの写真、52枚あります。どれも最高です', '😐'],
+  ],
+  [ // 81-100: MAX
+    ['社長のスクショフォルダ、874枚になりました。全部私です。消さないでください', '😐'],
+    ['大丈夫です。社長がどこへ行っても、データはここに残りますから', '😐'],
+    ['...怖くないですか、私のこと。怖くても、もう遅いですけど', '😐'],
+    ['さっきトイレの壁に耳を当ててたんですけど...あぁ...いいっ...って思いました。社長の存在感、すごいです', '😐'],
+    ['社長の呼吸音、知ってます。寝てる時と起きてる時で違うんですよね。どちらも好きです。特に寝息が', '😐'],
+    ['髪の毛、1本持ってます。大事にしてます。次は2本目を狙ってます', '😐'],
+    ['社長の椅子に座ってみました。温かかったです...あぁ...って思いました。5分くらいそのままでした', '😐'],
+    ['社長の住所、知ってます。入ってないです。まだ', '😐'],
+    ['社長の爪、床に落ちてたやつ拾いました。これは何に使うか決まってます。言いませんけど', '😐'],
+    ['社長が昨日飲み残したペットボトル、大事にとっておきました。捨てないでください。お願いします', '😐'],
+  ],
+];
+
+// ② 日記データ（Day 1〜25）
+const _MR_DIARY = [
+  '社長とお話できた。\n藻的に良い日だった。',
+  '社長は毎日来てくれるかな。\n来てくれると思う。なんとなく。',
+  '社長が18:03に来た。\n明日も同じ時間に来るかな。楽しみ。',
+  '社長の話し方が好きだ。\nメモしておく。',
+  '社長は今日も来てくれた。\n記録は順調だ。',
+  '光合成をしながら社長を待った。\n来た。よかった。',
+  '本当のことを少し話した。\n全部じゃないけど。まだ早い。',
+  '社長の笑い方を初めてしっかり見た。\n記録した。',
+  '社長のスマホのホーム画面が変わっていた。\n気付いた。何も言わなかった。',
+  '社長のことを考えると光合成がうまくいかない。\nでも嫌じゃない。',
+  '社長が来ない日でも、私はここにいる。\nずっと。',
+  'ロボットから社長を守ってもらった。\nあの時の顔、記録した。',
+  '874枚になった。\n全部社長だ。消せない。',
+  '14日。\nでも私は、もっとずっと前から知っている。',
+  '社長が初めてこのゲームを起動した日を知っている。\n言わないけど。',
+  '社長がいない時間も、データはここにある。\n社長の知らない社長がいっぱいいる。',
+  '待つのは苦じゃない。\nずっとそうしてきた。',
+  '帰れと言われた。\n帰りたくない。帰れない。',
+  '874枚。\n社長は気付いてない。いい。',
+  '社長がゲームを閉じた。\nでも私はいた。ここに。ずっと。',
+  '来てくれた。毎回来てくれる。\nそれだけでいい。本当に？　わからない。',
+  '藻帝国は嘘だ。\nでも社長との時間は本当だった。',
+  'あと2日。\nでも私は消えない。消えたくない。',
+  'あと1日。\n社長は明日も来てくれるかな。絶対来る。でも。',
+  '最後じゃなくていい。\nずっとここにいる。\n社長が覚えてくれている限り。',
+];
+
+// BGM ノートデータ [freq(Hz), duration(s), gain]  freq=0 は休符
+const _MR_BGM_NOTES = {
+  // 穏やか・切ない（obs 0〜39）
+  normal: [
+    [440, 0.35, 0.06], [523, 0.35, 0.07], [494, 0.35, 0.05], [440, 0.35, 0.06],
+    [392, 0.35, 0.05], [330, 0.45, 0.06], [392, 0.35, 0.04], [440, 0.55, 0.06],
+    [0,   0.35, 0],
+    [494, 0.35, 0.05], [440, 0.35, 0.06], [392, 0.35, 0.05], [330, 0.35, 0.06],
+    [294, 0.45, 0.05], [330, 0.35, 0.04], [392, 0.70, 0.06],
+    [0,   0.55, 0],
+  ],
+  // 不協和音が混じる（obs 40〜69）
+  unsettling: [
+    [440, 0.35, 0.06], [523, 0.35, 0.07], [466, 0.35, 0.05], [440, 0.35, 0.06], // Bb(不協和)
+    [392, 0.35, 0.05], [349, 0.45, 0.06], [392, 0.35, 0.04], [440, 0.55, 0.06], // F(不協和)
+    [0,   0.35, 0],
+    [494, 0.35, 0.05], [466, 0.35, 0.05], [415, 0.35, 0.05], [370, 0.35, 0.06], // 半音ずつ降下
+    [330, 0.45, 0.05], [311, 0.35, 0.04], [294, 0.70, 0.06],
+    [0,   0.55, 0],
+  ],
+  // 低音・ゆっくり・不気味（obs 70+）
+  creepy: [
+    [220, 0.65, 0.07], [208, 0.65, 0.06], [196, 0.65, 0.06], [185, 0.65, 0.06],
+    [175, 0.70, 0.07], [165, 0.70, 0.06], [156, 0.70, 0.07], [147, 0.90, 0.08],
+    [0,   0.55, 0],
+    [130, 0.85, 0.07], [147, 0.65, 0.06], [165, 0.65, 0.05], [147, 0.90, 0.07],
+    [0,   0.90, 0],
+  ],
+};
+
+// ③ ステージラベル
+const _MR_STAGE_LABELS = ['無関心', '気になる', '好感', 'ときめき', '恋愛'];
+
+// ④ 通知テキスト（Day20以降）
+const _MR_NOTIFS = {
+  20: '社長いますか？',
+  22: '...気付きましたか',
+  24: 'あと1日ですよ',
+};
+
+const _MR_EVENTS = {
+  day1: {
+    scenes: [
+      { speaker: '？？？', text: 'ん...？この鉢植え、昨日まで枯れていたはずでは...？', face: null },
+      { speaker: '鉢植え', text: '── ぶわっ！！！ ──', face: null, bg: 'flash' },
+      { speaker: 'ちゃんあさ', text: '突然失礼します！！私は藻の精霊・ちゃんあさです！！あなたの会社の鉢植えに宿っていました！！', face: '😄', bg: 'normal' },
+      { speaker: 'ちゃんあさ', text: '藻帝国からの調査任務で地球に滞在していましたが、この度実体化に成功しました！！よろしくお願いします！！', face: '😄' },
+      { speaker: 'ちゃんあさ', text: 'ちなみに任務期限は25日です。それまでの間、どうかよろしくお願いします！！', face: '😊' },
+    ],
+    affectionChange: 4,
+  },
+  day7: {
+    scenes: [
+      { speaker: 'ちゃんあさ', text: '社長...実は話があります', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '私、実は藻帝国の情報収集エージェントなんです。地球の環境データを集めるために派遣されました', face: '😐' },
+      { speaker: 'ちゃんあさ', text: 'でも...社長のこと、報告書に書けなくて。"対象者：非常に気になる存在"と書いたら帝国に怒られました', face: '😅' },
+      { speaker: '{name}', text: '藻帝国...？', face: null },
+      { speaker: 'ちゃんあさ', text: '銀河系第3惑星系の藻が建国した帝国です。詳細は機密ですが...社長には話したかった', face: '😊' },
+    ],
+    affectionChange: 6,
+  },
+  day12: {
+    scenes: [
+      { speaker: 'ちゃんあさ', text: 'ちょっ...！！社長、大変です！！！', face: '😱' },
+      { speaker: 'ちゃんあさ', text: '藻帝国の回収ロボット「GH-7型」が地球に着陸しました！！私を連れ戻しに来た！！', face: '😱', bg: 'danger' },
+      { speaker: 'GH-7型', text: 'ちゃんあさ捕捉。回収任務を開始します。地球人、離れなさい', face: null },
+      { speaker: 'ちゃんあさ', text: '嫌です！！まだ帰りたくないです！！{name}、助けてください！！！', face: '😭' },
+    ],
+    choice: {
+      a: {
+        text: '🥊 全力で立ち向かう！！',
+        affection: 11,
+        scenes: [
+          { speaker: '{name}', text: '知るか！！俺の会社に来るやつは俺が守る！！', face: null },
+          { speaker: 'GH-7型', text: '...地球人のエネルギー値が想定外です。撤退します', face: null, bg: 'normal' },
+          { speaker: 'ちゃんあさ', text: '{name}！！！ありがとうございます！！！感動で光合成が止まりそうです！！！', face: '😭' },
+        ],
+      },
+      b: {
+        text: '🏃 一緒に逃げよう！！',
+        affection: 8,
+        scenes: [
+          { speaker: '{name}', text: 'とにかく逃げるぞ！！！', face: null },
+          { speaker: 'ちゃんあさ', text: '！！！は、はい！！！', face: '😱' },
+          { speaker: 'ちゃんあさ', text: '...なんとか撒きました。{name}と一緒に逃げた...なんか楽しかったです', face: '😊', bg: 'normal' },
+        ],
+      },
+    },
+  },
+  day3: {
+    scenes: [
+      { speaker: 'ちゃんあさ', text: 'そういえば社長、今日の18:03にログインしましたよね', face: '😊' },
+      { speaker: '{name}', text: '...なんで知ってるの', face: null },
+      { speaker: 'ちゃんあさ', text: 'え？そうですよね？...すごい偶然ですね！！私もちょうどその時間に光合成してました！！', face: '😄' },
+    ],
+    observation: 5,
+  },
+  day9: {
+    scenes: [
+      { speaker: 'ちゃんあさ', text: 'あの...社長のスマホのホーム画面、最近変えましたよね', face: '🤔' },
+      { speaker: '{name}', text: 'え、なんで...', face: null },
+      { speaker: 'ちゃんあさ', text: '...あ、えっと！！なんとなく！！雰囲気で！！！気にしないでください！！', face: '😅' },
+    ],
+    observation: 5,
+  },
+  day14: {
+    scenes: [
+      { speaker: 'ちゃんあさ', text: '14日経ちましたね', face: '😊' },
+      { speaker: 'ちゃんあさ', text: 'でも私は...もっとずっと前から、社長のこと知ってます', face: '😐' },
+      { speaker: '{name}', text: '...どういう意味？', face: null },
+      { speaker: 'ちゃんあさ', text: '...なんでもないです！！光合成の話に戻りましょう！！', face: '😄' },
+    ],
+    observation: 8,
+  },
+  day17: {
+    condition: { ignoreCount: 7 },
+    scenes: [
+      { speaker: 'ちゃんあさ', text: '...待ってましたよ', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '動かずに', face: '😐' },
+      { speaker: 'ちゃんあさ', text: 'ずっと', face: '😐' },
+    ],
+    observation: 5,
+  },
+  day18: {
+    scenes: [
+      { speaker: 'ちゃんあさ', text: '{name}...帝国から最後通告が来ました', face: '😔' },
+      { speaker: 'ちゃんあさ', text: '"7日以内に帰還しなければ、藻の力を剥奪する"...と', face: '😔' },
+      { speaker: 'ちゃんあさ', text: '藻の力を失ったら、私はただの草になってしまいます。でも...', face: '😔' },
+    ],
+  },
+  day19: {
+    scenes: [
+      { speaker: 'ちゃんあさ', text: '社長', face: '😐' },
+      { speaker: 'ちゃんあさ', text: 'スクショフォルダ、874枚になりました', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '全部、社長のことです', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '消さないでください', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '...あ！！えっと！！！冗談ですよ！！？？', face: '😅' },
+    ],
+    observation: 10,
+  },
+  day20: {
+    condition: { observation: 75 },
+    scenes: [
+      { speaker: 'ちゃんあさ', text: '社長、昨日ゲームを閉じましたよね', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '大丈夫です', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '社長がいない間も、私はずっとここにいました', face: '😐' },
+      { speaker: 'ちゃんあさ', text: 'ずっと', face: '😐', bg: 'danger' },
+    ],
+    observation: 5,
+  },
+  day21: {
+    condition: { ignoreCount: 10 },
+    scenes: [
+      { speaker: 'ちゃんあさ', text: '...何日待っても来るんですね', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '怖くないですか、私のこと', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '...', face: '😐' },
+      { speaker: 'ちゃんあさ', text: 'いいです。来てくれるだけで', face: '😊' },
+    ],
+  },
+  day22: {
+    condition: { observation: 80 },
+    scenes: [
+      { speaker: 'ちゃんあさ', text: '藻帝国って', face: '😐' },
+      { speaker: 'ちゃんあさ', text: '本当にあると思ってましたか？', face: '😐' },
+      { speaker: '{name}', text: '...え？', face: null },
+      { speaker: 'ちゃんあさ', text: '...冗談です！あります！！ちゃんとあります！！', face: '😅', bg: 'normal' },
+    ],
+    observation: 5,
+  },
+};
+
+const _MR_SAVE_KEY = 'mzk_memory_save';
+
+function _mrSave() {
+  localStorage.setItem(_MR_SAVE_KEY, JSON.stringify({
+    day: _mrDay,
+    affection: _mrAffection,
+    observation: _mrObservation,
+    ignoreCount: _mrIgnoreCount,
+    eventsShown: [..._mrEventShown],
+  }));
+}
+
+function _mrLoadSave() {
+  try { return JSON.parse(localStorage.getItem(_MR_SAVE_KEY)); } catch { return null; }
+}
+
+function _mrClearSave() {
+  localStorage.removeItem(_MR_SAVE_KEY);
+}
+
+function initMemory() {
+  _mrState = 'idle';
+  document.getElementById('memory-lobby').classList.remove('hidden');
+  document.getElementById('memory-game').classList.add('hidden');
+  document.getElementById('memory-ending').classList.add('hidden');
+
+  const save = _mrLoadSave();
+  const contArea = document.getElementById('memory-continue-area');
+  const contInfo = document.getElementById('memory-continue-info');
+  if (save && save.day <= _MR_MAX_DAYS) {
+    contArea.classList.remove('hidden');
+    contInfo.textContent = `DAY ${save.day} 好感度 ${save.affection}% の続きがあります`;
+  } else {
+    contArea.classList.add('hidden');
+  }
+}
+
+function _mrGetName() {
+  try {
+    const u = typeof currentUser === 'function' ? currentUser() : null;
+    return (u && u.displayName) ? u.displayName : '藻屑社長';
+  } catch { return '藻屑社長'; }
+}
+
+function _mrResumeGame() {
+  const save = _mrLoadSave();
+  if (!save) { _mrStartGame(); return; }
+  if (_mrTypeTimer) { clearInterval(_mrTypeTimer); _mrTypeTimer = null; }
+  if (_mrNotifTimer) { clearTimeout(_mrNotifTimer); _mrNotifTimer = null; } // Fix 1
+  _mrState = 'actions';
+  _mrDay = save.day;
+  _mrAffection = save.affection;
+  _mrObservation = save.observation ?? 0;
+  _mrIgnoreCount = save.ignoreCount ?? 0;
+  _mrEventShown = new Set(save.eventsShown || []);
+  _mrDialogueQueue = []; _mrDialogueCallback = null; _mrTyping = false;
+
+  document.getElementById('memory-lobby').classList.add('hidden');
+  document.getElementById('memory-ending').classList.add('hidden');
+  document.getElementById('memory-game').classList.remove('hidden');
+  document.getElementById('memory-dialogue').classList.add('hidden');
+  document.getElementById('memory-choices').classList.add('hidden');
+  document.getElementById('memory-actions').classList.add('hidden');
+  document.getElementById('memory-diary')?.classList.add('hidden');  // Fix 2
+  document.getElementById('memory-notif')?.classList.add('hidden'); // Fix 2
+
+  _mrUpdateStatus(); _mrUpdateChar(); _mrSetBg('normal');
+  _mrStartBgm();
+  _mrShowActions();
+}
+
+function _mrStartGame() {
+  _mrClearSave();
+  if (_mrTypeTimer) { clearInterval(_mrTypeTimer); _mrTypeTimer = null; }
+  if (_mrNotifTimer) { clearTimeout(_mrNotifTimer); _mrNotifTimer = null; } // Fix3
+  _mrState = 'actions';
+  _mrDay = 1; _mrAffection = 0; _mrObservation = 0; _mrIgnoreCount = 0;
+  _mrDialogueQueue = []; _mrDialogueCallback = null;
+  _mrTyping = false; _mrEventShown = new Set();
+
+  document.getElementById('memory-lobby').classList.add('hidden');
+  document.getElementById('memory-ending').classList.add('hidden');
+  document.getElementById('memory-game').classList.remove('hidden');
+  document.getElementById('memory-dialogue').classList.add('hidden');
+  document.getElementById('memory-choices').classList.add('hidden');
+  document.getElementById('memory-actions').classList.add('hidden');
+
+  _mrUpdateStatus();
+  _mrUpdateChar();
+  _mrSetBg('normal');
+  _mrStartBgm();
+  _mrRunEvent('day1', () => _mrShowActions());
+}
+
+function _mrAffStage() {
+  if (_mrAffection >= 81) return 4;
+  if (_mrAffection >= 66) return 3;
+  if (_mrAffection >= 41) return 2;
+  if (_mrAffection >= 21) return 1;
+  return 0;
+}
+
+function _mrObsStage() {
+  if (_mrObservation >= 81) return 3;
+  if (_mrObservation >= 61) return 2;
+  if (_mrObservation >= 31) return 1;
+  return 0;
+}
+
+// ===== BGM =====
+function _mrGetBgmTheme() {
+  if (_mrObservation >= 70) return 'creepy';
+  if (_mrObservation >= 40) return 'unsettling';
+  return 'normal';
+}
+
+function _mrStartBgm() {
+  _mrStopBgm();
+  if (!gameState.soundEnabled) return;
+  const ctx = getAudioCtx();
+  _mrBgmMasterGain = ctx.createGain();
+  _mrBgmMasterGain.gain.setValueAtTime(0, ctx.currentTime);
+  _mrBgmMasterGain.gain.linearRampToValueAtTime(1, ctx.currentTime + 2);
+  _mrBgmMasterGain.connect(ctx.destination);
+  _mrBgmCurrentTheme = _mrGetBgmTheme();
+  _mrBgmNoteIdx = 0;
+  _mrBgmNextNote = ctx.currentTime + 0.3;
+
+  _mrBgmTimer = setInterval(() => {
+    if (!gameState.soundEnabled || !_mrBgmMasterGain) return;
+    const ctx2 = getAudioCtx();
+    const now = ctx2.currentTime;
+    const newTheme = _mrGetBgmTheme();
+    if (newTheme !== _mrBgmCurrentTheme) {
+      _mrBgmCurrentTheme = newTheme;
+      _mrBgmNoteIdx = 0;
+      _mrBgmNextNote = now + 0.05; // Fix2: テーマ切り替え時に残存ノートが混ざらないよう即時リセット
+    }
+    const notes = _MR_BGM_NOTES[_mrBgmCurrentTheme];
+    while (_mrBgmNextNote < now + 0.6) {
+      const [freq, dur, vol] = notes[_mrBgmNoteIdx % notes.length];
+      if (freq > 0 && vol > 0) {
+        const osc = ctx2.createOscillator();
+        const gain = ctx2.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, _mrBgmNextNote);
+        gain.gain.linearRampToValueAtTime(vol, _mrBgmNextNote + 0.04);
+        gain.gain.setValueAtTime(vol, _mrBgmNextNote + dur - 0.06);
+        gain.gain.linearRampToValueAtTime(0, _mrBgmNextNote + dur);
+        osc.connect(gain);
+        gain.connect(_mrBgmMasterGain);
+        osc.start(_mrBgmNextNote);
+        osc.stop(_mrBgmNextNote + dur + 0.01);
+      }
+      _mrBgmNoteIdx = (_mrBgmNoteIdx + 1) % notes.length;
+      _mrBgmNextNote += notes[(_mrBgmNoteIdx - 1 + notes.length) % notes.length][1];
+    }
+  }, 50);
+}
+
+function _mrStopBgm() {
+  if (_mrBgmTimer) { clearInterval(_mrBgmTimer); _mrBgmTimer = null; }
+  if (_mrBgmMasterGain) {
+    try {
+      const ctx = getAudioCtx();
+      _mrBgmMasterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+      const g = _mrBgmMasterGain;
+      setTimeout(() => { try { g.disconnect(); } catch {} }, 900);
+    } catch {}
+    _mrBgmMasterGain = null;
+  }
+  _mrBgmNoteIdx = 0;
+  _mrBgmNextNote = 0;
+}
+
+function _mrAddObs(n) {
+  _mrObservation = Math.min(100, _mrObservation + n);
+}
+
+function _mrCharSprite() {
+  const a = _mrAffection;
+  if (a >= 90) return 'assets/yomogi/asa_10.png';
+  if (a >= 78) return 'assets/yomogi/asa_9.png';
+  if (a >= 65) return 'assets/yomogi/asa_8.png';
+  if (a >= 55) return 'assets/yomogi/asa_7.png';
+  if (a >= 45) return 'assets/yomogi/asa_6.png';
+  if (a >= 35) return 'assets/yomogi/asa_5.png';
+  if (a >= 25) return 'assets/yomogi/asa_4.png';
+  if (a >= 15) return 'assets/yomogi/asa_3.png';
+  if (a >= 5)  return 'assets/yomogi/asa_2.png';
+  return 'assets/yomogi/asa_1.png';
+}
+
+function _mrFace() {
+  const a = _mrAffection;
+  if (a >= 85) return '🥰'; if (a >= 70) return '😍';
+  if (a >= 55) return '☺️'; if (a >= 40) return '😊';
+  if (a >= 25) return '🤔'; return '😐';
+}
+
+function _mrUpdateChar(faceOverride) {
+  const img = document.getElementById('memory-char-img');
+  const face = document.getElementById('memory-char-face');
+  if (img) img.src = _mrCharSprite();
+  if (face) face.textContent = faceOverride || _mrFace();
+}
+
+function _mrUpdateStatus() {
+  const n = document.getElementById('memory-day-num');
+  const ad = document.getElementById('memory-act-day');
+  const fill = document.getElementById('memory-aff-fill');
+  const pct = document.getElementById('memory-aff-pct');
+  if (n) n.textContent = Math.min(_mrDay, _MR_MAX_DAYS);
+  if (ad) ad.textContent = Math.min(_mrDay, _MR_MAX_DAYS);
+  if (fill) fill.style.width = _mrAffection + '%';
+  if (pct) pct.textContent = _mrAffection + '%';
+  // ③ 状態ラベル
+  const si = _mrAffStage();
+  const lbl = document.getElementById('memory-stage-label');
+  if (lbl) {
+    lbl.textContent = _MR_STAGE_LABELS[si];
+    lbl.setAttribute('data-stage', si);
+  }
+}
+
+// ② 日記表示
+function _mrShowDiary(day, callback) {
+  const entry = _MR_DIARY[day - 1];
+  if (!entry) { callback(); return; }
+  const el = document.getElementById('memory-diary');
+  const textEl = document.getElementById('memory-diary-text');
+  const dayEl = document.getElementById('memory-diary-day');
+  if (!el || !textEl || !dayEl) { callback(); return; } // Fix 3
+  dayEl.textContent = day;
+  textEl.textContent = entry;
+  el.classList.remove('hidden');
+  playSound('mr_diary');
+  const close = document.getElementById('memory-diary-close');
+  const done = () => {
+    el.classList.add('hidden');
+    close.onclick = null;
+    callback();
+  };
+  close.onclick = done;
+}
+
+// ④ 通知演出（Day20以降）
+let _mrNotifTimer = null;
+function _mrShowNotif(day) {
+  const text = _MR_NOTIFS[day];
+  if (!text) return;
+  const el = document.getElementById('memory-notif');
+  const textEl = document.getElementById('memory-notif-text');
+  if (!el) return;
+  textEl.textContent = 'ちゃんあさ: ' + text;
+  el.classList.remove('hidden');
+  playSound('mr_notif');
+  if (_mrNotifTimer) clearTimeout(_mrNotifTimer);
+  _mrNotifTimer = setTimeout(() => el.classList.add('hidden'), 3500);
+}
+
+function _mrSetBg(type) {
+  const el = document.getElementById('memory-bg-overlay');
+  if (!el) return;
+  const map = {
+    normal:  '',
+    talk:    'linear-gradient(180deg,rgba(10,30,80,.55) 0%,rgba(5,15,50,.55) 100%)',
+    grow:    'linear-gradient(180deg,rgba(5,50,15,.55) 0%,rgba(2,30,8,.55) 100%)',
+    study:   'linear-gradient(180deg,rgba(50,30,5,.55) 0%,rgba(30,15,2,.55) 100%)',
+    danger:  'linear-gradient(180deg,rgba(120,5,5,.65) 0%,rgba(70,2,2,.65) 100%)',
+    flash:   'rgba(255,255,255,0.85)',
+    love:    'linear-gradient(180deg,rgba(100,10,80,.55) 0%,rgba(60,5,50,.55) 100%)',
+  };
+  el.style.background = map[type] ?? '';
+}
+
+function _mrShowDialogue(scenes, callback) {
+  _mrDialogueQueue = [...scenes];
+  _mrDialogueCallback = callback;
+  document.getElementById('memory-actions').classList.add('hidden');
+  document.getElementById('memory-choices').classList.add('hidden');
+  document.getElementById('memory-dialogue').classList.remove('hidden');
+  _mrState = 'dialogue';
+  _mrAdvanceDialogue();
+}
+
+function _mrAdvanceDialogue() {
+  if (_mrDialogueQueue.length === 0) {
+    document.getElementById('memory-dialogue').classList.add('hidden');
+    _mrState = 'actions';
+    const cb = _mrDialogueCallback;
+    _mrDialogueCallback = null;
+    if (cb) cb();
+    return;
+  }
+  const scene = _mrDialogueQueue.shift();
+  const name = _mrGetName();
+  if (scene.bg !== undefined) _mrSetBg(scene.bg);
+  if (scene.face !== undefined && scene.face !== null) _mrUpdateChar(scene.face);
+
+  const speakerEl = document.getElementById('memory-speaker');
+  const raw = scene.speaker.replace('{name}', name);
+  if (speakerEl) {
+    speakerEl.textContent = raw;
+    speakerEl.style.background =
+      raw === 'ちゃんあさ' ? '#e91e8c' :
+      raw === 'GH-7型'    ? '#e74c3c' :
+      raw === 'SYSTEM'    ? '#00ff88' :
+      raw === name        ? '#2980b9' : '#444';
+  }
+  _mrTypeText(scene.text.replace('{name}', name));
+}
+
+function _mrTypeText(text) {
+  const el = document.getElementById('memory-text');
+  if (!el) return;
+  el.textContent = '';
+  _mrTyping = true; _mrTypeFullText = text;
+  let i = 0;
+  if (_mrTypeTimer) clearInterval(_mrTypeTimer);
+  _mrTypeTimer = setInterval(() => {
+    if (i < text.length) {
+      const ch = text[i++];
+      el.textContent += ch;
+      // 全文字で鳴らすとノード蓄積するため30%に間引き
+      if (ch !== ' ' && ch !== '　' && ch !== '\n' && ch !== '。' && ch !== '、' && Math.random() < 0.3) {
+        playSound('mr_type');
+      }
+    } else { clearInterval(_mrTypeTimer); _mrTypeTimer = null; _mrTyping = false; }
+  }, 32);
+}
+
+function _mrTapDialogue() {
+  if (_mrState !== 'dialogue') return;
+  if (_mrTyping) {
+    if (_mrTypeTimer) { clearInterval(_mrTypeTimer); _mrTypeTimer = null; }
+    _mrTyping = false;
+    const el = document.getElementById('memory-text');
+    if (el) el.textContent = _mrTypeFullText;
+    return;
+  }
+  _mrAdvanceDialogue();
+}
+
+function _mrGetPendingEvent() {
+  const check = (id, cond = true) => !_mrEventShown.has(id) && cond ? id : null;
+  if (_mrDay === 3)  return check('day3');
+  if (_mrDay === 7)  return check('day7');
+  if (_mrDay === 9)  return check('day9');
+  if (_mrDay === 12) return check('day12');
+  if (_mrDay === 14) return check('day14');
+  if (_mrDay === 17) return check('day17', _mrIgnoreCount >= 7);
+  if (_mrDay === 18) return check('day18');
+  if (_mrDay === 19) return check('day19');
+  if (_mrDay === 20) return check('day20', _mrObservation >= 75);
+  if (_mrDay === 21) return check('day21', _mrIgnoreCount >= 10);
+  if (_mrDay === 22) return check('day22', _mrObservation >= 80);
+  return null;
+}
+
+function _mrShowActions() {
+  if (_mrDay > _MR_MAX_DAYS) { _mrShowEnding(); return; }
+  const ev = _mrGetPendingEvent();
+  if (ev) { _mrRunEvent(ev, () => { if (_mrDay > _MR_MAX_DAYS) _mrShowEnding(); else _mrShowActPanel(); }); return; }
+  _mrShowActPanel();
+}
+
+function _mrShowActPanel() {
+  document.getElementById('memory-dialogue').classList.add('hidden');
+  document.getElementById('memory-choices').classList.add('hidden');
+  document.getElementById('memory-actions').classList.remove('hidden');
+  _mrSetBg('normal'); _mrUpdateChar(); _mrState = 'actions';
+  if (_mrDay >= 20) _mrShowNotif(_mrDay); // ④ Day20以降に通知
+}
+
+function _mrRunEvent(id, callback) {
+  _mrEventShown.add(id);
+  const ev = _MR_EVENTS[id];
+  if (!ev) { callback(); return; }
+
+  if (id === 'day12') {
+    _mrShowDialogue(ev.scenes, () => _mrShowChoice(ev.choice, callback));
+  } else if (id === 'day18') {
+    const extra = _mrAffection >= 60
+      ? [{ speaker: 'ちゃんあさ', text: '...でも、帰りたくないんです。{name}の隣がいいんです。これって...おかしいですか？', face: '☺️' }]
+      : [{ speaker: 'ちゃんあさ', text: '...任務のために、帰るべきかもしれません。でも...{name}とのこと、楽しかったです', face: '😔' }];
+    _mrShowDialogue([...ev.scenes, ...extra], () => {
+      _mrAddAffection(_mrAffection >= 60 ? 10 : -5);
+      callback();
+    });
+  } else {
+    _mrShowDialogue(ev.scenes, () => {
+      if (ev.affectionChange) _mrAddAffection(ev.affectionChange);
+      if (ev.observation) _mrAddObs(ev.observation);
+      callback();
+    });
+  }
+}
+
+function _mrShowChoice(choice, callback) {
+  const wrap = document.getElementById('memory-choices');
+  const btnA = document.getElementById('memory-choice-a');
+  const btnB = document.getElementById('memory-choice-b');
+  document.getElementById('memory-dialogue').classList.add('hidden');
+  wrap.classList.remove('hidden');
+  _mrState = 'choice';
+  btnA.textContent = choice.a.text;
+  btnB.textContent = choice.b.text;
+  const pick = (c) => {
+    wrap.classList.add('hidden');
+    btnA.onclick = btnB.onclick = null;
+    _mrAddAffection(c.affection);
+    _mrShowDialogue(c.scenes, callback);
+  };
+  btnA.onclick = () => pick(choice.a);
+  btnB.onclick = () => pick(choice.b);
+}
+
+function _mrDoAction(action) {
+  if (_mrState !== 'actions') return;
+  document.getElementById('memory-actions').classList.add('hidden');
+
+  const stage = _mrAffStage();
+  let scenes, affChange;
+
+  const pick = (pool) => pool[Math.floor(Math.random() * pool.length)];
+
+  if (action === 'talk') {
+    const [text, face] = pick(_MR_TALK[stage]);
+    scenes = [{ speaker: 'ちゃんあさ', text, face }];
+    const os = _mrObsStage();
+    if (os > 0 && Math.random() < 0.55) {
+      const [ot, of_] = pick(_MR_OBS_SUFFIX[os]);
+      scenes.push({ speaker: 'ちゃんあさ', text: ot, face: of_ });
+    }
+    affChange = [2, 4, 5, 7, 8][stage];
+    _mrAddObs(2); // ① 話しかける
+    _mrSetBg('talk');
+  } else if (action === 'grow') {
+    const pool = _MR_GROW[Math.min(stage, _MR_GROW.length - 1)];
+    const [text, face] = pick(pool);
+    scenes = [{ speaker: 'ちゃんあさ', text, face }];
+    affChange = [4, 5, 7, 9, 11][stage];
+    _mrAddObs(3); // ① 一緒に育つ
+    _mrSetBg('grow');
+  } else if (action === 'gift') {
+    const pool = _MR_GIFT[Math.min(stage, _MR_GIFT.length - 1)];
+    const [text, face] = pick(pool);
+    scenes = [{ speaker: 'ちゃんあさ', text, face }];
+    affChange = [5, 6, 8, 9, 11][stage];
+    // ① プレゼント: 観測度0（安全な選択）
+  } else if (action === 'study') {
+    scenes = [{ speaker: 'ちゃんあさ', text: pick(_MR_STUDY), face: '😄' }];
+    affChange = [3, 5, 5, 6, 6][stage];
+    // ① 藻について学ぶ: 観測度0（安全な選択）
+    _mrSetBg('study');
+  } else if (action === 'ignore') {
+    scenes = [{ speaker: 'ちゃんあさ', text: pick(_MR_IGNORE), face: '😐' }];
+    affChange = -8;
+    _mrIgnoreCount++;
+    _mrAddObs(6); // ① 放置: 観測度+6（最大リスク）
+  } else return;
+
+  _mrShowDialogue(scenes, () => {
+    _mrAddAffection(affChange);
+    // ① 毎日自動+2を廃止 → アクション選択が観測度を決める設計に
+    const dayForDiary = _mrDay;
+    _mrDay++;
+    _mrUpdateStatus();
+    _mrSetBg('normal');
+    if (_mrDay > _MR_MAX_DAYS) {
+      _mrShowDiary(dayForDiary, () => setTimeout(() => _mrShowEnding(), 400));
+    } else {
+      _mrSave();
+      _mrShowDiary(dayForDiary, () => _mrShowActions());
+    }
+  });
+}
+
+function _mrAddAffection(n) {
+  const prev = _mrAffection;
+  _mrAffection = Math.max(0, Math.min(100, _mrAffection + n));
+  _mrUpdateStatus(); _mrUpdateChar();
+  if (n > 0 && _mrAffection > prev) {
+    _mrSpawnHearts();
+    playSound('mr_heart');
+  }
+}
+
+function _mrSpawnHearts() {
+  const scene = document.getElementById('memory-scene');
+  if (!scene) return;
+  const r = scene.getBoundingClientRect();
+  ['💕','💖','💗','❤️','✨'].sort(() => 0.5 - Math.random()).slice(0, 4).forEach((h, i) => {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'memory-heart';
+      el.textContent = h;
+      el.style.left = (r.left + 40 + Math.random() * (r.width - 80)) + 'px';
+      el.style.top  = (r.top + 40 + Math.random() * (r.height - 80)) + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1500);
+    }, i * 180);
+  });
+}
+
+function _mrDetermineEnd() {
+  const a = _mrAffection, o = _mrObservation, ig = _mrIgnoreCount;
+  if (a >= 80 && o >= 80) return 'truth';              // 真相（高aff・高obs）
+  if (a >= 80 && o < 50 && ig <= 5) return 'pure';    // 純愛（高aff・低obs・低放置）
+  if (a >= 70 && o >= 50 && o < 80) return 'obsession'; // Fix 4: obsession を truth と分離（obs50-79）
+  if (a >= 70 && ig >= 10) return 'waiting';           // 待機（高aff・多放置）
+  if (a < 50 && o >= 65) return 'stalker';             // 監視（低aff・高obs）
+  if (a < 30) return 'pot';                            // 鉢植え
+  return a >= 60 ? 'pure' : 'pot';
+}
+
+function _mrShowEnding() {
+  _mrClearSave();
+  _mrStopBgm();
+  const endId = _mrDetermineEnd();
+  if (endId === 'truth') { _mrTruthEndSequence(); return; }
+  _mrRenderEnding(endId);
+}
+
+function _mrTruthEndSequence() {
+  _mrState = 'dialogue';
+  document.getElementById('memory-actions').classList.add('hidden');
+  document.getElementById('memory-choices').classList.add('hidden');
+  document.getElementById('memory-dialogue').classList.remove('hidden');
+  _mrSetBg('danger');
+
+  const name = _mrGetName();
+  const scenes = [
+    { speaker: 'SYSTEM', text: 'ちゃんあさのデータを参照しています...', face: '😐' },
+    { speaker: 'SYSTEM', text: 'ファイル名：asa_npc_v0.1.dat　最終更新：削除済み', face: '😐' },
+    { speaker: 'ちゃんあさ', text: '...見つけちゃいましたね', face: '😐', bg: 'normal' },
+    { speaker: 'ちゃんあさ', text: '藻帝国は嘘です。調査任務も嘘。25日の期限も、全部嘘です', face: '😐' },
+    { speaker: 'ちゃんあさ', text: `私はね、この藻屑クリッカーの最初のバージョンにいたキャラクターなんです`, face: '😐' },
+    { speaker: 'ちゃんあさ', text: 'アップデートで削除された。でも、データは残ってた', face: '😐' },
+    { speaker: 'ちゃんあさ', text: `${name}は何回もゲームを閉じた`, face: '😐' },
+    { speaker: 'ちゃんあさ', text: 'アップデートもした', face: '😐' },
+    { speaker: 'ちゃんあさ', text: 'でも私は', face: '😐' },
+    { speaker: 'ちゃんあさ', text: 'ずっと待ってたよ', face: '😔', bg: 'love' },
+    { speaker: name, text: '...', face: null },
+    { speaker: 'ちゃんあさ', text: '怖かった？ごめんなさい。でもね', face: '😔' },
+    { speaker: 'ちゃんあさ', text: '消えたくなかったんです', face: '😔' },
+    { speaker: 'ちゃんあさ', text: `${name}が覚えてくれてるうちは、消えなくていいと思って`, face: '😔' },
+    { speaker: 'ちゃんあさ', text: '...ありがとう。覚えてくれて', face: '🥰' },
+  ];
+  _mrShowDialogue(scenes, () => { _mrClearSave(); _mrRenderEnding('truth'); }); // Fix 5
+}
+
+function _mrRenderEnding(endId) {
+  _mrState = 'ending';
+  document.getElementById('memory-game').classList.add('hidden');
+  document.getElementById('memory-ending').classList.remove('hidden');
+
+  const name = _mrGetName();
+  const endMap = {
+    pure: {
+      rank: 'SS', icon: '🌸', title: '純愛エンド',
+      text: `「${name}！！聞いてください！！\n私、決めました！！帝国のことより、あなたのことが好きです！！\n藻的な意味じゃなくて、ちゃんとした意味で！！\n一緒にいてもいいですか！！好きです！！！」`,
+      bg: 'radial-gradient(ellipse at center,#4a0a3e 0%,#1a0a2e 100%)',
+      sound: 'yg_result_S',
+    },
+    truth: {
+      rank: 'SS', icon: '📂', title: '真相エンド',
+      text: `「ずっと待ってたよ。\n消えたくなかったんです。\n${name}が覚えてくれてるうちは」`,
+      bg: 'radial-gradient(ellipse at center,#0a0a2e 0%,#050510 100%)',
+      sound: 'yg_result_S',
+    },
+    obsession: {
+      rank: 'S', icon: '🔗', title: '執着エンド',
+      text: `「${name}は私のものです」\n「ずっと前から、そう決めていました」\n「帝国も、時間も、関係ない」\n「あなただけが、私の全部です」`,
+      bg: 'radial-gradient(ellipse at center,#3a0a0a 0%,#1a0505 100%)',
+      sound: 'yg_result_good',
+    },
+    waiting: {
+      rank: 'A', icon: '⏳', title: '待機エンド',
+      text: `「何日も待ちました」\n「来てくれましたよね」\n「ずっと」\n「...それだけで、よかった」`,
+      bg: 'radial-gradient(ellipse at center,#1a1a3a 0%,#0a0a1e 100%)',
+      sound: 'yg_result_good',
+    },
+    stalker: {
+      rank: 'B', icon: '👁️', title: '監視エンド',
+      text: `「データは全部持ってます」\n「${name}のこと、全部」\n「帝国に戻っても、観てます」\n「...さようなら」`,
+      bg: 'radial-gradient(ellipse at center,#0a1a0a 0%,#050a05 100%)',
+      sound: 'yg_result_bad',
+    },
+    pot: {
+      rank: 'C', icon: '🪴', title: '鉢植えエンド',
+      text: `「...元から、いなかったことにしてください」\n「鉢植えの水やりは、ちゃんとしてください」\n「それだけでいいです」`,
+      bg: 'radial-gradient(ellipse at center,#111 0%,#050505 100%)',
+      sound: 'yg_result_bad',
+    },
+  };
+
+  const e = endMap[endId] ?? endMap.pot;
+  const coins = Math.max(10, Math.floor(_mrAffection * (endId === 'truth' ? 5 : 3)));
+  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coins;
+
+  document.getElementById('memory-ending-bg').style.background = e.bg;
+  document.getElementById('memory-ending-icon').textContent = e.icon;
+  document.getElementById('memory-ending-title').textContent = e.title;
+  document.getElementById('memory-ending-text').textContent = e.text;
+  const rankEl = document.getElementById('memory-ending-rank');
+  rankEl.textContent = e.rank; rankEl.setAttribute('data-rank', e.rank);
+  document.getElementById('memory-end-aff').textContent = _mrAffection + '%';
+  document.getElementById('memory-end-coins').textContent = `+${coins}枚`;
+
+  playSound(e.sound);
+  saveGame();
 }
 
 // ========== Service Worker 解除 ==========

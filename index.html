@@ -575,6 +575,121 @@
           </div>
           <span class="mg-arrow">›</span>
         </button>
+        <button class="mg-card" data-game="memory">
+          <span class="mg-icon">💕</span>
+          <div class="mg-info">
+            <div class="mg-name">藻屑メモリアル</div>
+            <div class="mg-desc">ちゃんあさと過ごす25日間の青春</div>
+          </div>
+          <span class="mg-arrow">›</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 藻屑メモリアル ゲーム画面 -->
+    <div id="minigame-game-memory" class="hidden">
+      <div class="mg-game-header">
+        <button id="memory-back-btn" class="mg-back-btn">‹ 戻る</button>
+        <span class="mg-game-title">💕 藻屑メモリアル</span>
+      </div>
+
+      <!-- ロビー -->
+      <div id="memory-lobby" class="memory-lobby">
+        <div class="memory-lobby-visual">
+          <img src="assets/yomogi/asa_5.png" class="memory-lobby-asa" alt="ちゃんあさ">
+          <div class="memory-lobby-face">😊</div>
+        </div>
+        <div class="memory-lobby-name">ちゃんあさ</div>
+        <p class="memory-lobby-desc">藻帝国から来た不思議な精霊。<br>残り25日で帰ってしまう前に<br>あなたとの時間を大切にして。</p>
+        <div id="memory-continue-area" class="memory-continue-area hidden">
+          <div id="memory-continue-info" class="memory-continue-info"></div>
+          <button id="memory-continue-btn" class="memory-primary-btn memory-continue-btn">続きから</button>
+        </div>
+        <button id="memory-start-btn" class="memory-primary-btn memory-newgame-btn">青春を始める</button>
+      </div>
+
+      <!-- ゲーム中 -->
+      <div id="memory-game" class="hidden">
+        <div class="memory-status">
+          <div class="memory-day-info">
+            <span class="memory-day-lbl">DAY</span>
+            <span id="memory-day-num" class="memory-day-num">1</span>
+            <span class="memory-day-tot">/ 25</span>
+          </div>
+          <div class="memory-aff-wrap">
+            <span class="memory-aff-lbl">💕</span>
+            <div class="memory-aff-bar-bg">
+              <div id="memory-aff-fill" class="memory-aff-fill"></div>
+            </div>
+            <span id="memory-aff-pct" class="memory-aff-pct">0%</span>
+          </div>
+          <span id="memory-stage-label" class="memory-stage-label">無関心</span>
+        </div>
+
+        <div id="memory-scene" class="memory-scene">
+          <div id="memory-bg-overlay" class="memory-bg-overlay"></div>
+          <div class="memory-char-wrap">
+            <img id="memory-char-img" class="memory-char-img" src="assets/yomogi/asa_1.png" alt="ちゃんあさ">
+            <div id="memory-char-face" class="memory-char-face">😐</div>
+          </div>
+        </div>
+
+        <div id="memory-dialogue" class="memory-dialogue hidden">
+          <div class="memory-dlg-header">
+            <span id="memory-speaker" class="memory-speaker">ちゃんあさ</span>
+          </div>
+          <div id="memory-text" class="memory-text"></div>
+          <div class="memory-tap-hint">▼ タップで次へ</div>
+        </div>
+
+        <div id="memory-actions" class="memory-actions hidden">
+          <div class="memory-act-header">
+            どうする？<span class="memory-day-badge">DAY <span id="memory-act-day">1</span></span>
+          </div>
+          <div class="memory-act-list">
+            <button class="memory-act-btn" data-action="talk">💬 話しかける</button>
+            <button class="memory-act-btn" data-action="grow">🌿 一緒に育つ</button>
+            <button class="memory-act-btn" data-action="gift">🎁 プレゼントする</button>
+            <button class="memory-act-btn" data-action="study">📚 藻について学ぶ</button>
+            <button class="memory-act-btn memory-act-ignore" data-action="ignore">😴 放置する</button>
+          </div>
+        </div>
+
+        <div id="memory-choices" class="memory-choices hidden">
+          <button id="memory-choice-a" class="memory-choice-btn"></button>
+          <button id="memory-choice-b" class="memory-choice-btn"></button>
+        </div>
+
+        <!-- 日記 -->
+        <div id="memory-diary" class="memory-diary hidden">
+          <div class="memory-diary-inner">
+            <div class="memory-diary-header">📔 DAY <span id="memory-diary-day">1</span> の日記</div>
+            <div id="memory-diary-text" class="memory-diary-text"></div>
+            <button id="memory-diary-close" class="memory-diary-close">しまう</button>
+          </div>
+        </div>
+
+        <!-- 通知 -->
+        <div id="memory-notif" class="memory-notif hidden">
+          <span class="memory-notif-icon">📩</span>
+          <span id="memory-notif-text">ちゃんあさ: ...</span>
+        </div>
+      </div>
+
+      <!-- エンディング -->
+      <div id="memory-ending" class="hidden memory-ending">
+        <div id="memory-ending-bg" class="memory-ending-bg"></div>
+        <div id="memory-ending-icon" class="memory-ending-icon">💕</div>
+        <div id="memory-ending-title" class="memory-ending-title">TRUE END</div>
+        <div id="memory-ending-rank-wrap">
+          <div id="memory-ending-rank" class="shooting-rank-badge" data-rank="SS">SS</div>
+        </div>
+        <div id="memory-ending-text" class="memory-ending-text"></div>
+        <div class="memory-ending-stats">
+          <div class="memory-ending-stat"><span>最終好感度</span><span id="memory-end-aff">0%</span></div>
+          <div class="memory-ending-stat"><span>獲得藻コイン</span><span id="memory-end-coins">+0枚</span></div>
+        </div>
+        <button id="memory-retry-btn" class="memory-primary-btn">もう一度</button>
       </div>
     </div>
 
@@ -638,7 +753,7 @@
         <div class="toilet-result-stats">
           <div class="toilet-stat"><span>距離</span><span id="toilet-res-dist">0m</span></div>
           <div class="toilet-stat"><span>スコア</span><span id="toilet-res-score">0</span></div>
-          <div class="toilet-stat"><span>獲得コイン</span><span id="toilet-res-coins">+0枚</span></div>
+          <div class="toilet-stat"><span>獲得藻コイン</span><span id="toilet-res-coins">+0枚</span></div>
         </div>
         <div class="toilet-result-btns">
           <button id="toilet-retry-btn" class="toilet-action-btn">もう一度</button>
@@ -1061,6 +1176,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=2.15.5"></script>
+  <script type="module" src="script.js?v=2.16.0"></script>
 </body>
 </html>
