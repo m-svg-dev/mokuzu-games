@@ -7389,8 +7389,8 @@ const _DG_MON_DEF = {
   jelly:    { name:'スライム',       sprite:'jelly',    hp:8,  atk:1,  def:0, gold:2  },
   bat:      { name:'コウモリ',       sprite:'bat',      hp:6,  atk:2,  def:0, gold:1  },
   skeleton: { name:'スケルトン',     sprite:'skeleton', hp:14, atk:5,  def:2, gold:5  },
-  devil:    { name:'ブルーデビル',   sprite:'devil',    hp:22, atk:8,  def:3, gold:10 },
-  boss:     { name:'黄金ドラゴン',   sprite:'boss',     hp:50, atk:12, def:5, gold:50 },
+  devil:    { name:'ブルーデビル',   sprite:'devil',    hp:22, atk:6,  def:2, gold:10 },
+  boss:     { name:'黄金ドラゴン',   sprite:'boss',     hp:40, atk:8,  def:3, gold:50 },
 };
 
 const _DG_EQUIP_DEF = {
@@ -7657,7 +7657,7 @@ function _dgUpdateHUD() {
 
 function _dgMsg(text) {
   _dgMsgs.push(text);
-  if (_dgMsgs.length > 8) _dgMsgs.shift();
+  if (_dgMsgs.length > 6) _dgMsgs.shift();
   const log=document.getElementById('dungeon-log');
   if (log) log.innerHTML = _dgMsgs.map(m=>`<p>${m}</p>`).join('');
 }
