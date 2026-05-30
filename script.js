@@ -5687,6 +5687,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   _dgInitJoystick();
 
+  const switchBtn = document.getElementById('dg-control-switch');
+  const bottomControls = document.querySelector('.dg-bottom-controls');
+  const savedMode = localStorage.getItem('dgControlMode') || 'stick';
+  if (bottomControls) bottomControls.className = `dg-bottom-controls dg-control-mode-${savedMode}`;
+  if (switchBtn) {
+    switchBtn.textContent = savedMode === 'stick' ? '🎮' : '➕';
+    switchBtn.addEventListener('click', () => {
+      const currentMode = bottomControls.classList.contains('dg-control-mode-stick') ? 'stick' : 'buttons';
+      const newMode = currentMode === 'stick' ? 'buttons' : 'stick';
+      bottomControls.className = `dg-bottom-controls dg-control-mode-${newMode}`;
+      switchBtn.textContent = newMode === 'stick' ? '🎮' : '➕';
+      localStorage.setItem('dgControlMode', newMode);
+    });
+  }
+
   // 藻屑メモリアル
   document.getElementById('memory-back-btn')?.addEventListener('click', () => {
     _mrState = 'idle';
