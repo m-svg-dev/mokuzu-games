@@ -7690,8 +7690,8 @@ function _dgUpdateHUD() {
 }
 
 function _dgMsg(text) {
-  _dgMsgs.push(text);
-  if (_dgMsgs.length > 6) _dgMsgs.shift();
+  _dgMsgs.unshift(text);
+  if (_dgMsgs.length > 6) _dgMsgs.pop();
   const log=document.getElementById('dungeon-log');
   if (log) log.innerHTML = _dgMsgs.map(m=>`<p>${m}</p>`).join('');
 }
