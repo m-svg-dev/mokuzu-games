@@ -7541,7 +7541,7 @@ function _dgGenFloor() {
   let bossSpawned = false;
   for (let i = 0; i < numMon; i++) {
     const room = _dgRooms[1 + Math.floor(Math.random() * (_dgRooms.length-1))];
-    const type = (_dgFloor === 3 && i === 0) ? 'boss' : monTypes[Math.floor(Math.random() * monTypes.length)];
+    const type = (_dgFloor === 3 && !bossSpawned) ? 'boss' : monTypes[Math.floor(Math.random() * monTypes.length)];
     const def = _DG_MON_DEF[type];
     let mx, my;
     do {
