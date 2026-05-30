@@ -7557,7 +7557,14 @@ function _dgGenFloor() {
 function _dgGenEquip(eqId, x, y) {
   const base = _DG_EQUIP_DEF[eqId];
   const rarityRoll = Math.random();
-  const rarity = rarityRoll < 0.50 ? 'common' : rarityRoll < 0.85 ? 'rare' : 'epic';
+  let rarity;
+  if (_dgFloor === 1) {
+    rarity = rarityRoll < 0.50 ? 'common' : rarityRoll < 0.85 ? 'rare' : 'epic';
+  } else if (_dgFloor === 2) {
+    rarity = rarityRoll < 0.30 ? 'common' : rarityRoll < 0.75 ? 'rare' : 'epic';
+  } else {
+    rarity = rarityRoll < 0.15 ? 'common' : rarityRoll < 0.60 ? 'rare' : 'epic';
+  }
   const rarityData = _DG_RARITY[rarity];
   const atk = Array.isArray(base.atk) ? Math.round((base.atk[0] + Math.random()*(base.atk[1]-base.atk[0])) * rarityData.mult) : base.atk;
   const def = Array.isArray(base.def) ? Math.round((base.def[0] + Math.random()*(base.def[1]-base.def[0])) * rarityData.mult) : base.def;
