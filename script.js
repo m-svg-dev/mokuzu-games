@@ -7433,7 +7433,7 @@ const _DG_RARITY = {
 const _DG_FLOOR_MONSTERS = [
   ['jelly','jelly','bat','bat'],
   ['jelly','bat','skeleton','skeleton'],
-  ['skeleton','devil','devil','boss'],
+  ['skeleton','skeleton','devil','devil'],
 ];
 const _DG_FLOOR_EQUIP_POOL = [
   ['dagger','shortsword','buckler','roundshield','ring_str','ring_def','ring_hp'],
