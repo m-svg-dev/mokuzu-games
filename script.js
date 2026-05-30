@@ -5678,12 +5678,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dungeon-start-btn')?.addEventListener('click', _dgStartGame);
   document.getElementById('dungeon-retry-btn')?.addEventListener('click', _dgStartGame);
   document.getElementById('dungeon-inv-btn')?.addEventListener('click', _dgShowInventory);
+  document.getElementById('dungeon-inv-btn-mobile')?.addEventListener('click', _dgShowInventory);
   document.getElementById('dungeon-inv-close')?.addEventListener('click', _dgHideInventory);
   document.getElementById('dg-popup-equip')?.addEventListener('click', _dgEquipPending);
   document.getElementById('dg-popup-bag')?.addEventListener('click', _dgBagPending);
   document.querySelectorAll('.dungeon-dpad-btn').forEach(btn => {
     btn.addEventListener('click', () => _dgHandleDir(btn.dataset.dir));
   });
+  _dgInitJoystick();
 
   // 藻屑メモリアル
   document.getElementById('memory-back-btn')?.addEventListener('click', () => {
@@ -7972,6 +7974,49 @@ function _dgShowResult(won) {
   document.getElementById('dg-res-floor').textContent=`B${_dgFloor}F`;
   document.getElementById('dg-res-coins').textContent=`+${coins}枚`;
   saveGame();
+}
+
+function _dgInitJoystick() {
+  const canvas = document.getElementById('joystick-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let touching = false, joyX = 0, joyY = 0, centerX = 90, centerY = 90, baseR = 60, stickR = 30;
+
+  function draw() {
+    ctx.clearRect(0, 0, 180, 180);
+    ctx.fillStyle = 'rgba(50,50,50,0.3)';
+    ctx.beginPath(); ctx.arc(centerX, centerY, baseR, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(centerX, centerY, baseR, 0, Math.PI*2); ctx.stroke();
+    const stickX = centerX + joyX, stickY = centerY + joyY;
+    ctx.fillStyle = touching ? 'rgba(100,100,100,0.8)' : 'rgba(80,80,80,0.6)';
+    ctx.beginPath(); ctx.arc(stickX, stickY, stickR, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(stickX, stickY, stickR, 0, Math.PI*2); ctx.stroke();
+  }
+
+  function handleTouch(e) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0] || e.changedTouches[0];
+    const x = touch.clientX - rect.left - centerX;
+    const y = touch.clientY - rect.top - centerY;
+    const dist = Math.sqrt(x*x + y*y);
+    const maxDist = baseR - stickR;
+    if (dist > maxDist) { joyX = x/dist*maxDist; joyY = y/dist*maxDist; }
+    else { joyX = x; joyY = y; }
+    draw();
+
+    const threshold = 20;
+    if (Math.abs(joyX) > threshold || Math.abs(joyY) > threshold) {
+      if (Math.abs(joyX) > Math.abs(joyY)) _dgHandleDir(joyX > 0 ? 'right' : 'left');
+      else _dgHandleDir(joyY > 0 ? 'down' : 'up');
+    }
+  }
+
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); touching = true; handleTouch(e); });
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); if(touching) handleTouch(e); });
+  canvas.addEventListener('touchend', e => { e.preventDefault(); touching = false; joyX = 0; joyY = 0; draw(); });
+  draw();
 }
 
 // ========== Service Worker 解除 ==========
