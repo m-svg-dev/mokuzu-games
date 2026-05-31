@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.17.0';
+const CURRENT_VERSION = '2.17.1';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.17.1',
+    date: '2026/05/31',
+    title: '🐛 ボス複数スポーンバグ修正',
+    items: [
+      '🐛 B3Fでボスが複数体出現するバグを修正',
+    ],
+  },
   {
     id: 'v2.17.0',
     date: '2026/05/30',
@@ -1105,7 +1113,7 @@ function updateDisplay() {
   document.getElementById('moku-display').textContent = `藻: ${fmt(gameState.moku)}`;
 
   const mpsTotal = gameState.mokuPerSecond
-    * (gameState.isAwakened ? 5 : 1)
+    * (gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1)
     * (gameState.eventMpsMult ?? 1)
     * (isEffectActive('mps_boost') ? 5 : 1)
     * getPetMultiplier().mps;
@@ -1844,7 +1852,7 @@ function useConsumable(itemId) {
     if (item.effect === 'auto_click') startAutoClicker();
   } else if (item.effect === 'moku_storm') {
     const mpsTotal = gameState.mokuPerSecond
-      * (gameState.isAwakened ? 5 : 1)
+      * (gameState.isAwakened ? 5 * getPrestigeBonus('awakenMult') : 1)
       * (gameState.eventMpsMult ?? 1)
       * (isEffectActive('mps_boost') ? 5 : 1)
       * getPetMultiplier().mps;
@@ -7552,10 +7560,8 @@ function _dgGenFloor() {
       type, name: def.name, sprite: def.sprite, hp: def.hp, maxHp: def.hp, atk: def.atk, def: def.def, gold: def.gold });
     if (type === 'boss') {
       bossSpawned = true;
-      console.log('BOSS spawned at', mx, my, 'sprite:', def.sprite);
     }
   }
-  if (_dgFloor === 3) console.log('All B3F monsters:', _dgMonsters.map(m => `${m.name}(${m.type})`));
   const equipPool = _DG_FLOOR_EQUIP_POOL[_dgFloor-1];
   const numEquip = 5 + _dgFloor * 2;
   for (let i = 0; i < numEquip; i++) {
