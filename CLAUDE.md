@@ -40,6 +40,15 @@ mokuPerSecond × awakening × event × mpsBoost × petMult
 `beepAt(at, freq, dur, vol, type)` を使って音を予約スケジュールする。
 `setTimeout` 内で `ctx.currentTime` を取得すると過去時刻になり音が鳴らないので禁止。
 
+## ミニゲームのファイル分割
+
+**新しいミニゲームは必ず別ファイルに作る**：
+- `minigame-xxx.js` として `script.js` と同じ階層に置く
+- `script.js` から `import { initXxx } from './minigame-xxx.js'` で読み込む
+- HTMLの `<div id="minigame-game-xxx">` はこれまで通り `index.html` に追加する
+
+既存のミニゲーム（dungeon, yomogi等）は `script.js` 内にあるが、新規追加分は必ず分割すること。
+
 ## コーディング方針
 - コメントは原則書かない（理由が自明でない場合のみ1行）
 - エラーハンドリングは外部APIの境界のみ（内部ロジックに不要なtry/catchを足さない）

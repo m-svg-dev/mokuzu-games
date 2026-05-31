@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.17.1';
+const CURRENT_VERSION = '2.17.2';
 const SAVE_VERSION   = 1;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
@@ -19,6 +19,15 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.17.2',
+    date: '2026/05/31',
+    title: '🐛 ダンジョンバグ修正',
+    items: [
+      '🐛 インベントリの装備・取り外しボタンが効かないバグを修正',
+      '🐛 ボスのエフェクトが正しく表示されないバグを修正',
+    ],
+  },
   {
     id: 'v2.17.1',
     date: '2026/05/31',
@@ -5762,6 +5771,8 @@ window._save = saveGame;
 
 // インラインonclickから呼ばれる関数をグローバルに公開
 window.equipSkin = equipSkin;
+window._dgUnequip = _dgUnequip;
+window._dgEquipFromInv = _dgEquipFromInv;
 
 // ========== Firebase 連携 ==========
 
@@ -7662,9 +7673,12 @@ function _dgRender() {
     const mon=_dgMonsters.find(m=>m.x===mx&&m.y===my&&m.hp>0);
     if (mon) {
       const isBoss = mon.type === 'boss';
-      const im=_dgImages[mon.sprite]; if(im?.complete) ctx.drawImage(im,sx,sy,T,T);
       if (isBoss) {
         ctx.fillStyle='rgba(255,215,0,0.3)'; ctx.fillRect(sx-4,sy-4,T+8,T+8);
+      }
+      const im=_dgImages[mon.sprite]; if(im?.complete) ctx.drawImage(im,sx,sy,T,T);
+      if (isBoss) {
+        ctx.save();
         ctx.strokeStyle = '#ffd700';
         ctx.lineWidth = 4;
         ctx.strokeRect(sx-3, sy-3, T+6, T+6);
@@ -7672,10 +7686,10 @@ function _dgRender() {
         ctx.fillStyle='#1a0a00'; ctx.fillRect(sx-2,sy-14,T+4,12);
         ctx.fillStyle='#8b0000'; ctx.fillRect(sx-1,sy-13,Math.round((T+2)*mon.hp/mon.maxHp),10);
         ctx.fillStyle='#ffd700'; ctx.fillRect(sx-1,sy-13,Math.round((T+2)*mon.hp/mon.maxHp),5);
-        ctx.fillStyle='#000'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center';
-        ctx.fillText('BOSS', sx+T/2+1, sy+T+11);
-        ctx.fillStyle='#ffd700';
-        ctx.fillText('BOSS', sx+T/2, sy+T+10);
+        ctx.font='bold 10px sans-serif'; ctx.textAlign='center';
+        ctx.fillStyle='#000'; ctx.fillText('BOSS', sx+T/2+1, sy+T+11);
+        ctx.fillStyle='#ffd700'; ctx.fillText('BOSS', sx+T/2, sy+T+10);
+        ctx.restore();
       } else {
         ctx.fillStyle='#600'; ctx.fillRect(sx,sy,T,6);
         ctx.fillStyle='#0d0'; ctx.fillRect(sx,sy,Math.round(T*mon.hp/mon.maxHp),6);
