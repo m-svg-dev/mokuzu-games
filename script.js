@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.21.3';
+const CURRENT_VERSION = '2.21.4';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.21.4',
+    date: '2026/06/08',
+    title: '💾 セーブの安定性を向上（内部改善）',
+    items: [
+      '💾 セーブデータ容量の監視を追加し、将来的なデータ肥大化に備えました（遊び心地に影響はありません）',
+    ],
+  },
   {
     id: 'v2.21.3',
     date: '2026/06/07',
@@ -3389,11 +3397,31 @@ function checkOfflineEarnings() {
 
 // ========== セーブ / ロード / リセット ==========
 
+// セーブサイズ警告のしきい値（Firestore 1ドキュメント上限=1MB に対する早期警告）
+const SAVE_SIZE_WARN  = 700 * 1024;   // 700KB で警告
+const SAVE_SIZE_ALERT = 950 * 1024;   // 950KB で強い警告
+
 function saveGame() {
   gameState.lastSaved = Date.now();
   const json = JSON.stringify(gameState);
   localStorage.setItem(SAVE_KEY, json);
   localStorage.setItem(CHECKSUM_KEY, computeChecksum(json));
+  checkSaveSize(json);
+}
+
+// セーブ容量を監視（1MB上限に近づいたら知らせる火災報知器）
+let _saveSizeWarned = false;
+function checkSaveSize(json) {
+  const bytes = new Blob([json]).size;   // UTF-8 実バイト数
+  if (bytes >= SAVE_SIZE_ALERT) {
+    console.error(`[mokuzu] ⚠️ セーブが ${Math.round(bytes/1024)}KB！ Firestore上限1MBが目前です。データ分割など対策を。`);
+    if (!_saveSizeWarned && typeof toast === 'function') {
+      _saveSizeWarned = true;
+      toast?.('⚠️ セーブ容量が上限に近づいています');
+    }
+  } else if (bytes >= SAVE_SIZE_WARN) {
+    console.warn(`[mokuzu] セーブサイズ ${Math.round(bytes/1024)}KB（上限1MBの${Math.round(bytes/1048576*100)}%）`);
+  }
 }
 
 function saveGameCloud() {
@@ -5875,7 +5903,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.21.3';
+import { initMokumon } from './minigame-mokumon.js?v=2.21.4';
 
 let _authMode = 'login'; // 'login' | 'register'
 
