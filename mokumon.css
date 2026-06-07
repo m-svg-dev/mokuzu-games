@@ -690,14 +690,16 @@
   position: absolute; z-index: 2; pointer-events: none;
   background: url('data/mokumon/tiles/tile_exit.webp') center bottom / contain no-repeat;
   image-rendering: pixelated;
-  /* drop-shadowは1つ＋アニメは opacity だけ（scaleで影を毎フレーム再描画しない）。
-     will-changeで独立レイヤー化してカクつき防止 */
-  filter: drop-shadow(0 0 14px rgba(120,200,255,0.7));
-  will-change: opacity;
+  /* filter(drop-shadow)は重い（カメラ移動のたびに再描画）。
+     光彩は再描画の起きない radial-gradient(::before) で表現する */
   animation: mkm-warp-pulse 1.8s ease-in-out infinite;
 }
+.mkm-warp::before {
+  content: ''; position: absolute; inset: -8%; z-index: -1;
+  background: radial-gradient(ellipse at 50% 60%, rgba(120,200,255,0.5), rgba(120,200,255,0.15) 45%, transparent 70%);
+}
 @keyframes mkm-warp-pulse {
-  0%, 100% { opacity: 0.78; }
+  0%, 100% { opacity: 0.82; }
   50%      { opacity: 1; }
 }
 .mkm-npc-icon { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }

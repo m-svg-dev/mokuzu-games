@@ -3097,7 +3097,7 @@ function centerCamera(animate) {
   const offX = vw / 2 - (MAP.px * TILE + TILE / 2);
   const offY = vh / 2 - (MAP.py * TILE + TILE / 2);
   layer.style.transition = animate ? `transform ${MOVE_MS}ms linear` : 'none';
-  layer.style.transform = `translate(${offX}px, ${offY}px)`;
+  layer.style.transform = `translate3d(${offX}px, ${offY}px, 0)`;   // 3D指定でGPU合成を強制
 }
 
 // 主人公スプライト切り替え
