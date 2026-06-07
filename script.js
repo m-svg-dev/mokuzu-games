@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.21.1';
+const CURRENT_VERSION = '2.21.2';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.21.2',
+    date: '2026/06/07',
+    title: '🐛 ジョイスティックで2歩進む不具合を修正',
+    items: [
+      '🐛 ジョイスティックを軽くタップしたとき、2歩動いてしまう不具合を修正（タップ＝1歩、長押しで連続移動に）',
+    ],
+  },
   {
     id: 'v2.21.1',
     date: '2026/06/07',
@@ -5858,7 +5866,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.21.1';
+import { initMokumon } from './minigame-mokumon.js?v=2.21.2';
 
 let _authMode = 'login'; // 'login' | 'register'
 

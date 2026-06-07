@@ -3292,11 +3292,15 @@ function initJoystick() {
     stopJoy();
     _joyDir = dir;
     move(dir);
-    _joyTimer = setInterval(() => move(dir), 180);
+    // タップ（短い接触）は1歩だけ。長押し（350ms以上）で連続移動に入る
+    _joyTimer = setTimeout(function rep() {
+      move(dir);
+      _joyTimer = setTimeout(rep, 180);
+    }, 350);
   };
 
   const stopJoy = () => {
-    clearInterval(_joyTimer);
+    clearTimeout(_joyTimer);
     _joyTimer = null;
     _joyDir   = null;
     knob.style.transform = 'translate(-50%,-50%)';
@@ -3333,7 +3337,7 @@ function initJoystick() {
 function detachMapInput() {
   if (_mapKeyHandler) { document.removeEventListener('keydown', _mapKeyHandler); _mapKeyHandler = null; }
   // ジョイスティックタイマーも止める（戦闘中に move() が走り続けるバグ防止）
-  if (_joyTimer) { clearInterval(_joyTimer); _joyTimer = null; _joyDir = null; }
+  if (_joyTimer) { clearTimeout(_joyTimer); _joyTimer = null; _joyDir = null; }
   // 入力ロック：地図が再描画されるまで move()・エンカウント判定を一切走らせない
   if (MAP) MAP.inputLocked = true;
 }
