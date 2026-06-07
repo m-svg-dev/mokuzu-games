@@ -3704,7 +3704,7 @@ function renderEnemies() {
       </div>
       <div class="mkm-bt-enemy-info">
         <span class="mkm-bt-name">${escHtml(e.name)} <small>Lv.${e.level}</small></span>
-        <div class="mkm-hpbar"><div class="mkm-hpbar-fill" id="mkm-enemy-hp-${i}" style="width:${hpPct(e)}%"></div></div>
+        <div class="mkm-hpbar"><div class="mkm-hpbar-fill ${hpPct(e) <= 25 ? 'mkm-hp-low' : hpPct(e) <= 50 ? 'mkm-hp-mid' : ''}" id="mkm-enemy-hp-${i}" style="width:${hpPct(e)}%"></div></div>
         <div class="mkm-ailments">${ailmentIconsHtml(e)}</div>
       </div>
     `;

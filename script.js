@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.21.7';
+const CURRENT_VERSION = '2.21.8';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.21.8',
+    date: '2026/06/08',
+    title: '🩹 敵HPバーの色表示を改善',
+    items: [
+      '🩹 状態異常などで画面更新したとき、HPの少ない敵のバーが一瞬みどり色に戻ってしまう表示を修正しました',
+    ],
+  },
   {
     id: 'v2.21.7',
     date: '2026/06/08',
@@ -5927,7 +5935,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.21.7';
+import { initMokumon } from './minigame-mokumon.js?v=2.21.8';
 
 let _authMode = 'login'; // 'login' | 'register'
 
