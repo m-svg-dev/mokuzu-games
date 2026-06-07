@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.21.6';
+const CURRENT_VERSION = '2.21.7';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.21.7',
+    date: '2026/06/08',
+    title: '🚶 スマホで歩行アニメが止まる不具合を修正',
+    items: [
+      '🚶 スマホでキャラの歩行アニメ（足踏み）が再生されず1枚絵に見えていた不具合を修正（歩行画像を先読みするようにしました）',
+    ],
+  },
   {
     id: 'v2.21.6',
     date: '2026/06/08',
@@ -5919,7 +5927,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.21.6';
+import { initMokumon } from './minigame-mokumon.js?v=2.21.7';
 
 let _authMode = 'login'; // 'login' | 'register'
 

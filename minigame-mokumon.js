@@ -1978,6 +1978,7 @@ function buildVillageMap() {
 }
 
 function enterVillage() {
+  preloadPlayerSprites();
   // 村マップが既にある場合は位置を保持して再描画するだけ
   if (MAP?.isVillage) {
     renderMap();
@@ -2799,7 +2800,21 @@ function partyHpBarsHtml() {
   }).join('');
 }
 
+// プレイヤー歩行スプライト（全方向×3コマ）を先読み（スマホで切替が間に合わずアニメしない対策）
+let _playerSpritesPreloaded = false;
+function preloadPlayerSprites() {
+  if (_playerSpritesPreloaded) return;
+  _playerSpritesPreloaded = true;
+  ['up', 'down', 'left', 'right'].forEach(dir => {
+    for (let f = 1; f <= 3; f++) {
+      const im = new Image();
+      im.src = `data/mokumon/player/player_${dir}_${f}.webp`;
+    }
+  });
+}
+
 function enterMap(area, floorNo = 1, keepHp = false) {
+  preloadPlayerSprites();
   const d = data();
   const validParty = d.party.filter(id => id && d.monsters[id]);
   if (validParty.length === 0) {
