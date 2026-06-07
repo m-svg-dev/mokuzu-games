@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.21.8';
+const CURRENT_VERSION = '2.21.9';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.21.9',
+    date: '2026/06/08',
+    title: '🎒 ダンジョン探索中に回復どうぐが使えるように',
+    items: [
+      '🎒 ダンジョンを歩いているときに「どうぐ」ボタンから回復薬・蘇生の藻などを使えるようにしました（戦闘の合間にHP/MP回復・復活ができます）',
+    ],
+  },
   {
     id: 'v2.21.8',
     date: '2026/06/08',
@@ -5935,7 +5943,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.21.8';
+import { initMokumon } from './minigame-mokumon.js?v=2.21.9';
 
 let _authMode = 'login'; // 'login' | 'register'
 

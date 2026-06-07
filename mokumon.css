@@ -829,10 +829,17 @@
 }
 
 .mkm-map-hud {
-  text-align: center; padding: 6px 12px 2px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 6px 12px 2px;
   font-size: 12px; color: var(--mkm-muted);
   background: var(--mkm-bg);
 }
+.mkm-field-item-btn {
+  background: var(--mkm-primary); color: #fff; border: none;
+  border-radius: 14px; padding: 4px 12px; font-size: 12px; font-weight: bold;
+  cursor: pointer;
+}
+.mkm-field-item-btn:active { transform: scale(0.95); }
 .mkm-map-hint { font-size: 11px; color: var(--mkm-muted); }
 
 /* マップ探索中のパーティHP */

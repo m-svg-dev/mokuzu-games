@@ -2800,6 +2800,91 @@ function partyHpBarsHtml() {
   }).join('');
 }
 
+// ===== 探索中の道具メニュー（回復薬を使う）=====
+function openFieldItemMenu() {
+  const d = data();
+  d.items = d.items || {};
+  const owned = Object.entries(d.items)
+    .filter(([id, n]) => n > 0 && getItem(id) && ['heal_hp', 'heal_mp', 'revive'].includes(getItem(id).kind))
+    .map(([id, n]) => ({ id, n, m: getItem(id) }));
+  const ov = document.createElement('div');
+  ov.className = 'mkm-modal-ov';
+  ov.innerHTML = `
+    <div class="mkm-modal mkm-skill-modal">
+      <button class="mkm-modal-close">✕</button>
+      <h3 class="mkm-skill-modal-title">どうぐを つかう</h3>
+      <div class="mkm-skill-choices" id="mkm-fielditem-list"></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const list = ov.querySelector('#mkm-fielditem-list');
+  if (!owned.length) {
+    list.innerHTML = '<p class="mkm-empty">つかえる かいふくどうぐが ない</p>';
+  } else {
+    owned.forEach(({ id, n, m }) => {
+      const btn = document.createElement('button');
+      btn.className = 'mkm-skill-choice';
+      btn.innerHTML = `<span class="mkm-skill-cn">${m.icon} ${escHtml(m.name)} <small>×${n}</small></span><span class="mkm-skill-cd">${escHtml(m.desc)}</span>`;
+      btn.onclick = () => { ov.remove(); openFieldHealTarget(id, m); };
+      list.appendChild(btn);
+    });
+  }
+  ov.querySelector('.mkm-modal-close').onclick = () => ov.remove();
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+}
+
+function openFieldHealTarget(id, m) {
+  const d = data();
+  const party = d.party.filter(pid => pid && d.monsters[pid]);
+  const ov = document.createElement('div');
+  ov.className = 'mkm-modal-ov';
+  ov.innerHTML = `
+    <div class="mkm-modal mkm-skill-modal">
+      <button class="mkm-modal-close">✕</button>
+      <h3 class="mkm-skill-modal-title">だれに つかう？</h3>
+      <div class="mkm-skill-choices" id="mkm-fieldtarget-list"></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const list = ov.querySelector('#mkm-fieldtarget-list');
+  party.forEach(pid => {
+    const inst = d.monsters[pid];
+    const master = getMonsterMaster(inst.monsterId);
+    const st = calcStats(inst);
+    const s = MAP?.hpState?.[pid];
+    const curHp = s ? Math.max(0, Math.min(st.hp, s.hp)) : st.hp;
+    const curMp = s ? Math.max(0, Math.min(st.mp, s.mp)) : st.mp;
+    const fainted = curHp <= 0;
+    const ok = m.kind === 'revive' ? fainted : !fainted;   // 蘇生は戦闘不能のみ、回復は生存のみ
+    const btn = document.createElement('button');
+    btn.className = 'mkm-skill-choice' + (ok ? '' : ' mkm-skill-ng');
+    if (!ok) btn.disabled = true;
+    btn.innerHTML = `<span class="mkm-skill-cn">${escHtml(inst.nickname || master.name)}</span><span class="mkm-skill-cmp">HP ${curHp}/${st.hp}${m.kind === 'heal_mp' ? ` ・ MP ${curMp}/${st.mp}` : ''}</span>`;
+    if (ok) btn.onclick = () => { ov.remove(); applyFieldItem(id, m, pid, st, curHp, curMp); };
+    list.appendChild(btn);
+  });
+  ov.querySelector('.mkm-modal-close').onclick = () => ov.remove();
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+}
+
+function applyFieldItem(id, m, pid, st, curHp, curMp) {
+  MAP.hpState = MAP.hpState || {};
+  const cur = MAP.hpState[pid] || { hp: curHp, mp: curMp };
+  let msg = '';
+  if (m.kind === 'heal_hp') {
+    const v = Math.min(st.hp, cur.hp + m.power) - cur.hp; cur.hp += v; msg = `HPが ${v} かいふく！`;
+  } else if (m.kind === 'heal_mp') {
+    const v = Math.min(st.mp, cur.mp + m.power) - cur.mp; cur.mp += v; msg = `MPが ${v} かいふく！`;
+  } else if (m.kind === 'revive') {
+    cur.hp = Math.max(1, Math.floor(st.hp * m.power)); msg = 'ふっかつ！';
+  }
+  MAP.hpState[pid] = cur;
+  addItem(id, -1);
+  save();
+  sfx('heal');
+  toast(`${m.name}！ ${msg}`);
+  const partyEl = document.querySelector('.mkm-map-party');
+  if (partyEl) partyEl.innerHTML = partyHpBarsHtml();
+}
+
 // プレイヤー歩行スプライト（全方向×3コマ）を先読み（スマホで切替が間に合わずアニメしない対策）
 let _playerSpritesPreloaded = false;
 function preloadPlayerSprites() {
@@ -2899,7 +2984,7 @@ function renderMap() {
       ${(MAP.isVillage || MAP.floorNpcs?.length) ? '<button class="mkm-dpad-talk mkm-talk-overlay" id="mkm-talk-btn">💬</button>' : ''}
     </div>
     <div class="mkm-map-hud">
-      ${MAP.isVillage ? '🏘️ 始まりの村' : `👣 <span id="mkm-steps">${MAP.steps}</span> 歩${MAP.floor && MAP.area.floors ? ` &nbsp;|&nbsp; ${MAP.area.floors.length}階中 ${MAP.floor}階` : ''}`}
+      ${MAP.isVillage ? '🏘️ 始まりの村' : `<span>👣 <span id="mkm-steps">${MAP.steps}</span> 歩${MAP.floor && MAP.area.floors ? ` &nbsp;|&nbsp; ${MAP.area.floors.length}階中 ${MAP.floor}階` : ''}</span><button class="mkm-field-item-btn" id="mkm-field-item">🎒 どうぐ</button>`}
     </div>
     <div class="mkm-map-party">${partyHpBarsHtml()}</div>
     <!-- 保険のDパッド -->
@@ -2927,6 +3012,8 @@ function renderMap() {
     const talkBtn = document.getElementById('mkm-talk-btn');
     if (talkBtn) talkBtn.onclick = tryTalkFloor;
   }
+  const fieldItemBtn = document.getElementById('mkm-field-item');
+  if (fieldItemBtn) fieldItemBtn.onclick = openFieldItemMenu;
   initJoystick();
 
   // キーボード
