@@ -4,3 +4,8 @@ README.md
 
 # Claude Code ローカル状態
 .claude/
+
+# ローカル作業ファイル
+data/mokumon_backup/
+make_pptx.py
+mokue/
