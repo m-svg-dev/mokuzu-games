@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.21.0';
+const CURRENT_VERSION = '2.21.1';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.21.1',
+    date: '2026/06/07',
+    title: '🐛 ダンジョンの動作が重い不具合を修正',
+    items: [
+      '🐛 大湿原などのダンジョンで歩くとカクついていた不具合を修正（出口ワープの描画を軽量化）',
+    ],
+  },
   {
     id: 'v2.21.0',
     date: '2026/06/07',
@@ -5850,7 +5858,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.21.0';
+import { initMokumon } from './minigame-mokumon.js?v=2.21.1';
 
 let _authMode = 'login'; // 'login' | 'register'
 
