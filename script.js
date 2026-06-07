@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.21.5';
+const CURRENT_VERSION = '2.21.6';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.21.6',
+    date: '2026/06/08',
+    title: '🏃 ダンジョンの移動を軽量化（カクつき対策）',
+    items: [
+      '🏃 ダンジョンのカメラ移動をマス単位の即時移動に変更し、スマホでの動作を軽くしました',
+    ],
+  },
   {
     id: 'v2.21.5',
     date: '2026/06/08',
@@ -5911,7 +5919,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.21.5';
+import { initMokumon } from './minigame-mokumon.js?v=2.21.6';
 
 let _authMode = 'login'; // 'login' | 'register'
 

@@ -3155,7 +3155,7 @@ function move(dir) {
   sfx('step');
   startWalkAnim(dir);
   if (pEl) pEl.classList.add('mkm-player-walk');
-  centerCamera(true);
+  centerCamera(false);   // ★アニメ無しの瞬間スナップ（重いタイル層を毎フレーム合成しない＝スマホで軽い）
 
   setTimeout(() => {
     MAP.moving = false;
