@@ -1,0 +1,1509 @@
+/* ========================================
+   藻屑モンスターズ（ミニゲーム）専用スタイル
+   prefix: mkm-
+   ======================================== */
+
+/* 色変数は :root に置く（body直下のモーダル等でも参照できるように） */
+:root {
+  --mkm-bg:        #f0f0e8;
+  --mkm-card:      #e4e4d4;
+  --mkm-surface:   #d8d8c8;
+  --mkm-border:    #9a9a80;
+  --mkm-text:      #1a2a10;
+  --mkm-muted:     #3e5228;
+  --mkm-primary:   #2e8c34;
+  --mkm-accent:    #a07000;
+  --mkm-danger:    #c62828;
+  --mkm-radius:    10px;
+  --mkm-radius-sm: 6px;
+}
+
+#minigame-game-mokumon {
+  background: var(--mkm-bg);
+  color: var(--mkm-text);
+  min-height: 100%;
+}
+/* ライト背景用：ダークテーマ前提の親CSSをミニゲーム内で上書き */
+#minigame-game-mokumon .mg-game-title  { color: var(--mkm-text); }
+#minigame-game-mokumon .mg-back-btn    { background: var(--mkm-card); border-color: var(--mkm-border); color: var(--mkm-text); }
+#minigame-game-mokumon .mg-back-btn:active { background: var(--mkm-surface); }
+#minigame-game-mokumon .mg-arrow       { color: var(--mkm-primary); }
+/* body直下に追加されるmokumon要素：bodyのdarkテーマ色を上書き */
+.mkm-toast               { color: #e8f5e9 !important; }
+.mkm-dialog-box          { background: #f4f4ec !important; color: #222 !important; }
+.mkm-dialog-box *        { color: #222 !important; }
+.mkm-dialog-name         { color: #4a6a20 !important; }
+.mkm-result              { color: #1a2a10 !important; }
+.mkm-result *            { color: #1a2a10 !important; }
+/* .mkm-modal系の見出し：ホスト側h3等の色漏れを防ぐ（明色背景なので濃色固定） */
+.mkm-modal               { color: var(--mkm-text); }
+.mkm-skill-modal-title,
+.mkm-detail-name,
+.mkm-input-title,
+.mkm-birth-name,
+.mkm-picker-head         { color: #1a2a10 !important; }
+
+
+/* ---- タイトル画面 ---- */
+.mkm-title-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 20px 24px;
+  gap: 28px;
+  min-height: 60vh;
+  justify-content: center;
+}
+.mkm-title-logo { text-align: center; }
+.mkm-title-img { width: 100%; max-width: 340px; height: auto; }
+.mkm-title-icon {
+  width: 76px; height: 76px;
+  background: var(--mkm-primary);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px; font-weight: bold; color: #fff;
+  margin: 0 auto 14px;
+  box-shadow: 0 0 22px #4caf5070;
+}
+.mkm-title-name {
+  font-size: 24px; font-weight: bold;
+  color: var(--mkm-accent);
+  letter-spacing: 0.06em;
+}
+.mkm-title-tag {
+  font-size: 12px; color: var(--mkm-muted); margin-top: 8px;
+}
+.mkm-start-btn {
+  background: var(--mkm-primary);
+  color: #fff; font-weight: bold;
+  padding: 14px 40px;
+  border-radius: 100px; border: none;
+  font-size: 16px; cursor: pointer;
+  animation: mkm-pulse 1.6s ease-in-out infinite;
+}
+@keyframes mkm-pulse {
+  0%,100% { transform: scale(1); box-shadow: 0 0 0 0 #4caf5060; }
+  50%     { transform: scale(1.04); box-shadow: 0 0 18px 4px #4caf5040; }
+}
+.mkm-title-back { margin-top: 8px; }
+.mkm-debug-title-btn {
+  margin-top: 12px;
+  background: #37474f;
+  color: #cfd8dc;
+  border: 1px solid #546e7a;
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mkm-debug-title-btn:hover { background: #455a64; }
+
+/* ---- ゲームヘッダー（既存の mg-game-header を流用しつつgold追加） ---- */
+.mkm-gold {
+  margin-left: auto;
+  color: var(--mkm-accent);
+  font-weight: bold;
+  font-size: 14px;
+}
+.mkm-count { margin-left: auto; color: var(--mkm-muted); font-size: 13px; }
+
+/* ---- ホーム ---- */
+.mkm-home { padding: 12px; }
+.mkm-section {
+  background: var(--mkm-card);
+  border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.mkm-section-title {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 13px; font-weight: bold; color: var(--mkm-muted);
+  margin-bottom: 10px;
+}
+.mkm-link { background: none; border: none; color: var(--mkm-primary); font-size: 12px; cursor: pointer; }
+.mkm-party-row { display: flex; flex-direction: column; gap: 6px; }
+.mkm-party-slot {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--mkm-card); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius-sm); padding: 6px 10px;
+  cursor: pointer; transition: background 0.15s;
+}
+.mkm-party-slot:active { background: var(--mkm-border); }
+.mkm-party-slot-img {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: 8px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.mkm-party-slot-img img { width: 100%; height: 100%; object-fit: contain; }
+.mkm-party-slot-info { flex: 1; min-width: 0; }
+.mkm-party-slot-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mkm-party-slot-sub  { font-size: 11px; color: var(--mkm-muted); margin-top: 2px; }
+.mkm-party-slot-rank {
+  font-size: 10px; font-weight: bold; color: #fff;
+  padding: 1px 5px; border-radius: 4px; flex-shrink: 0;
+}
+.mkm-party-slot--empty {
+  justify-content: center; color: var(--mkm-muted);
+  font-size: 13px; min-height: 56px;
+}
+.mkm-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.mkm-menu-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 4px;
+  background: var(--mkm-surface);
+  border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius-sm);
+  color: var(--mkm-text); font-size: 11px; cursor: pointer;
+  position: relative;
+}
+.mkm-menu-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.mkm-menu-icon { font-size: 22px; }
+.mkm-lock { position: absolute; top: 4px; right: 4px; font-size: 10px; }
+
+/* ---- モンスターカード ---- */
+.mkm-card {
+  background: var(--mkm-card);
+  border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius);
+  overflow: hidden;
+  position: relative;
+}
+.mkm-card--sm { display: flex; flex: 1; min-width: 0; }
+.mkm-card--md { display: flex; flex-direction: column; }
+.mkm-card--empty {
+  display: flex; align-items: center; justify-content: center;
+  flex: 1; height: 66px;
+  background: var(--mkm-surface);
+  border: 1px dashed var(--mkm-border);
+  border-radius: var(--mkm-radius);
+  color: var(--mkm-muted); font-size: 12px;
+}
+.mkm-card--dim { opacity: 0.4; pointer-events: none; }
+.mkm-card-rank {
+  position: absolute; top: 5px; left: 5px;
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: bold; color: #fff; z-index: 2;
+}
+.mkm-card-mut { position: absolute; top: 5px; right: 5px; color: var(--mkm-accent); font-size: 13px; z-index: 2; }
+.mkm-card-img {
+  width: 78px; height: 78px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; position: relative;
+}
+.mkm-card--sm .mkm-card-img { width: 60px; height: 60px; }
+.mkm-card-img img { width: 100%; height: 100%; object-fit: contain; }
+.mkm-card-ph {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: bold; color: rgba(255,255,255,0.9);
+}
+.mkm-card-body { padding: 7px; flex: 1; min-width: 0; }
+.mkm-card-name { font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mkm-card-sub { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+.mkm-tag { font-size: 9px; padding: 1px 6px; border-radius: 100px; color: #fff; font-weight: bold; }
+.mkm-lv { font-size: 11px; color: var(--mkm-muted); font-weight: bold; }
+.mkm-card-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 2px 4px; margin-top: 6px; font-size: 10px; color: var(--mkm-text);
+}
+.mkm-card-stats span { font-weight: 600; }
+.mkm-card-fav { position: absolute; bottom: 5px; right: 5px; color: #ef5350; font-size: 11px; }
+
+/* ---- フィルター ---- */
+.mkm-filter { display: flex; gap: 6px; padding: 8px 12px; }
+.mkm-filter select {
+  padding: 6px 8px;
+  background: var(--mkm-surface);
+  border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius-sm);
+  color: var(--mkm-text); font-size: 12px; outline: none;
+}
+
+/* ---- グリッド ---- */
+.mkm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 8px 12px; }
+.mkm-empty { grid-column: 1/-1; text-align: center; color: var(--mkm-muted); padding: 30px; }
+
+/* ---- 図鑑 ---- */
+.mkm-dex-tabs { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; }
+.mkm-dex-tabs::-webkit-scrollbar { display: none; }
+.mkm-dtab {
+  padding: 5px 12px; border-radius: 100px;
+  background: var(--mkm-surface); border: 1px solid var(--mkm-border);
+  color: var(--mkm-muted); font-size: 12px; flex-shrink: 0; cursor: pointer;
+}
+.mkm-dtab.active { background: var(--mkm-primary); border-color: var(--mkm-primary); color: #fff; }
+.mkm-dex-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px 12px; }
+.mkm-dex-item {
+  background: var(--mkm-card); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius-sm); padding: 8px; text-align: center; cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.mkm-dex-item:active { transform: scale(0.97); }
+.mkm-dex-owned { border-color: var(--mkm-primary); box-shadow: 0 0 0 1px var(--mkm-primary)22; }
+.mkm-dex-hidden { opacity: 0.55; cursor: default; }
+.mkm-dex-no { font-size: 10px; color: var(--mkm-muted); margin-bottom: 4px; }
+.mkm-dex-img {
+  width: 100%; aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--mkm-radius-sm); overflow: hidden;
+  border: 1px solid transparent; position: relative; margin-bottom: 6px;
+}
+.mkm-dex-unknown { background: #1a1a1a; }
+.mkm-dex-img img { width: 100%; height: 100%; object-fit: contain; }
+.mkm-dex-rank {
+  position: absolute; top: 3px; left: 3px;
+  width: 17px; height: 17px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: bold; color: #fff;
+}
+.mkm-dex-name { font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- モーダル ---- */
+.mkm-modal-ov {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; padding: 20px;
+}
+.mkm-modal {
+  background: var(--mkm-bg); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius);
+  width: 100%; max-width: 360px; max-height: 82vh;
+  overflow-y: auto; padding: 20px 16px; position: relative;
+}
+.mkm-modal-close {
+  position: absolute; top: 10px; right: 12px;
+  background: none; border: none; color: var(--mkm-muted);
+  font-size: 18px; cursor: pointer; z-index: 1;
+}
+.mkm-detail-head { text-align: center; padding-bottom: 16px; border-bottom: 1px solid var(--mkm-border); }
+.mkm-detail-img {
+  width: 140px; height: 140px; margin: 0 auto 14px;
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.mkm-detail-img img { width: 100%; height: 100%; object-fit: contain; }
+.mkm-detail-name { font-size: 24px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.03em; }
+.mkm-detail-tags { display: flex; gap: 6px; justify-content: center; align-items: center; }
+
+/* ---- 図鑑infoグリッド ---- */
+.mkm-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.mkm-info-cell {
+  background: var(--mkm-surface); border-radius: var(--mkm-radius-sm);
+  padding: 8px 10px;
+}
+.mkm-info-cell--wide { grid-column: 1 / -1; }
+.mkm-info-lbl { font-size: 10px; color: var(--mkm-muted); font-weight: 600; margin-bottom: 3px; letter-spacing: 0.04em; }
+.mkm-info-val { font-size: 15px; font-weight: bold; color: var(--mkm-text); }
+.mkm-stars { font-size: 16px; letter-spacing: 1px; line-height: 1; }
+/* ---- 経験値バー ---- */
+.mkm-exp-bar-wrap { margin-top: 10px; }
+.mkm-exp-bar-track {
+  height: 6px; background: rgba(255,255,255,0.1);
+  border-radius: 100px; overflow: hidden;
+}
+.mkm-exp-bar-fill {
+  height: 100%; border-radius: 100px;
+  transition: width 0.4s ease;
+}
+.mkm-exp-bar-label {
+  font-size: 10px; color: var(--mkm-muted);
+  text-align: right; margin-top: 3px;
+}
+
+/* ---- ステータスグリッド ---- */
+.mkm-stat-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 6px; margin-top: 14px;
+}
+.mkm-stat-cell {
+  background: var(--mkm-card);
+  border: 1px solid var(--mkm-border);
+  border-radius: 8px; padding: 6px 4px;
+  text-align: center;
+}
+.mkm-stat-lbl { font-size: 10px; margin-bottom: 3px; font-weight: 600; letter-spacing: 0.03em; }
+.mkm-stat-val { font-size: 17px; font-weight: bold; }
+.mkm-stat-val--sm { font-size: 12px; line-height: 2; }
+
+/* ステータスごとの色（ライト背景向け：800番台） */
+.mkm-stat-hp  { border-bottom: 2px solid #c62828; }
+.mkm-stat-hp  .mkm-stat-lbl { color: #c62828; }
+.mkm-stat-mp  { border-bottom: 2px solid #1565c0; }
+.mkm-stat-mp  .mkm-stat-lbl { color: #1565c0; }
+.mkm-stat-atk { border-bottom: 2px solid #bf360c; }
+.mkm-stat-atk .mkm-stat-lbl { color: #bf360c; }
+.mkm-stat-def { border-bottom: 2px solid #00695c; }
+.mkm-stat-def .mkm-stat-lbl { color: #00695c; }
+.mkm-stat-mag { border-bottom: 2px solid #6a1b9a; }
+.mkm-stat-mag .mkm-stat-lbl { color: #6a1b9a; }
+.mkm-stat-mnd { border-bottom: 2px solid #ad1457; }
+.mkm-stat-mnd .mkm-stat-lbl { color: #ad1457; }
+.mkm-stat-spd { border-bottom: 2px solid #e65100; }
+.mkm-stat-spd .mkm-stat-lbl { color: #e65100; }
+.mkm-stat-grow { border-bottom: 2px solid #2e7d32; }
+.mkm-stat-grow .mkm-stat-lbl { color: #2e7d32; }
+
+.mkm-detail-desc {
+  font-size: 14px; line-height: 1.8; color: var(--mkm-text);
+  border-left: 3px solid var(--mkm-border);
+  padding: 8px 12px; margin-top: 14px;
+}
+.mkm-dex-locked {
+  color: var(--mkm-muted); font-size: 13px;
+  border-left-color: var(--mkm-muted); font-style: italic;
+  border-left-style: dashed;
+}
+.mkm-fusion-table {
+  margin-top: 14px; padding: 10px 12px;
+  background: var(--mkm-surface); border-radius: var(--mkm-radius-sm);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mkm-fusion-table-title { font-size: 11px; color: var(--mkm-muted); font-weight: 600; letter-spacing: 0.04em; }
+.mkm-fusion-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mkm-fusion-chip {
+  font-size: 12px; font-weight: bold; color: var(--mkm-text);
+  border: 1.5px solid; border-radius: 100px;
+  padding: 2px 10px;
+}
+.mkm-fusion-plus { font-size: 14px; color: var(--mkm-muted); font-weight: bold; }
+
+/* ---- 特技リスト ---- */
+.mkm-skill-list { margin-top: 14px; }
+.mkm-skill-title {
+  font-size: 11px; color: var(--mkm-muted); margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.mkm-skill-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center; gap: 0 8px;
+  padding: 8px 10px;
+  background: var(--mkm-card);
+  border: 1px solid var(--mkm-border);
+  border-radius: 8px; margin-bottom: 5px;
+}
+.mkm-skill-name { font-size: 13px; font-weight: bold; }
+.mkm-skill-desc-short { font-size: 10px; color: var(--mkm-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mkm-skill-mp {
+  font-size: 11px; font-weight: bold;
+  color: #1565c0; background: rgba(21,101,192,0.12);
+  padding: 2px 7px; border-radius: 100px;
+}
+
+/* ---- パーティ編成 ---- */
+.mkm-party-slots { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+.mkm-pslot { cursor: pointer; }
+.mkm-pslot-filled {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--mkm-card); border: 2px solid transparent;
+  border-radius: var(--mkm-radius); padding: 10px;
+}
+.mkm-pslot-img {
+  width: 54px; height: 54px; border-radius: var(--mkm-radius-sm);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.mkm-pslot-img img { width: 100%; height: 100%; object-fit: contain; }
+.mkm-pslot-info { flex: 1; }
+.mkm-pslot-name { font-size: 15px; font-weight: bold; }
+.mkm-pslot-sub { font-size: 12px; color: var(--mkm-muted); margin-top: 2px; }
+.mkm-pslot-remove {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--mkm-surface); border: 1px solid var(--mkm-border);
+  color: var(--mkm-danger); font-size: 14px; cursor: pointer; flex-shrink: 0;
+}
+.mkm-pslot-empty {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--mkm-card); border: 2px dashed var(--mkm-border);
+  border-radius: var(--mkm-radius); padding: 20px; color: var(--mkm-muted);
+}
+.mkm-pslot-add { font-size: 22px; color: var(--mkm-primary); }
+.mkm-party-picker {
+  padding: 10px 12px; background: var(--mkm-surface);
+  border-top: 1px solid var(--mkm-border);
+}
+.mkm-picker-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; font-weight: bold; padding-bottom: 8px;
+  border-bottom: 1px solid var(--mkm-border); margin-bottom: 8px;
+}
+.mkm-party-footer { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+.mkm-btn-primary {
+  background: var(--mkm-primary); color: #fff; font-weight: bold;
+  padding: 12px; border: none; border-radius: var(--mkm-radius); cursor: pointer;
+}
+.mkm-btn-sec {
+  background: var(--mkm-surface); color: var(--mkm-text);
+  border: 1px solid var(--mkm-border); padding: 12px;
+  border-radius: var(--mkm-radius); cursor: pointer;
+}
+.mkm-center { text-align: center; padding: 40px 20px; color: var(--mkm-muted); }
+
+/* ========================================
+   フィールド / エリア
+   ======================================== */
+.mkm-field { padding: 16px 12px; }
+.mkm-field-note { text-align: center; color: var(--mkm-muted); font-size: 13px; margin-bottom: 14px; }
+.mkm-area-list { display: flex; flex-direction: column; gap: 10px; }
+.mkm-area-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--mkm-card); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius); padding: 14px; cursor: pointer; text-align: left;
+  color: var(--mkm-text); transition: transform 0.1s;
+}
+.mkm-area-card:active { transform: scale(0.98); }
+.mkm-area-emoji { font-size: 30px; }
+.mkm-area-info { flex: 1; }
+.mkm-area-name { font-size: 15px; font-weight: bold; }
+.mkm-area-desc { font-size: 11px; color: var(--mkm-muted); margin-top: 3px; }
+.mkm-area-locked { opacity: 0.55; cursor: not-allowed; }
+.mkm-area-clear { font-size: 10px; color: var(--mkm-accent); background: #2a3a1a; padding: 1px 6px; border-radius: 100px; margin-left: 4px; }
+.mkm-area-wip   { font-size: 10px; color: #ff9800; background: #2a1f00; padding: 1px 6px; border-radius: 100px; margin-left: 4px; }
+/* 掲示板 */
+.mkm-board-section { margin-bottom: 10px; }
+.mkm-board-title { font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #1a2a10 !important; }
+.mkm-board-floors { display: flex; flex-direction: column; gap: 5px; }
+.mkm-board-floor {
+  display: grid; grid-template-columns: 36px 1fr auto;
+  align-items: center; gap: 6px;
+  background: #e4e4d4; border: 1px solid #9a9a80;
+  border-radius: 6px; padding: 5px 8px; font-size: 12px;
+  color: #1a2a10 !important;
+}
+.mkm-board-floor--boss { border-color: var(--mkm-danger); }
+.mkm-board-fn { font-weight: bold; color: var(--mkm-primary); }
+.mkm-board-lv { font-size: 10px; color: var(--mkm-muted); white-space: nowrap; }
+.mkm-board-tips { font-size: 11px; color: var(--mkm-muted); padding-top: 8px; border-top: 1px solid var(--mkm-border); }
+
+.mkm-floor-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 1px 8px; border-radius: 100px; margin-left: 6px; vertical-align: middle; }
+
+/* ========================================
+   マップ探索（スクロール式・カメラ追従）
+   ======================================== */
+.mkm-map-viewport {
+  position: relative;
+  width: 100%;
+  height: 58vh;
+  max-height: 460px;
+  overflow: hidden;
+  background: #16301a;
+  border-bottom: 2px solid var(--mkm-border);
+  touch-action: none;
+}
+.mkm-map-layer {
+  position: absolute;
+  top: 0; left: 0;
+  will-change: transform;
+}
+.mkm-tile2 {
+  position: absolute;
+  box-sizing: border-box;
+}
+/* タイル種別の見た目 */
+.mkm-t-road  { background: #6b8e4e; }                 /* 道 */
+.mkm-t-grass {
+  background: #4a7a3a;
+  background-image:
+    radial-gradient(circle at 30% 40%, #5c9148 2px, transparent 3px),
+    radial-gradient(circle at 70% 65%, #5c9148 2px, transparent 3px);
+}
+.mkm-t-tree {
+  background: #2e5028;
+  box-shadow: inset 0 0 0 2px #24401f;
+}
+.mkm-t-tree::after {
+  content: '🌳'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+}
+.mkm-t-water {
+  background: #2a6a8a;
+  background-image: linear-gradient(180deg, #3a7a9a 50%, #2a6a8a 50%);
+  background-size: 100% 8px;
+}
+.mkm-t-exit { background: #8a6a3a; }
+.mkm-t-exit::after {
+  content: '🚪'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+}
+/* ---- エリア別タイル見た目 ---- */
+
+/* 共通タイル画像ヘルパー */
+.mkm-img-tile { background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; box-shadow: none !important; }
+.mkm-img-tile::after { content: '' !important; }
+
+/* ---- 村 & 湿原 共通タイル画像 ---- */
+/* pseudoリセット共通 */
+.mkm-area-village [class*="mkm-t-"]::after,
+.mkm-area-wetland [class*="mkm-t-"]::after { content: ''; }
+.mkm-area-village [class*="mkm-t-"],
+.mkm-area-wetland [class*="mkm-t-"] { box-shadow: none; }
+
+/* 草 */
+.mkm-area-village .mkm-t-grass,
+.mkm-area-wetland .mkm-t-grass { background: url('data/mokumon/tiles/tile_grass.webp') center/cover no-repeat; }
+
+/* 道（中央）*/
+/* 村は床が全部road型なので草タイルを使う */
+.mkm-area-village .mkm-t-road  { background: url('data/mokumon/tiles/tile_grass.webp') center/cover no-repeat; }
+.mkm-area-wetland .mkm-t-road  { background: url('data/mokumon/tiles/tile_road.webp') center/cover no-repeat; }
+
+/* 道エッジ */
+.mkm-area-village .mkm-t-road-top,
+.mkm-area-wetland .mkm-t-road-top    { background: url('data/mokumon/tiles/tile_road-top.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-road-bottom,
+.mkm-area-wetland .mkm-t-road-bottom { background: url('data/mokumon/tiles/tile_road-bottom.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-road-left,
+.mkm-area-wetland .mkm-t-road-left   { background: url('data/mokumon/tiles/tile_road-left.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-road-right,
+.mkm-area-wetland .mkm-t-road-right  { background: url('data/mokumon/tiles/tile_road-right.webp') center/cover no-repeat; }
+
+/* 水（中央） */
+.mkm-area-village .mkm-t-water,
+.mkm-area-wetland .mkm-t-water { background: url('data/mokumon/tiles/tile_water.webp') center/cover no-repeat; }
+
+/* 水エッジ */
+.mkm-area-village .mkm-t-water-top,
+.mkm-area-wetland .mkm-t-water-top    { background: url('data/mokumon/tiles/tile_water-top.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-water-bottom,
+.mkm-area-wetland .mkm-t-water-bottom { background: url('data/mokumon/tiles/tile_water-bottom.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-water-left,
+.mkm-area-wetland .mkm-t-water-left   { background: url('data/mokumon/tiles/tile_water-left.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-water-right,
+.mkm-area-wetland .mkm-t-water-right  { background: url('data/mokumon/tiles/tile_water-right.webp') center/cover no-repeat; }
+
+/* 道コーナー */
+.mkm-area-village .mkm-t-road-corner-tl,
+.mkm-area-wetland .mkm-t-road-corner-tl { background: url('data/mokumon/tiles/tile_road-corner-tl.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-road-corner-tr,
+.mkm-area-wetland .mkm-t-road-corner-tr { background: url('data/mokumon/tiles/tile_road-corner-tr.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-road-corner-bl,
+.mkm-area-wetland .mkm-t-road-corner-bl { background: url('data/mokumon/tiles/tile_road-corner-bl.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-road-corner-br,
+.mkm-area-wetland .mkm-t-road-corner-br { background: url('data/mokumon/tiles/tile_road-corner-br.webp') center/cover no-repeat; }
+
+/* 水コーナー */
+.mkm-area-village .mkm-t-water-corner-tl,
+.mkm-area-wetland .mkm-t-water-corner-tl { background: url('data/mokumon/tiles/tile_water-corner-tl.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-water-corner-tr,
+.mkm-area-wetland .mkm-t-water-corner-tr { background: url('data/mokumon/tiles/tile_water-corner-tr.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-water-corner-bl,
+.mkm-area-wetland .mkm-t-water-corner-bl { background: url('data/mokumon/tiles/tile_water-corner-bl.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-water-corner-br,
+.mkm-area-wetland .mkm-t-water-corner-br { background: url('data/mokumon/tiles/tile_water-corner-br.webp') center/cover no-repeat; }
+
+/* 木（湿原）/ 壁（村） */
+.mkm-area-wetland .mkm-t-tree { background: url('data/mokumon/tiles/tile_tree.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-tree { background: url('data/mokumon/tiles/tile_wall.webp') center/cover no-repeat; }
+
+/* 建物屋根（村の '#' 上段） */
+.mkm-area-village .mkm-t-roof { background: url('data/mokumon/tiles/tile_roof.webp') center/cover no-repeat; }
+
+/* ドア */
+.mkm-area-village .mkm-t-door-closed { background: url('data/mokumon/tiles/tile_door-closed.webp') center/cover no-repeat; }
+.mkm-area-village .mkm-t-door-open   { background: url('data/mokumon/tiles/tile_door-open.webp')   center/cover no-repeat; }
+
+/* 宝箱 */
+.mkm-area-village .mkm-t-chest,
+.mkm-area-wetland .mkm-t-chest { background: url('data/mokumon/tiles/tile_chest-closed.webp') center/cover no-repeat; }
+.mkm-t-chest-open               { background: url('data/mokumon/tiles/tile_chest-open.webp') center/cover no-repeat !important; }
+
+/* 出口 */
+.mkm-area-village .mkm-t-exit,
+.mkm-area-wetland .mkm-t-exit { background: url('data/mokumon/tiles/tile_exit.webp') center/cover no-repeat; }
+
+/* 村の門ドア */
+.mkm-area-village .mkm-t-door-closed { background: url('data/mokumon/tiles/tile_door-closed.webp') center/cover no-repeat; }
+.mkm-t-door-closed { background: #6a4a2a; }
+
+/* 奈落海溝：壁=岩礁、道=砂地、草=藻場 */
+.mkm-area-deepsea .mkm-t-road  { background: #c2b280; }              /* 砂地 */
+.mkm-area-deepsea .mkm-t-grass { background: #2e7d6e; background-image:
+  radial-gradient(circle at 30% 40%, #3a9d88 2px, transparent 3px),
+  radial-gradient(circle at 70% 65%, #3a9d88 2px, transparent 3px); }
+.mkm-area-deepsea .mkm-t-tree  { background: #5a5a6a; box-shadow: inset 0 0 0 2px #44444f; }
+.mkm-area-deepsea .mkm-t-tree::after { content: '🪨'; }
+
+/* 機械都市：壁=建物、道=コンクリ、草=配線の隙間 */
+.mkm-area-machine .mkm-t-road  { background: #7a7a82; }              /* コンクリ舗装 */
+.mkm-area-machine .mkm-t-grass { background: #4a6a4a; background-image:
+  radial-gradient(circle at 30% 40%, #5c8c5c 2px, transparent 3px),
+  radial-gradient(circle at 70% 65%, #5c8c5c 2px, transparent 3px); }
+.mkm-area-machine .mkm-t-tree  { background: #44464e; box-shadow: inset 0 0 0 2px #2a2c33; }
+.mkm-area-machine .mkm-t-tree::after { content: '🏢'; }
+
+/* 世界樹の神域：濃い森 */
+.mkm-area-spirit .mkm-t-road  { background: #8a7a4e; }
+.mkm-area-spirit .mkm-t-grass { background: #3a6e2e; background-image:
+  radial-gradient(circle at 30% 40%, #4d8a3c 2px, transparent 3px),
+  radial-gradient(circle at 70% 65%, #4d8a3c 2px, transparent 3px); }
+.mkm-area-spirit .mkm-t-tree::after { content: '🌲'; }
+
+/* 黄昏墓地：薄暗い・墓石 */
+.mkm-area-ghost .mkm-t-road  { background: #4a4a52; }
+.mkm-area-ghost .mkm-t-grass { background: #3a4a3e; background-image:
+  radial-gradient(circle at 30% 40%, #4a5a4e 2px, transparent 3px),
+  radial-gradient(circle at 70% 65%, #4a5a4e 2px, transparent 3px); }
+.mkm-area-ghost .mkm-t-tree  { background: #3a3a42; box-shadow: inset 0 0 0 2px #2a2a30; }
+.mkm-area-ghost .mkm-t-tree::after { content: '🪦'; }
+
+/* 超巨大企業都市：ビル街 */
+.mkm-area-corporate .mkm-t-road  { background: #6a6a72; }
+.mkm-area-corporate .mkm-t-grass { background: #4a6a4a; background-image:
+  radial-gradient(circle at 30% 40%, #5c8c5c 2px, transparent 3px),
+  radial-gradient(circle at 70% 65%, #5c8c5c 2px, transparent 3px); }
+.mkm-area-corporate .mkm-t-tree  { background: #54565e; box-shadow: inset 0 0 0 2px #3a3c43; }
+.mkm-area-corporate .mkm-t-tree::after { content: '🏙️'; }
+
+/* 終焉火山：溶岩・焦土 */
+.mkm-area-disaster .mkm-t-road  { background: #6a4a3a; }              /* 岩の足場 */
+.mkm-area-disaster .mkm-t-grass { background: #5a3a2a; background-image:
+  radial-gradient(circle at 30% 40%, #7a4a30 2px, transparent 3px),
+  radial-gradient(circle at 70% 65%, #7a4a30 2px, transparent 3px); }
+.mkm-area-disaster .mkm-t-water { background: #c0392b;               /* 溶岩 */
+  background-image: linear-gradient(180deg, #e25a3a 50%, #c0392b 50%); background-size: 100% 8px; }
+.mkm-area-disaster .mkm-t-tree  { background: #4a3530; box-shadow: inset 0 0 0 2px #33241f; }
+.mkm-area-disaster .mkm-t-tree::after { content: '🪨'; }
+
+.mkm-t-chest { background: #4a7a3a; }
+.mkm-t-chest::after {
+  content: '📦'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  animation: mkm-chest-bob 1.2s ease-in-out infinite;
+}
+@keyframes mkm-chest-bob {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* NPC スプライト */
+.mkm-npc-sprite {
+  position: absolute; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer; z-index: 5;
+}
+/* 大きな出口ワープ（タイルの上に重ねる立派な門） */
+.mkm-warp {
+  position: absolute; z-index: 2; pointer-events: none;
+  background: url('data/mokumon/tiles/tile_exit.webp') center bottom / contain no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 14px rgba(120,200,255,0.85)) drop-shadow(0 0 28px rgba(120,200,255,0.45));
+  animation: mkm-warp-pulse 1.8s ease-in-out infinite;
+}
+@keyframes mkm-warp-pulse {
+  0%, 100% { transform: translateY(0) scale(1);    opacity: 0.92; }
+  50%      { transform: translateY(-3px) scale(1.04); opacity: 1; }
+}
+.mkm-npc-icon { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
+.mkm-npc-name {
+  font-size: 9px; color: #fff; background: rgba(0,0,0,0.55);
+  border-radius: 3px; padding: 1px 4px; margin-top: 1px; white-space: nowrap;
+}
+
+/* NPC タイル */
+.mkm-t-npc { background: transparent; }
+
+/* ボスNPC */
+.mkm-npc-boss .mkm-npc-icon,
+.mkm-npc-boss img {
+  animation: mkm-boss-pulse 1.4s ease-in-out infinite;
+}
+.mkm-npc-boss .mkm-npc-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 0 8px rgba(220,50,50,0.8));
+}
+.mkm-npc-boss .mkm-npc-name {
+  background: rgba(180,0,0,0.75);
+  font-weight: bold; font-size: 10px;
+}
+@keyframes mkm-boss-pulse {
+  0%,100% { transform: scale(1);    filter: drop-shadow(0 0 6px rgba(220,50,50,0.6)); }
+  50%      { transform: scale(1.15); filter: drop-shadow(0 0 14px rgba(255,80,80,1)); }
+}
+
+/* バーチャルジョイスティック（ビューポート内オーバーレイ） */
+.mkm-joystick-wrap {
+  position: absolute;
+  bottom: 12px; left: 12px;
+  width: 110px; height: 110px;
+  touch-action: none; user-select: none;
+  z-index: 20; pointer-events: all;
+}
+.mkm-joystick-outer {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: rgba(0,0,0,0.2);
+  border: 2px solid rgba(255,255,255,0.3);
+  position: relative;
+}
+.mkm-joystick-knob {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: rgba(40,40,40,0.6);
+  border: 2px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(4px);
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* 💬ボタン ビューポート右下オーバーレイ */
+.mkm-talk-overlay {
+  position: absolute !important;
+  bottom: 16px; right: 12px;
+  z-index: 20;
+}
+
+/* 話すボタン */
+.mkm-dpad-talk {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #4a9020; border: 2px solid #88d848;
+  color: #fff; font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.1s;
+}
+.mkm-dpad-talk:active { transform: scale(0.9); }
+
+/* ダイアログ */
+.mkm-dialog-overlay {
+  position: fixed; inset: 0; z-index: 10020;
+  display: flex; align-items: flex-end;
+  background: rgba(0,0,0,0.45);
+}
+.mkm-dialog-box {
+  width: 100%; background: #f4f4ec !important;
+  border-top: 3px solid #8a8a70;
+  padding: 14px 16px 12px; box-sizing: border-box;
+  color: #222 !important;
+}
+.mkm-dialog-name {
+  font-size: 12px; font-weight: bold; color: #4a6a20 !important;
+  margin-bottom: 4px;
+}
+.mkm-dialog-text {
+  font-size: 14px; color: #222 !important; margin-bottom: 10px; line-height: 1.6;
+}
+.mkm-dialog-close {
+  width: 100%; padding: 10px; background: #deded0 !important;
+  border: 2px solid #8a8a70; border-radius: 6px;
+  font-size: 13px; font-weight: bold; cursor: pointer; color: #444 !important;
+}
+
+/* エリア選択リスト */
+.mkm-area-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.mkm-area-btn {
+  padding: 10px 14px; background: #f4f4ec !important;
+  border: 2px solid #8a8a70; border-radius: 8px;
+  font-size: 14px; font-weight: bold; cursor: pointer; text-align: left; color: #222 !important;
+}
+.mkm-area-btn:active { background: #d8d8c8; }
+.mkm-area-locked { opacity: 0.5; cursor: not-allowed; background: #e8e8e0; }
+.mkm-area-locked small { font-size: 11px; color: #888; }
+
+/* 主人公（ビューポート中央固定） */
+.mkm-player {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px; height: 64px;
+  background: url('data/mokumon/player/player_down_1.webp') center/contain no-repeat;
+  font-size: 0;
+  z-index: 10;
+  pointer-events: none;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 4px rgba(0,0,0,0.5));
+}
+.mkm-player-walk { /* スプライトアニメで表現するためCSSアニメは無効 */ }
+.mkm-player-bump { animation: mkm-bump 0.2s; }
+@keyframes mkm-bump {
+  0%,100% { transform: translate(-50%, -50%); }
+  50%     { transform: translate(-50%, -50%) scale(0.88); }
+}
+
+.mkm-map-hud {
+  text-align: center; padding: 6px 12px 2px;
+  font-size: 12px; color: var(--mkm-muted);
+  background: var(--mkm-bg);
+}
+.mkm-map-hint { font-size: 11px; color: var(--mkm-muted); }
+
+/* マップ探索中のパーティHP */
+.mkm-map-party {
+  display: flex; gap: 8px; padding: 8px 12px;
+  background: var(--mkm-bg);
+}
+.mkm-mp-ally {
+  flex: 1; min-width: 0;
+  background: var(--mkm-card); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius-sm); padding: 5px 8px;
+}
+.mkm-mp-ally.mkm-mp-dead { opacity: 0.45; }
+.mkm-mp-name {
+  font-size: 11px; font-weight: bold; display: block;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;
+}
+
+/* 十字キー */
+.mkm-dpad {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8px 0 16px;
+}
+.mkm-dpad-mid { display: flex; gap: 60px; }
+.mkm-dpad-btn {
+  width: 56px; height: 56px;
+  background: var(--mkm-surface); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius); color: var(--mkm-text);
+  font-size: 20px; cursor: pointer; transition: transform 0.1s, background 0.15s;
+  user-select: none;
+}
+.mkm-dpad-btn:active { transform: scale(0.92); background: var(--mkm-primary); }
+
+/* ========================================
+   エンカウント演出
+   ======================================== */
+.mkm-encounter {
+  position: fixed; inset: 0; z-index: 10000;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+  animation: mkm-enc-bg 0.3s ease-out;
+}
+@keyframes mkm-enc-bg { from { opacity: 0; } to { opacity: 1; } }
+.mkm-enc-inner { text-align: center; position: relative; }
+.mkm-enc-flash {
+  position: absolute; inset: -40px;
+  background: radial-gradient(circle, #fff8 0%, transparent 70%);
+  animation: mkm-enc-flash 0.5s ease-out;
+}
+@keyframes mkm-enc-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+.mkm-enc-mon {
+  width: 140px; height: 140px; margin: 0 auto 16px;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  animation: mkm-enc-pop 0.5s cubic-bezier(0.2,1.4,0.5,1);
+}
+.mkm-enc-mon img { width: 100%; height: 100%; object-fit: contain; }
+@keyframes mkm-enc-pop { 0% { transform: scale(0.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.mkm-enc-text { color: #fff; font-size: 18px; font-weight: bold; animation: mkm-enc-text 0.4s 0.3s both; }
+.mkm-enc-label { color: #ffd54f; font-size: 15px; font-weight: bold; margin-bottom: 6px; }
+.mkm-enc-name  { color: #fff; font-size: 22px; font-weight: bold; }
+@keyframes mkm-enc-text { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ========================================
+   戦闘画面
+   ======================================== */
+.mkm-battle {
+  display: flex; flex-direction: column;
+  background: #f0f0e8;
+}
+.mkm-battle-enemies {
+  height: 220px; flex-shrink: 0;
+  display: flex; flex-wrap: wrap; gap: 10px;
+  align-items: center; justify-content: center;
+  padding: 24px 12px 12px;
+}
+.mkm-bt-enemy {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  transition: opacity 0.4s;
+  position: relative;   /* スキルエフェクトの重ね基準 */
+}
+.mkm-bt-enemy.mkm-bt-dead { opacity: 0; transform: scale(0.7); pointer-events: none; }
+.mkm-bt-enemy-img {
+  width: 110px; height: 110px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  position: relative;
+}
+.mkm-bt-enemy-img img { width: 100%; height: 100%; object-fit: contain; }
+.mkm-bt-enemy-info { width: 130px; text-align: center; }
+
+/* ボス専用：背景透明・大きくドーン */
+.mkm-bt-enemy-img--boss {
+  width: 180px; height: 180px;
+  border-radius: 0;
+  background: transparent !important;
+  filter: drop-shadow(0 4px 16px rgba(180,0,0,0.5));
+}
+.mkm-bt-enemy--boss .mkm-bt-enemy-info { width: 180px; }
+.mkm-bt-enemy--boss .mkm-bt-name { font-size: 14px; }
+.mkm-bt-name { font-size: 12px; font-weight: bold; color: #222; }
+.mkm-bt-name small { color: #666; font-weight: normal; }
+
+/* 状態異常アイコン */
+.mkm-ailments { display: flex; gap: 2px; justify-content: center; margin-top: 3px; min-height: 16px; }
+.mkm-ailment { font-size: 13px; animation: mkm-ail-pop 0.3s; }
+.mkm-ail-inline .mkm-ailment { font-size: 11px; }
+@keyframes mkm-ail-pop { from { transform: scale(0.4); } to { transform: scale(1); } }
+
+/* HP/MPバー */
+.mkm-hpbar {
+  height: 8px; background: #0006; border-radius: 100px;
+  overflow: hidden; margin-top: 3px; border: 1px solid #0008;
+}
+.mkm-hpbar.small { height: 6px; }
+.mkm-hpbar-fill {
+  height: 100%; background: linear-gradient(90deg, #66bb6a, #43a047);
+  transition: width 0.45s ease-out;
+}
+.mkm-hpbar-fill.mkm-hp-mid { background: linear-gradient(90deg, #ffca28, #ffa726); }
+.mkm-hpbar-fill.mkm-hp-low { background: linear-gradient(90deg, #ff7043, #e53935); }
+.mkm-mpbar {
+  height: 4px; background: #0006; border-radius: 100px;
+  overflow: hidden; margin-top: 2px;
+}
+.mkm-mpbar-fill { height: 100%; background: linear-gradient(90deg, #42a5f5, #1e88e5); transition: width 0.4s; }
+
+/* ログ */
+.mkm-battle-log {
+  background: #e8e8d8; border-top: 2px solid #b0b090;
+  border-bottom: 2px solid #b0b090;
+  padding: 8px 14px; min-height: 70px; max-height: 70px; overflow: hidden;
+  font-size: 13px; line-height: 1.5; color: #222;
+}
+.mkm-log-line { animation: mkm-log-in 0.2s; }
+@keyframes mkm-log-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; } }
+
+/* 味方 */
+.mkm-battle-allies {
+  display: flex; flex-direction: column; gap: 4px; padding: 8px 14px;
+  background: #deded0;
+  border-top: 2px solid #b0b090;
+}
+.mkm-bt-ally {
+  position: relative;   /* スキルエフェクトの重ね基準 */
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto auto;
+  grid-template-rows: auto 10px 5px;
+  grid-template-areas:
+    "img name lv hpnum mpnum"
+    "img hpbar hpbar hpbar hpbar"
+    "img mpbar mpbar mpbar mpbar";
+  gap: 2px 8px; align-items: center;
+  background: #f4f4ec; border: 1px solid #b0b090;
+  border-radius: var(--mkm-radius-sm); padding: 6px 10px;
+  position: relative;
+}
+.mkm-bt-ally.mkm-bt-dead { opacity: 0.35; }
+.mkm-bt-ally-img {
+  grid-area: img;
+  width: 40px; height: 40px;
+  border-radius: 8px; overflow: hidden;
+  background: #e8e8dc;
+  display: flex; align-items: center; justify-content: center;
+}
+.mkm-bt-ally-img img { width: 100%; height: 100%; object-fit: contain; }
+.mkm-bt-ally-name { grid-area: name; font-size: 13px; font-weight: bold; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mkm-bt-ally-lv   { grid-area: lv;   font-size: 11px; color: #666; white-space: nowrap; }
+.mkm-bt-hpnum     { grid-area: hpnum; font-size: 11px; color: #2a7a2a; font-weight: bold; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mkm-bt-mpnum     { grid-area: mpnum; font-size: 11px; color: #2a50aa; font-weight: bold; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mkm-bt-ally .mkm-hpbar { grid-area: hpbar; height: 10px; }
+.mkm-bt-ally .mkm-mpbar { grid-area: mpbar; height: 5px; margin-top: 3px; }
+
+/* コマンド */
+.mkm-battle-cmd {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+  padding: 10px 14px 16px;
+  min-height: 170px;
+  background: #deded0;
+  border-top: 2px solid #b0b090;
+}
+.mkm-cmd-btn {
+  padding: 14px; background: #f4f4ec;
+  border: 2px solid #8a8a70; border-radius: var(--mkm-radius);
+  color: #222; font-size: 14px; font-weight: bold; cursor: pointer;
+  transition: transform 0.1s, background 0.15s;
+}
+.mkm-cmd-btn:active { transform: scale(0.96); background: #d8d8c8; }
+.mkm-cmd-run { background: #f4e8e8; border-color: #a07070; color: #8a2020; }
+.mkm-cmd-scout { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 14px; }
+.mkm-scout-label { font-size: 13px; font-weight: bold; }
+.mkm-scout-rate-bar {
+  width: 100%; height: 5px; background: #ccc;
+  border-radius: 100px; overflow: hidden;
+}
+.mkm-scout-rate-fill { height: 100%; border-radius: 100px; transition: width 0.3s; }
+.mkm-scout-rate-num { font-size: 10px; color: #666; }
+
+/* ダメージポップアップ */
+.mkm-dmg-pop {
+  position: absolute; top: 30%; left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold; font-size: 26px; pointer-events: none;
+  text-shadow: 0 2px 4px #000, 0 0 8px #000;
+  animation: mkm-dmg-rise 0.8s ease-out forwards; z-index: 5;
+}
+.mkm-dmg-damage { color: #fff; }
+.mkm-dmg-heal { color: #69f0ae; }
+.mkm-dmg-crit { color: #ffd54f; font-size: 40px; text-shadow: 0 2px 4px #000, 0 0 16px #ff9800, 0 0 6px #fff; }
+@keyframes mkm-dmg-rise {
+  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.6); }
+  20% { opacity: 1; transform: translate(-50%, -6px) scale(1.2); }
+  60% { transform: translate(-50%, -20px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -40px) scale(1); }
+}
+
+/* シェイク */
+.mkm-shake { animation: mkm-shake 0.35s; }
+@keyframes mkm-shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+/* スキルエフェクト（対象に重ねる） */
+.mkm-fx {
+  position: absolute; left: 50%; top: 50%;
+  width: 150%; height: 150%;
+  transform: translate(-50%, -50%);
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  pointer-events: none; z-index: 8;
+  animation: mkm-fx-anim 0.72s ease-out forwards;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+}
+@keyframes mkm-fx-anim {
+  0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.5) rotate(-6deg); }
+  25%  { opacity: 1; transform: translate(-50%,-50%) scale(1.1) rotate(2deg); }
+  70%  { opacity: 1; transform: translate(-50%,-50%) scale(1.0); }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(1.05); }
+}
+
+/* エフェクト確認ギャラリー */
+.mkm-fx-gallery {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  padding: 12px;
+}
+.mkm-fx-card {
+  background: #11161a; border: 1px solid var(--mkm-border); border-radius: 12px;
+  padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.mkm-fx-card:active { transform: scale(0.96); }
+.mkm-fx-stage { position: relative; width: 100%; aspect-ratio: 1; overflow: visible; }
+.mkm-fx-name { font-size: 11px; color: #cfe8d4; font-weight: bold; }
+.mkm-skill-gallery { grid-template-columns: repeat(2, 1fr); }
+.mkm-skill-gname { font-size: 12px; color: #eaffea; font-weight: bold; text-align: center; }
+.mkm-skill-gmeta { font-size: 10px; font-weight: bold; }
+
+/* 会心時の強いシェイク */
+.mkm-shake-strong { animation: mkm-shake-strong 0.42s; }
+@keyframes mkm-shake-strong {
+  0%,100% { transform: translate(0,0); }
+  15% { transform: translate(-11px, 3px); }
+  30% { transform: translate(11px, -3px); }
+  45% { transform: translate(-9px, 2px); }
+  60% { transform: translate(9px, -2px); }
+  75% { transform: translate(-5px, 1px); }
+  90% { transform: translate(5px, 0); }
+}
+
+/* ========================================
+   とくぎメニュー
+   ======================================== */
+.mkm-skill-modal-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; text-align: center; }
+.mkm-skill-choices { display: flex; flex-direction: column; gap: 8px; }
+.mkm-skill-choice {
+  display: grid; grid-template-columns: 1fr auto;
+  grid-template-areas: "name mp" "desc desc";
+  gap: 2px 8px; text-align: left;
+  background: var(--mkm-surface); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius-sm); padding: 10px 12px; cursor: pointer;
+  color: var(--mkm-text);
+}
+.mkm-skill-choice:active { background: var(--mkm-border); }
+.mkm-skill-ng { opacity: 0.4; cursor: not-allowed; }
+.mkm-skill-cn { grid-area: name; font-size: 14px; font-weight: bold; }
+.mkm-skill-cmp { grid-area: mp; font-size: 12px; color: #42a5f5; }
+.mkm-skill-cd { grid-area: desc; font-size: 11px; color: var(--mkm-muted); }
+
+/* ========================================
+   スカウト演出
+   ======================================== */
+.mkm-scout-anim {
+  position: fixed; inset: 0; z-index: 10001;
+  background: rgba(0,0,0,0.75);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+.mkm-scout-ball { font-size: 64px; }
+.mkm-scout-shake { animation: mkm-scout-shake 0.4s; }
+@keyframes mkm-scout-shake {
+  0%,100% { transform: rotate(0); }
+  25% { transform: rotate(-25deg); }
+  75% { transform: rotate(25deg); }
+}
+.mkm-scout-success { animation: mkm-scout-success 0.6s; }
+@keyframes mkm-scout-success {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); filter: brightness(2); }
+  100% { transform: scale(1); }
+}
+.mkm-scout-fail { animation: mkm-scout-fail 0.5s; }
+@keyframes mkm-scout-fail {
+  0% { transform: scale(1); }
+  100% { transform: scale(0.5) translateY(-40px); opacity: 0; }
+}
+.mkm-scout-text { color: #fff; font-size: 18px; font-weight: bold; min-height: 24px; }
+
+/* ========================================
+   戦闘結果
+   ======================================== */
+.mkm-result-ov {
+  position: fixed; inset: 0; z-index: 10002;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  animation: mkm-enc-bg 0.25s;
+}
+.mkm-result {
+  background: var(--mkm-card); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius); padding: 24px 20px; width: 100%; max-width: 340px;
+  text-align: center; animation: mkm-result-pop 0.35s cubic-bezier(0.2,1.3,0.5,1);
+}
+@keyframes mkm-result-pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.mkm-result h3 { font-size: 20px; margin-bottom: 14px; }
+.mkm-result-win h3 { color: var(--mkm-accent); }
+.mkm-result-lose h3 { color: var(--mkm-danger); }
+.mkm-result-scout { color: var(--mkm-primary); font-weight: bold; margin-bottom: 12px; }
+.mkm-result-rewards {
+  background: var(--mkm-surface); border-radius: var(--mkm-radius-sm);
+  padding: 12px; margin-bottom: 12px; font-size: 14px; display: flex; flex-direction: column; gap: 6px;
+}
+.mkm-result-rewards b { color: var(--mkm-accent); }
+.mkm-result-levelups { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.mkm-levelup { color: #f0f4e8 !important;
+  font-size: 13px; color: var(--mkm-accent); font-weight: bold;
+  animation: mkm-levelup-in 0.4s; background: #2a3a1a; padding: 8px; border-radius: var(--mkm-radius-sm);
+}
+@keyframes mkm-levelup-in { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+.mkm-skill-learn { background: #3a2a1a !important; color: #ffe082 !important;
+  box-shadow: 0 0 12px rgba(255,200,80,0.35); }
+.mkm-result .mkm-btn-primary { width: 100%; margin-bottom: 8px; }
+.mkm-result .mkm-btn-sec { width: 100%; }
+
+/* ========================================
+   トースト
+   ======================================== */
+.mkm-toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(20,40,20,0.95); color: #e8f5e9 !important;
+  padding: 10px 20px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.2);
+  font-size: 13px; z-index: 10003; opacity: 0; transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+}
+.mkm-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ========================================
+   配合
+   ======================================== */
+.mkm-fusion { padding: 14px 12px 20px; }
+.mkm-fusion-note { text-align: center; font-size: 13px; color: var(--mkm-muted); margin-bottom: 14px; }
+.mkm-fusion-slots {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.mkm-fslot {
+  width: 96px; min-height: 120px;
+  background: var(--mkm-card); border: 2px dashed var(--mkm-border);
+  border-radius: var(--mkm-radius);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; padding: 8px;
+}
+.mkm-fslot-filled { border-style: solid; }
+.mkm-fslot-empty { color: var(--mkm-muted); font-size: 13px; text-align: center; line-height: 1.6; }
+.mkm-fslot-img {
+  width: 60px; height: 60px; border-radius: var(--mkm-radius-sm);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px;
+}
+.mkm-fslot-img img { width: 100%; height: 100%; object-fit: contain; }
+.mkm-fslot-name { font-size: 12px; font-weight: bold; text-align: center; }
+.mkm-fslot-sub { font-size: 11px; color: var(--mkm-muted); margin-top: 2px; }
+.mkm-fusion-plus { font-size: 22px; color: var(--mkm-primary); font-weight: bold; }
+
+.mkm-fusion-preview { margin: 14px 0; }
+.mkm-fusion-arrow { text-align: center; color: var(--mkm-primary); font-size: 18px; margin-bottom: 6px; }
+.mkm-fusion-result {
+  background: var(--mkm-surface); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius); padding: 10px 14px;
+}
+.mkm-fusion-result-row {
+  display: flex; justify-content: space-between; font-size: 13px;
+  padding: 4px 0;
+}
+.mkm-fusion-result-row b { color: var(--mkm-accent); }
+.mkm-fusion-actions { margin-bottom: 18px; }
+.mkm-fusion-actions .mkm-btn-primary { width: 100%; }
+.mkm-fusion-actions .mkm-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.mkm-fusion-pick-title { font-size: 13px; color: var(--mkm-muted); margin: 0 12px 8px; font-weight: bold; }
+
+.mkm-card--sel { outline: 3px solid var(--mkm-primary); outline-offset: -1px; }
+
+.mkm-inherit-note { font-size: 11px; color: var(--mkm-muted); text-align: center; margin-bottom: 10px; }
+.mkm-skill-on { background: #2a3a1a !important; border-color: var(--mkm-primary) !important; }
+
+/* 誕生演出 */
+.mkm-fusion-birth { position: relative; overflow: hidden; }
+.mkm-birth-flash {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle, #fff 0%, transparent 60%);
+  animation: mkm-birth-flash 0.8s ease-out; pointer-events: none;
+}
+@keyframes mkm-birth-flash { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+.mkm-birth-img {
+  width: 120px; height: 120px; margin: 14px auto 10px;
+  border-radius: var(--mkm-radius);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  animation: mkm-birth-pop 0.6s cubic-bezier(0.2,1.4,0.5,1);
+}
+.mkm-birth-img img { width: 100%; height: 100%; object-fit: contain; }
+@keyframes mkm-birth-pop { 0% { transform: scale(0.1) rotate(-20deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+.mkm-birth-name { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+.mkm-birth-tags { display: flex; gap: 6px; justify-content: center; align-items: center; }
+.mkm-fusion-birth .mkm-btn-primary { width: 100%; }
+.mkm-birth-actions { display: flex; flex-direction: column; gap: 8px; }
+.mkm-birth-actions .mkm-btn-primary,
+.mkm-birth-actions .mkm-btn-sec { width: 100%; }
+
+/* 詳細画面のアクションボタン */
+.mkm-detail-actions {
+  margin-top: 16px; display: flex; flex-direction: column; gap: 8px;
+}
+.mkm-detail-actions .mkm-btn-primary { width: 100%; }
+.mkm-detail-actions-row { display: flex; gap: 8px; }
+.mkm-detail-actions-row .mkm-btn-sec { flex: 1; }
+.mkm-btn-release {
+  width: 100%; padding: 10px; border-radius: var(--mkm-radius);
+  background: none; border: 1px solid var(--mkm-danger);
+  color: var(--mkm-danger); font-size: 13px; cursor: pointer;
+}
+.mkm-btn-release:disabled { opacity: 0.35; cursor: not-allowed; }
+.mkm-btn-danger-outline {
+  border: 1px solid var(--mkm-danger) !important;
+  color: var(--mkm-danger) !important;
+}
+/* 牧場カウント */
+.mkm-farm-max { color: var(--mkm-muted); }
+.mkm-farm-full {
+  font-size: 10px; font-weight: bold;
+  color: #fff; background: var(--mkm-danger);
+  padding: 1px 6px; border-radius: 100px; margin-left: 4px;
+}
+
+/* スカウト結果の操作 */
+.mkm-result-scout-acts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.mkm-result-scout-acts .mkm-btn-primary,
+.mkm-result-scout-acts .mkm-btn-sec { width: 100%; }
+.mkm-scout-added { color: var(--mkm-primary); font-weight: bold; font-size: 14px; padding: 6px; }
+
+/* ゲーム内入力モーダル */
+.mkm-input-ov { z-index: 10020; }  /* 結果モーダル(10002)より前面に */
+.mkm-input-modal { max-width: 320px; text-align: center; }
+.mkm-input-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; }
+.mkm-input-field {
+  width: 100%; box-sizing: border-box;
+  padding: 12px 14px; font-size: 16px;
+  background: var(--mkm-surface);
+  border: 2px solid var(--mkm-border);
+  border-radius: var(--mkm-radius);
+  color: var(--mkm-text); outline: none;
+  text-align: center;
+}
+.mkm-input-field:focus { border-color: var(--mkm-primary); }
+.mkm-input-actions { display: flex; gap: 8px; margin-top: 16px; }
+.mkm-input-actions .mkm-btn-sec,
+.mkm-input-actions .mkm-btn-primary { flex: 1; }
+
+/* 宝箱開封モーダル */
+.mkm-chest-modal { max-width: 300px; text-align: center; }
+.mkm-chest-icon { font-size: 56px; line-height: 1; animation: mkm-birth-pop 0.5s cubic-bezier(0.2,1.4,0.5,1); }
+.mkm-chest-icon img { width: 84px; height: 84px; object-fit: contain; image-rendering: pixelated;
+  filter: drop-shadow(0 4px 10px rgba(180,140,0,0.5)); }
+.mkm-chest-title { font-size: 18px; font-weight: bold; margin: 10px 0; color: var(--mkm-accent); }
+.mkm-chest-reward {
+  font-size: 16px; font-weight: bold;
+  background: var(--mkm-surface); border-radius: var(--mkm-radius);
+  padding: 12px; margin-bottom: 16px;
+}
+.mkm-chest-modal .mkm-btn-primary { width: 100%; }
+
+/* ========================================
+   導入イベント
+   ======================================== */
+.mkm-intro {
+  position: fixed; inset: 0; z-index: 10030;
+  background: linear-gradient(160deg, #080d1a 0%, #0e1528 50%, #080d1a 100%);
+  display: flex; flex-direction: column;
+  color: var(--mkm-text);
+  overflow: hidden;
+}
+.mkm-intro-stage {
+  flex: 1; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+/* スポットライト背景 */
+.mkm-intro-spotlight {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 60% 55% at 50% 55%, rgba(76,175,80,0.18) 0%, transparent 70%);
+}
+/* 博士キャラ枠 */
+.mkm-intro-char {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.mkm-intro-char-icon {
+  font-size: 100px; line-height: 1;
+  filter: drop-shadow(0 0 20px rgba(76,175,80,0.5));
+  animation: mkm-char-float 3s ease-in-out infinite;
+}
+@keyframes mkm-char-float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+.mkm-intro-mon {
+  width: 190px; height: 190px; border-radius: 24px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  animation: mkm-birth-pop 0.5s cubic-bezier(0.2,1.4,0.5,1);
+}
+.mkm-intro-mon img { width: 100%; height: 100%; object-fit: contain; }
+/* 人物ポートレート（博士など）：枠いっぱいに収め、ゆらっと浮遊＋光彩 */
+.mkm-intro-portrait {
+  width: 200px; height: 260px; border-radius: 16px;
+  background: #0a0f14;
+  box-shadow: 0 0 28px rgba(76,175,80,0.35);
+  animation: mkm-char-float 3s ease-in-out infinite;
+}
+.mkm-intro-portrait img { object-fit: cover; }
+/* 転生の閃光 */
+.mkm-intro-flash {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: radial-gradient(circle, #fff 0%, #d6ffd0 30%, transparent 75%);
+  animation: mkm-intro-flash-anim 0.8s ease-out forwards;
+}
+@keyframes mkm-intro-flash-anim {
+  0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; }
+}
+/* 頭の中に響く声（女神／システムボイス）：神秘的な発光テキスト */
+.mkm-intro-voice-text {
+  font-style: italic; color: #b9f6ca; letter-spacing: 0.04em;
+  text-shadow: 0 0 8px rgba(120,255,180,0.6), 0 0 18px rgba(120,255,180,0.3);
+}
+.mkm-intro-voice-name {
+  color: #80d8c0 !important;
+  text-shadow: 0 0 6px rgba(120,255,180,0.5);
+}
+/* シーン転換：暗転フェード */
+.mkm-scene-fade {
+  position: fixed; inset: 0; background: #000; z-index: 10060;
+  opacity: 0; transition: opacity 0.65s ease; pointer-events: none;
+}
+.mkm-scene-fade.on { opacity: 1; }
+/* ロケーションカード（JRPG風の地名表示） */
+.mkm-loc-card {
+  position: fixed; inset: 0; z-index: 10061; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; text-align: center;
+  opacity: 0; transition: opacity 0.8s ease;
+}
+.mkm-loc-card.on { opacity: 1; }
+.mkm-loc-title {
+  font-size: 30px; font-weight: bold; color: #eaffea;
+  letter-spacing: 0.1em; text-shadow: 0 0 18px rgba(120,255,180,0.55);
+}
+.mkm-loc-sub { font-size: 13px; color: #9fd9b0; letter-spacing: 0.12em; }
+.mkm-loc-line {
+  width: 180px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(150,230,170,0.7), transparent);
+}
+/* マップ入場バナー（明るいマップ上でも読めるよう暗い帯を敷く） */
+.mkm-area-banner-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 18px 40px; border-radius: 14px;
+  background: rgba(8, 16, 10, 0.62);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+.mkm-intro-box {
+  background: rgba(6,14,8,0.96);
+  border-top: 2px solid var(--mkm-primary);
+  padding: 16px 20px 24px;
+  min-height: 140px;
+  cursor: pointer;
+  position: relative;
+}
+.mkm-intro-speaker-row { margin-bottom: 10px; }
+.mkm-intro-speaker {
+  display: inline-block;
+  background: var(--mkm-primary); color: #fff;
+  font-size: 13px; font-weight: bold;
+  padding: 4px 16px; border-radius: 100px;
+  letter-spacing: 0.04em;
+}
+.mkm-intro-text {
+  font-size: 15px; line-height: 1.8; white-space: pre-line;
+  min-height: 56px; color: #e8f5e9;
+}
+.mkm-intro-next {
+  text-align: right; font-size: 12px; color: var(--mkm-muted);
+  margin-top: 10px; animation: mkm-blink 1.2s ease-in-out infinite;
+}
+@keyframes mkm-blink { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+.mkm-intro-skip {
+  position: absolute; top: 14px; right: 14px;
+  background: rgba(0,0,0,0.45); border: 1px solid var(--mkm-border);
+  color: var(--mkm-muted); font-size: 12px;
+  padding: 6px 14px; border-radius: 100px; cursor: pointer; z-index: 1;
+}
+
+/* ========================================
+   持ち物・ショップ
+   ======================================== */
+.mkm-bag, .mkm-shop { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.mkm-bag-item, .mkm-shop-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--mkm-card); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius); padding: 10px 12px;
+}
+.mkm-bag-icon { font-size: 26px; flex-shrink: 0; }
+.mkm-bag-info { flex: 1; min-width: 0; }
+.mkm-bag-name { font-size: 14px; font-weight: bold; }
+.mkm-bag-name small { color: var(--mkm-muted); font-weight: normal; }
+.mkm-bag-desc { font-size: 11px; color: var(--mkm-muted); margin-top: 2px; }
+/* ショップタブ */
+.mkm-shop-tabs {
+  display: flex; gap: 0;
+  border-bottom: 2px solid var(--mkm-border);
+  margin-bottom: 4px;
+}
+.mkm-shop-tab {
+  flex: 1; padding: 10px; font-size: 14px; font-weight: bold;
+  background: var(--mkm-card); border: none; cursor: pointer;
+  color: var(--mkm-muted); border-bottom: 3px solid transparent;
+}
+.mkm-shop-tab--active {
+  color: var(--mkm-primary);
+  border-bottom: 3px solid var(--mkm-primary);
+  background: var(--mkm-bg);
+}
+
+.mkm-shop-buy {
+  background: var(--mkm-primary); color: #fff; font-weight: bold;
+  border: none; border-radius: var(--mkm-radius-sm);
+  padding: 8px 12px; font-size: 13px; cursor: pointer; flex-shrink: 0;
+  white-space: nowrap;
+}
+.mkm-shop-buy:active { transform: scale(0.95); }
+.mkm-shop-ng { opacity: 0.4; cursor: not-allowed; }
+
+/* デバッグ */
+.mkm-debug-btn {
+  display: block; margin: 8px auto 0;
+  background: #3a2a4a; border: 1px solid #5a4a6a;
+  color: #d0b0f0; font-size: 12px;
+  padding: 6px 16px; border-radius: 100px; cursor: pointer;
+}
+.mkm-debug-list { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; }
+.mkm-debug-item {
+  background: var(--mkm-card); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius); color: var(--mkm-text);
+  padding: 12px 14px; font-size: 14px; text-align: left; cursor: pointer;
+}
+.mkm-debug-item:active { background: var(--mkm-border); }
+.mkm-debug-danger { border-color: #6a3030; color: #ff9090; }

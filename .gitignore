@@ -1,3 +1,6 @@
 docs/
 FIREBASE_SETUP.md
 README.md
+
+# Claude Code ローカル状態
+.claude/

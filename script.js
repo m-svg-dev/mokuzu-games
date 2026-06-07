@@ -1,7 +1,8 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.17.2';
+const CURRENT_VERSION = '2.21.0';
 const SAVE_VERSION   = 1;
+const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
 const CHECKSUM_KEY   = '_mzk_i_v1';
 const CHECKSUM_SALT  = 'mzk_9f2x_k4p7_bq8r';
@@ -19,6 +20,58 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.21.0',
+    date: '2026/06/07',
+    title: '⚔️ バトル＆特技システム大強化＆異世界転生ストーリー',
+    items: [
+      '🎬 オープニングに「異世界転生」ストーリーを追加（医者→藻の戦士へ転生！）',
+      '✨ 特技に専用エフェクト＆効果音を実装（炎・水・氷・雷・闇・光…属性ごとに演出）',
+      '⚡ 「会心の一撃」を実装（まれに大ダメージ！敵の「痛恨の一撃」も）',
+      '💥 全体攻撃・全体回復・能力アップ・連続攻撃がちゃんと機能するように',
+      '📚 特技を大幅追加（105種）。レベルの節目で新しい特技を覚えるように＆習得を演出',
+      '🎵 効果音をレトロゲーム風に一新（足音・戦闘・全滅ジングルなど）',
+      '🎁 宝箱・ワープの見た目を強化、各エリアに地名表示を追加',
+      '🐛 まれに敵が2連続で出る不具合、藻おにぎりのスカウト率不具合などを修正',
+    ],
+  },
+  {
+    id: 'v2.20.0',
+    date: '2026/06/07',
+    title: '👾 ボス戦リニューアル＆激レアモンスター登場',
+    items: [
+      '👾 ボスを大きく迫力ある姿で表示するように',
+      '🍼 ボス撃破後、ボスの子供（Lv1）が仲間に加わるように',
+      '⚔️ ボス戦ではスカウト不可に変更',
+      '✨ 激レア「藻メタル」が出現！倒すと莫大な経験値（すぐ逃げる＆ダメージが通りにくい）',
+      '📖 モンスターは見ただけで図鑑に登録されるように',
+      '🐛 ボス前で話しかけられない不具合を修正',
+    ],
+  },
+  {
+    id: 'v2.19.1',
+    date: '2026/06/07',
+    title: '✨ 全系統にA・Sランクモンスターを追加',
+    items: [
+      '✨ 深海：深淵王(A)・原初海(S)を追加',
+      '✨ 機械：機皇(A)・創機神(S)を追加',
+      '✨ 精霊：精霊王(A)・世界樹霊(S)を追加',
+      '✨ 亡霊：冥府王(A)・始源霊(S)を追加',
+      '✨ 企業：藻財閥(A)・藻帝国(S)を追加',
+      '✨ 厄災：厄災王(A)・原初厄(S)を追加',
+    ],
+  },
+  {
+    id: 'v2.18.0',
+    date: '2026/06/06',
+    title: '📖 図鑑UI改善',
+    items: [
+      '📖 図鑑一覧を2列表示に変更し、カードを見やすく',
+      '✨ 図鑑詳細の危険度・希少度を色付き★表示に',
+      '🎨 図鑑詳細のレイアウトをカード型に刷新',
+      '🐛 エンカウント時の画像ちらつきを修正',
+    ],
+  },
   {
     id: 'v2.17.2',
     date: '2026/05/31',
@@ -870,6 +923,11 @@ function getAudioCtx() {
   if (_audioCtx.state === 'suspended') _audioCtx.resume();
   return _audioCtx;
 }
+// ミニゲーム（藻屑モンスターズ等）から音を鳴らせるよう公開
+window.getAudioCtx = getAudioCtx;
+window.isSoundEnabled = () => gameState.soundEnabled;
+// ミニゲームからクラウド保存を呼べるよう公開
+window.saveGameCloud = saveGameCloud;
 
 function playSound(type) {
   if (!gameState.soundEnabled) return;
@@ -1913,7 +1971,7 @@ function claimDailyCoins() {
   if (Date.now() - last < DAILY_INTERVAL_MS) return;
   gameState.lastDailyLogin = Date.now();
   const coins = getDailyCoins();
-  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coins;
+  gameState.mokuCoins = Math.min(MAX_MOKU_COINS, (gameState.mokuCoins ?? 0) + coins);
   saveGame();
   const coinImg = `<img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン">`;
   document.getElementById('daily-modal-body').innerHTML = `${coinImg} 藻コイン ×${coins} を受け取りました！`;
@@ -1933,7 +1991,7 @@ function exchangeStonesForCoins() {
   // 10石=1コインを1回分だけ交換
   if ((gameState.prestigeStones ?? 0) < COINS_PER_STONE) return;
   gameState.prestigeStones -= COINS_PER_STONE;
-  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 1;
+  gameState.mokuCoins = Math.min(MAX_MOKU_COINS, (gameState.mokuCoins ?? 0) + 1);
   saveGame();
   playSound('buy');
   updateDisplay();
@@ -1942,10 +2000,11 @@ function exchangeStonesForCoins() {
 function updateCoinDisplay() {
   const el = document.getElementById('coin-display');
   const coinImg = `<img class="mocoin-icon" src="assets/ui/mocoin.png" alt="藻コイン">`;
-  if (el) el.innerHTML = `${coinImg} ${fmt(gameState.mokuCoins ?? 0)}`;
+  const coinStr = (gameState.mokuCoins ?? 0) >= MAX_MOKU_COINS ? '∞' : fmt(gameState.mokuCoins ?? 0);
+  if (el) el.innerHTML = `${coinImg} ${coinStr}`;
 
   const balEl = document.getElementById('coin-balance-val');
-  if (balEl) balEl.innerHTML = `${coinImg} ${fmt(gameState.mokuCoins ?? 0)} コイン`;
+  if (balEl) balEl.innerHTML = `${coinImg} ${coinStr} コイン`;
 
   const last     = gameState.lastDailyLogin ?? 0;
   const claimed  = Date.now() - last < DAILY_INTERVAL_MS;
@@ -2851,7 +2910,7 @@ function checkAchievements() {
     if (gameState.achievements?.[a.id]) return;
     if (!a.check(gameState)) return;
     gameState.achievements = { ...gameState.achievements, [a.id]: Date.now() };
-    if (a.reward.coins)  gameState.mokuCoins      = (gameState.mokuCoins ?? 0)      + a.reward.coins;
+    if (a.reward.coins)  gameState.mokuCoins      = Math.min(MAX_MOKU_COINS, (gameState.mokuCoins ?? 0) + a.reward.coins);
     if (a.reward.stones) gameState.prestigeStones = (gameState.prestigeStones ?? 0) + a.reward.stones;
     _achievementQueue.push(a);
     showNextAchievementPopup();
@@ -3319,12 +3378,16 @@ function saveGameCloud() {
   // 空の状態・クラウドより進捗が低い状態でクラウドを上書きしない
   try {
     const s = JSON.parse(json);
-    const isEmpty = (s.moku ?? 0) === 0
+    // 藻屑モンスターズ（ミニゲーム）の進捗があるか
+    const mokumonActive = s.mokumon && Object.keys(s.mokumon.monsters ?? {}).length > 0;
+    const isEmpty = !mokumonActive
+      && (s.moku ?? 0) === 0
       && Object.keys(s.employees ?? {}).length === 0
       && (s.tapCount ?? 0) === 0;
     if (isEmpty) return;
     const localTotalMoku = s.totalMoku ?? 0;
-    if (localTotalMoku < _minCloudTotalMoku) return;
+    // モンスターズの進捗がある場合は totalMoku ガードをスキップ（モンスターズ単独プレイ対応）
+    if (!mokumonActive && localTotalMoku < _minCloudTotalMoku) return;
   } catch (_) { return; }
   _lastCloudSave = json;
   saveGameData(json).catch(e => { console.warn('[mokuzu] クラウド保存失敗:', e); });
@@ -3371,6 +3434,7 @@ function showMinigameLobby() {
   document.getElementById('minigame-lobby').classList.remove('hidden');
   document.querySelectorAll('[id^="minigame-game-"]').forEach(el => el.classList.add('hidden'));
 }
+window.showMinigameLobby = showMinigameLobby;
 
 function showMinigame(gameId) {
   document.getElementById('minigame-lobby').classList.add('hidden');
@@ -3384,6 +3448,7 @@ function showMinigame(gameId) {
   if (gameId === 'toilet')    initToilet();
   if (gameId === 'memory')    initMemory();
   if (gameId === 'dungeon')   initDungeon();
+  if (gameId === 'mokumon')   initMokumon({ saveGame, getState: () => gameState, version: CURRENT_VERSION });
 }
 
 // ========== ハイロー ミニゲーム ==========
@@ -3504,12 +3569,12 @@ function hlChoose(choice) {
     if (_zaibatsuCheck(coins, gain)) {
       _zaibatsuStrike(resultEl, gain, 'hl-result hl-result-lose');
     } else {
-      gameState.mokuCoins = coins + gain;
+      gameState.mokuCoins = Math.min(MAX_MOKU_COINS, coins + gain);
       _hlStreak++;
       if (_hlStreak > (gameState.highlowHighScore ?? 0)) gameState.highlowHighScore = _hlStreak;
       const returned = bet + gain;
       if (_hlStreak % 5 === 0) {
-        gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 10;
+        gameState.mokuCoins = Math.min(MAX_MOKU_COINS, (gameState.mokuCoins ?? 0) + 10);
         if (resultEl) {
           resultEl.innerHTML  = `<span class="hl-win">✅ 正解！×${mult} ${bet} → ${returned}コイン (+${gain})</span><br><span class="hl-bonus">🎉 ${_hlStreak}連続ボーナス！+10コイン！</span>`;
           resultEl.className  = 'hl-result hl-result-win';
@@ -3767,7 +3832,7 @@ function rlSpin() {
       if (_zaibatsuCheck(coins, gain)) {
         _zaibatsuStrike(resultEl, gain, 'rl-result rl-result-lose');
       } else {
-        gameState.mokuCoins = coins + gain;
+        gameState.mokuCoins = Math.min(MAX_MOKU_COINS, coins + gain);
         if (resultEl) {
           resultEl.innerHTML = `<span class="hl-win">✅ 当たり！ ${bet} → ${bet + gain}コイン (+${gain})</span>`;
           resultEl.className = 'rl-result rl-result-win';
@@ -4345,7 +4410,7 @@ function _slotEvaluate(bet, coins, results, resultEl) {
       _zaibatsuStrike(resultEl, gain, 'slot-result slot-result-lose');
       msg = '';
     } else {
-      gameState.mokuCoins = coins + gain;
+      gameState.mokuCoins = Math.min(MAX_MOKU_COINS, coins + gain);
       msg = `<span class="hl-win"><img src="assets/slot/${sym.file}" class="slot-result-sym"> ×${sym.mult} が ${bestCount}個！ ${bet} → ${total}コイン (+${gain})</span>`;
       if (resultEl) resultEl.className = 'slot-result slot-result-win';
     }
@@ -4968,7 +5033,7 @@ function _stGameClear() {
   cancelAnimationFrame(_stRafId); _stRafId = null;
   _stBoss = null;
   const reward = 5000;
-  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + reward;
+  gameState.mokuCoins = Math.min(MAX_MOKU_COINS, (gameState.mokuCoins ?? 0) + reward);
   saveGame(); updateDisplay();
   _stBeep(1320, 1047, 0.3, 0.18, 'sine');
   document.getElementById('shooting-clear-score').textContent  = _stScore.toLocaleString();
@@ -4981,7 +5046,7 @@ function _stGameOver() {
   _stState = 'gameover';
   cancelAnimationFrame(_stRafId); _stRafId = null;
   const reward = Math.floor(_stScore / 10);
-  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + reward;
+  gameState.mokuCoins = Math.min(MAX_MOKU_COINS, (gameState.mokuCoins ?? 0) + reward);
   saveGame(); updateDisplay();
   document.getElementById('shooting-result-score').textContent  = _stScore.toLocaleString();
   document.getElementById('shooting-result-reward').textContent = reward.toLocaleString();
@@ -5785,6 +5850,8 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
+import { initMokumon } from './minigame-mokumon.js?v=2.21.0';
+
 let _authMode = 'login'; // 'login' | 'register'
 
 function initFirebase() {
@@ -5882,7 +5949,7 @@ function initFirebase() {
           '🌙 オフライン補填 80% にアップ！',
         ];
         if (isPrestiged) {
-          gameState.mokuCoins = (gameState.mokuCoins ?? 0) + 10;
+          gameState.mokuCoins = Math.min(MAX_MOKU_COINS, (gameState.mokuCoins ?? 0) + 10);
           bonusLines.push('🪙 藻コイン +10枚 プレゼント！');
         } else {
           gameState.prestigeStones = (gameState.prestigeStones ?? 0) + 10;
@@ -6405,7 +6472,7 @@ function _tlShowResult(cleared) {
   const rank = _tlCalcRank(cleared);
   const score = Math.floor(_tlDist * 10) + _tlAvoids * 100 + (cleared ? 5000 : 0);
   const coins = Math.max(1, Math.floor(score / 80));
-  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coins;
+  gameState.mokuCoins = Math.min(MAX_MOKU_COINS, (gameState.mokuCoins ?? 0) + coins);
   document.getElementById('toilet-game').classList.add('hidden');
   document.getElementById('toilet-result').classList.remove('hidden');
   document.getElementById('toilet-result-icon').textContent = cleared ? '🚽' : '💩';
@@ -7372,7 +7439,7 @@ function _mrRenderEnding(endId) {
 
   const e = endMap[endId] ?? endMap.pot;
   const coins = Math.max(10, Math.floor(_mrAffection * (endId === 'truth' ? 5 : 3)));
-  gameState.mokuCoins = (gameState.mokuCoins ?? 0) + coins;
+  gameState.mokuCoins = Math.min(MAX_MOKU_COINS, (gameState.mokuCoins ?? 0) + coins);
 
   document.getElementById('memory-ending-bg').style.background = e.bg;
   document.getElementById('memory-ending-icon').textContent = e.icon;

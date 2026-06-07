@@ -8,7 +8,7 @@
 ## 必須ルール
 
 ### バージョン更新
-バージョンを上げるときは **必ず4箇所セットで変える**：
+#### メインゲーム（script.js / version.json）を変えるとき — 4箇所
 1. `version.json` の `version` フィールド
 2. `script.js` 冒頭の `const CURRENT_VERSION`
 3. `index.html` 末尾の `<script src="script.js?v=X.X.X">` のクエリパラメータ
@@ -16,6 +16,11 @@
 
 4箇所揃えないとブラウザが古いscript.jsをキャッシュから読み続け、更新バナーが毎回出続ける。
 **UPDATE_LOGを忘れるとお知らせモーダルに新バージョンが表示されない。**
+
+#### モンスターズミニゲーム（minigame-mokumon.js / mokumon.css）を変えるとき — 追加2箇所
+上記4箇所に加えて：
+5. `index.html` の `mokumon.css?v=X.X.X`
+6. `script.js` 末尾の `import { initMokumon } from './minigame-mokumon.js?v=X.X.X'`
 
 ### コミット時の画像
 `git add` するとき `assets/` 以下の画像ファイルを**必ず含める**。
