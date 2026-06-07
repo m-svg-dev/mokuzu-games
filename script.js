@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.21.2';
+const CURRENT_VERSION = '2.21.3';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.21.3',
+    date: '2026/06/07',
+    title: '🛟【重要】転生で藻クエストのデータが消える不具合を修正',
+    items: [
+      '🛟 転生したときに「藻クエスト（モンスターズ）」のモンスター・図鑑・進行が消えてしまう重大な不具合を修正しました。今後は転生してもデータは引き継がれます',
+    ],
+  },
   {
     id: 'v2.21.2',
     date: '2026/06/07',
@@ -3029,6 +3037,7 @@ function doPrestige() {
     usedCoupons:              gameState.usedCoupons,
     shinStones:               gameState.shinStones ?? 0,
     highlowHighScore:         gameState.highlowHighScore ?? 0,
+    mokumon:                  gameState.mokumon,   // 藻クエスト（モンスターズ）のデータを転生で消さない
   };
 
   gameState = structuredClone(DEFAULT_STATE);
@@ -5866,7 +5875,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.21.2';
+import { initMokumon } from './minigame-mokumon.js?v=2.21.3';
 
 let _authMode = 'login'; // 'login' | 'register'
 
