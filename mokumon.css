@@ -99,6 +99,10 @@
 .mkm-debug-title-btn:hover { background: #455a64; }
 
 /* ---- ゲームヘッダー（既存の mg-game-header を流用しつつgold追加） ---- */
+/* マップ画面のヘッダーはノッチ/Dynamic Island に被るためセーフエリア分だけ上に余白を取る */
+.mkm-map-header {
+  padding-top: max(8px, env(safe-area-inset-top));
+}
 .mkm-gold {
   margin-left: auto;
   color: var(--mkm-accent);

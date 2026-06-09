@@ -2951,7 +2951,7 @@ function showAreaBanner(title, sub) {
 
 function renderMap() {
   root().innerHTML = `
-    <div class="mg-game-header">
+    <div class="mg-game-header mkm-map-header">
       <button id="mokumon-back-btn" class="mg-back-btn">‹ ${MAP.isVillage ? '藻クエストTOPへ' : '始まりの村へ'}</button>
       <h2 class="mg-game-title">${escHtml(MAP.area.name)}${MAP.floor ? ` <span class="mkm-floor-badge">${currentFloorInfo()?.name ?? ''}</span>` : ''}</h2>
       <span class="mkm-gold">💰 ${fmtNum(data().gold)}</span>
