@@ -655,20 +655,10 @@ function playIntro() {
     setTimeout(() => {
       ov.remove();
       enterVillage();                       // 村を暗転の裏で描画
-      const card = document.createElement('div');
-      card.className = 'mkm-loc-card';
-      card.innerHTML = `
-        <div class="mkm-loc-line"></div>
-        <div class="mkm-loc-title">🌿 始まりの村</div>
-        <div class="mkm-loc-sub">—— 藻生（セカンドライフ）の はじまり ——</div>
-        <div class="mkm-loc-line"></div>`;
-      document.body.appendChild(card);
-      requestAnimationFrame(() => card.classList.add('on'));
-      sfx('heal');
-      setTimeout(() => {                     // カードと暗転を消して村を見せる
-        card.classList.remove('on');
+      showLocCard('🌿 始まりの村', '—— 藻生（セカンドライフ）の はじまり ——');
+      setTimeout(() => {                     // 暗転を消して村を見せる
         fade.classList.remove('on');
-        setTimeout(() => { card.remove(); fade.remove(); }, 800);
+        setTimeout(() => fade.remove(), 800);
       }, 2200);
     }, 700);
   };
@@ -1205,6 +1195,7 @@ function renderPartySlots() {
           <div class="mkm-pslot-info">
             <div class="mkm-pslot-name">${escHtml(inst.nickname || m?.name)}</div>
             <div class="mkm-pslot-sub">Lv.${inst.level} <span style="color:${rankColor(m?.rank)}">${m?.rank}</span></div>
+            <div class="mkm-pslot-expbar"><div class="mkm-pslot-expbar-fill" style="width:${inst.level >= LEVEL_MAX ? 100 : Math.min(100, Math.floor((inst.exp ?? 0) / expToNext(inst.level) * 100))}%"></div></div>
           </div>
           <button class="mkm-pslot-remove" data-i="${i}">✕</button>
         </div>`;
@@ -2791,11 +2782,13 @@ function partyHpBarsHtml() {
     const mpPctVal = stats.mp ? Math.round(mp / stats.mp * 100) : 0;
     const colorCls = hpPctVal <= 25 ? 'mkm-hp-low' : (hpPctVal <= 50 ? 'mkm-hp-mid' : '');
     const dead = hp <= 0 ? ' mkm-mp-dead' : '';
+    const expPctVal = inst.level >= LEVEL_MAX ? 100 : Math.min(100, Math.floor((inst.exp ?? 0) / expToNext(inst.level) * 100));
     return `
       <div class="mkm-mp-ally${dead}">
-        <span class="mkm-mp-name">${escHtml(inst.nickname || master.name)}</span>
+        <div class="mkm-mp-namerow"><span class="mkm-mp-name">${escHtml(inst.nickname || master.name)}</span><span class="mkm-mp-lv">Lv.${inst.level}</span></div>
         <div class="mkm-hpbar small"><div class="mkm-hpbar-fill ${colorCls}" style="width:${hpPctVal}%"></div></div>
         <div class="mkm-mpbar"><div class="mkm-mpbar-fill" style="width:${mpPctVal}%"></div></div>
+        <div class="mkm-exbar" style="height:3px;margin-top:2px"><div class="mkm-exbar-fill" style="width:${expPctVal}%"></div></div>
       </div>`;
   }).join('');
 }
@@ -2885,17 +2878,8 @@ function applyFieldItem(id, m, pid, st, curHp, curMp) {
   if (partyEl) partyEl.innerHTML = partyHpBarsHtml();
 }
 
-// プレイヤー歩行スプライト（全方向×3コマ）を先読み（スマホで切替が間に合わずアニメしない対策）
-let _playerSpritesPreloaded = false;
 function preloadPlayerSprites() {
-  if (_playerSpritesPreloaded) return;
-  _playerSpritesPreloaded = true;
-  ['up', 'down', 'left', 'right'].forEach(dir => {
-    for (let f = 1; f <= 3; f++) {
-      const im = new Image();
-      im.src = `data/mokumon/player/player_${dir}_${f}.webp`;
-    }
-  });
+  // アニメーションWebP化により不要（互換のため残す）
 }
 
 function enterMap(area, floorNo = 1, keepHp = false) {
@@ -2968,7 +2952,7 @@ function showAreaBanner(title, sub) {
 function renderMap() {
   root().innerHTML = `
     <div class="mg-game-header">
-      <button id="mokumon-back-btn" class="mg-back-btn">‹ 戻る</button>
+      <button id="mokumon-back-btn" class="mg-back-btn">‹ ${MAP.isVillage ? '藻クエストTOPへ' : '始まりの村へ'}</button>
       <h2 class="mg-game-title">${escHtml(MAP.area.name)}${MAP.floor ? ` <span class="mkm-floor-badge">${currentFloorInfo()?.name ?? ''}</span>` : ''}</h2>
       <span class="mkm-gold">💰 ${fmtNum(data().gold)}</span>
     </div>
@@ -3002,6 +2986,7 @@ function renderMap() {
   if (MAP.isVillage) buildNpcSprites();
   if (MAP.floorNpcs?.length) buildFloorNpcSprites();
   centerCamera(false);
+  setPlayerSprite(MAP.facing);
 
   MAP.inputLocked = false;   // 地図再描画＝入力解除（エンカウント・戦闘から復帰）
   document.getElementById('mokumon-back-btn').onclick = exitMap;
@@ -3203,32 +3188,20 @@ function centerCamera(animate) {
 }
 
 // 主人公スプライト切り替え
-let _walkFrame = 1;
-let _walkTimer = null;
-function setPlayerSprite(dir, frame) {
+function setPlayerSprite(dir) {
   const pEl = document.getElementById('mkm-player');
   if (!pEl) return;
-  pEl.style.backgroundImage = `url('data/mokumon/player/player_${dir}_${frame}.webp')`;
+  pEl.classList.remove('dir-down', 'dir-up', 'dir-left', 'dir-right');
+  pEl.classList.add(`dir-${dir}`);
 }
-function startWalkAnim(dir) {
-  _walkFrame = 1;
-  setPlayerSprite(dir, 1);
-  _walkTimer = setInterval(() => {
-    _walkFrame = (_walkFrame % 3) + 1;
-    setPlayerSprite(dir, _walkFrame);
-  }, Math.floor(MOVE_MS / 3));
-}
-function stopWalkAnim(dir) {
-  clearInterval(_walkTimer);
-  _walkTimer = null;
-  setPlayerSprite(dir, 1); // 静止は1枚目
-}
+function startWalkAnim(dir) { setPlayerSprite(dir); }
+function stopWalkAnim(dir)  { setPlayerSprite(dir); }
 
 function move(dir) {
   if (!MAP || MAP.moving || MAP.inputLocked) return;
   const delta = { up: [0,-1], down: [0,1], left: [-1,0], right: [1,0] }[dir];
   MAP.facing = dir;
-  setPlayerSprite(dir, 1); // 向き変更は即時反映（壁でも）
+  setPlayerSprite(dir);
   const pEl = document.getElementById('mkm-player');
   if (pEl) pEl.style.transform = 'translate(-50%,-50%)';
 
@@ -3409,7 +3382,7 @@ function initJoystick() {
   };
 
   outer.addEventListener('touchstart', e => {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     const t = e.touches[0];
     const { cx, cy } = getCenter();
     const dx = t.clientX - cx, dy = t.clientY - cy;
@@ -3421,7 +3394,7 @@ function initJoystick() {
   }, { passive: false });
 
   outer.addEventListener('touchmove', e => {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     const t = e.touches[0];
     const { cx, cy } = getCenter();
     const dx = t.clientX - cx, dy = t.clientY - cy;
@@ -3448,8 +3421,29 @@ function exitMap() {
   detachMapInput();
   const wasVillage = MAP?.isVillage;
   MAP = null;
-  if (wasVillage) renderTitle();
-  else enterVillage(); // 冒険エリアから戻ると村へ
+  if (wasVillage) {
+    renderTitle();
+  } else {
+    enterVillage();
+    showLocCard('🌿 始まりの村', '—— 冒険から帰還 ——');
+  }
+}
+
+function showLocCard(title, sub) {
+  const card = document.createElement('div');
+  card.className = 'mkm-loc-card';
+  card.innerHTML = `
+    <div class="mkm-loc-line"></div>
+    <div class="mkm-loc-title">${title}</div>
+    <div class="mkm-loc-sub">${sub}</div>
+    <div class="mkm-loc-line"></div>`;
+  document.body.appendChild(card);
+  requestAnimationFrame(() => card.classList.add('on'));
+  sfx('heal');
+  setTimeout(() => {
+    card.classList.remove('on');
+    setTimeout(() => card.remove(), 800);
+  }, 2200);
 }
 
 // 出口到達ハンドラ（フロア制 or 従来）
@@ -3708,6 +3702,7 @@ function makeCombatant(inst, isEnemy) {
     alive: hp > 0,
     ailments: {},   // 状態異常 { 種別: 残りターン }  毒は -1=戦闘終了まで
     buffs: {},      // 能力バフ倍率 { atk:1.3, spd:1.3 ... }
+    expPct: inst.level >= LEVEL_MAX ? 100 : Math.min(100, Math.floor((inst.exp ?? 0) / expToNext(inst.level) * 100)),
   };
 }
 
@@ -3822,6 +3817,7 @@ function renderAllies() {
       <span class="mkm-bt-mpnum" id="mkm-ally-mpnum-${i}">MP ${String(a.mp).padStart(3)}/${a.maxMp}</span>
       <div class="mkm-hpbar"><div class="mkm-hpbar-fill ${hpPct(a) <= 25 ? 'mkm-hp-low' : hpPct(a) <= 50 ? 'mkm-hp-mid' : ''}" id="mkm-ally-hp-${i}" style="width:${hpPct(a)}%"></div></div>
       <div class="mkm-mpbar"><div class="mkm-mpbar-fill" id="mkm-ally-mp-${i}" style="width:${mpPct(a)}%"></div></div>
+      <div class="mkm-exbar"><div class="mkm-exbar-fill" style="width:${a.expPct}%"></div></div>
     `;
     el.querySelector('.mkm-bt-ally-img img').src = monImg(a.monsterId);
     c.appendChild(el);
@@ -3849,16 +3845,18 @@ function renderCommand() {
   const scoutRate = calcCurrentScoutRate();
   const scoutPct = Math.round(scoutRate * 100);
   const scoutColor = scoutPct >= 60 ? '#4caf50' : scoutPct >= 30 ? '#ffa726' : '#ef5350';
+  const canSwap = B.allies.filter(a => a.alive).length >= 2;
   cmd.innerHTML = `
     <button class="mkm-cmd-btn" data-cmd="attack">たたかう</button>
     <button class="mkm-cmd-btn" data-cmd="skill">とくぎ</button>
     <button class="mkm-cmd-btn" data-cmd="item">どうぐ</button>
     <button class="mkm-cmd-btn" data-cmd="defend">ぼうぎょ</button>
-    <button class="mkm-cmd-btn mkm-cmd-scout" data-cmd="scout" ${B.isBoss ? 'disabled style="opacity:0.35;pointer-events:none"' : ''}>
+    <button class="mkm-cmd-btn mkm-cmd-swap" data-cmd="swap" ${canSwap ? '' : 'disabled style="opacity:0.35;pointer-events:none"'}>いれかえ</button>
+    <button class="mkm-cmd-btn mkm-cmd-run" data-cmd="run">にげる</button>
+    <button class="mkm-cmd-btn mkm-cmd-scout mkm-cmd-scout--wide" data-cmd="scout" ${B.isBoss ? 'disabled style="opacity:0.35;pointer-events:none"' : ''}>
       <span class="mkm-scout-label">${B.isBoss ? 'スカウト不可' : `スカウト率 <span style="color:${scoutColor};font-weight:bold">${scoutPct}%</span>`}</span>
       ${B.isBoss ? '' : `<div class="mkm-scout-rate-bar"><div class="mkm-scout-rate-fill" style="width:${scoutPct}%;background:${scoutColor}"></div></div>`}
     </button>
-    <button class="mkm-cmd-btn mkm-cmd-run" data-cmd="run">にげる</button>
   `;
   cmd.querySelectorAll('.mkm-cmd-btn').forEach(b => {
     b.onclick = () => onCommand(b.dataset.cmd);
@@ -3900,7 +3898,51 @@ function onCommand(cmd) {
   else if (cmd === 'skill') { openSkillMenu(actor); }
   else if (cmd === 'item') { openItemMenu(actor); }
   else if (cmd === 'scout') { actor.defending = false; playerTurn(() => doScout(firstEnemy())); }
+  else if (cmd === 'swap') { openSwapMenu(); }
   else if (cmd === 'run') { tryRun(); }
+}
+
+function openSwapMenu() {
+  const current = firstAlly();
+  const candidates = B.allies.filter(a => a.alive && a !== current);
+  if (!candidates.length) return;
+
+  const ov = document.createElement('div');
+  ov.className = 'mkm-swap-ov';
+  const items = candidates.map((a, idx) => {
+    const hpCls = hpPct(a) <= 25 ? 'mkm-hp-low' : hpPct(a) <= 50 ? 'mkm-hp-mid' : '';
+    return `
+      <div class="mkm-swap-item" data-idx="${idx}">
+        <img src="${monImg(a.monsterId)}" alt="" onerror="this.style.display='none'"/>
+        <div class="mkm-swap-item-info">
+          <div class="mkm-swap-item-name">${escHtml(a.name)}</div>
+          <div class="mkm-swap-item-sub">Lv.${a.level}　HP ${a.hp}/${a.maxHp}</div>
+          <div class="mkm-hpbar small" style="margin-top:4px"><div class="mkm-hpbar-fill ${hpCls}" style="width:${hpPct(a)}%"></div></div>
+        </div>
+      </div>`;
+  }).join('');
+  ov.innerHTML = `
+    <div class="mkm-swap-panel">
+      <div class="mkm-swap-title">だれと いれかえる？（1ターン消費）</div>
+      <div class="mkm-swap-list">${items}</div>
+      <button class="mkm-swap-cancel">キャンセル</button>
+    </div>`;
+
+  document.body.appendChild(ov);
+  ov.querySelector('.mkm-swap-cancel').onclick = () => ov.remove();
+  ov.querySelectorAll('.mkm-swap-item').forEach((el, i) => {
+    el.onclick = () => {
+      ov.remove();
+      const target = candidates[i];
+      const fromIdx = B.allies.indexOf(current);
+      const toIdx = B.allies.indexOf(target);
+      B.allies[fromIdx] = target;
+      B.allies[toIdx] = current;
+      renderAllies();
+      pushLog(`${target.name} と いれかえた！`);
+      enemyPhase();
+    };
+  });
 }
 
 // 行動阻害判定。阻害される場合はログ文字列を返す（行動不能）。されない場合 null
@@ -4082,8 +4124,12 @@ function doAttack(actor, target) {
   pushLog(`${actor.name} の こうげき！`);
   const crit = rollCrit(actor, target);
   if (crit) pushLog('⚡ 会心の一撃！');
-  // 斬撃エフェクト（会心は2連）
-  playSkillEffect(`mkm-enemy-${B.enemies.indexOf(target)}`, 'slash', crit ? 2 : 1);
+  // 通常攻撃：地味なフラッシュのみ。会心のときだけ斬撃エフェクト2連
+  if (crit) {
+    playSkillEffect(`mkm-enemy-${B.enemies.indexOf(target)}`, 'slash', 2);
+  } else {
+    playAttackFlash(`mkm-enemy-${B.enemies.indexOf(target)}`);
+  }
   const dmg = calcPhysical(actor, target, 1.0, crit);
   applyDamage(target, dmg, 'enemy', () => {
     pushLog(`${target.name} に ${dmg} のダメージ！`);
@@ -4145,6 +4191,17 @@ function fxVariant(skill) {
     hue: (h % 51) - 25,                          // -25〜+25度の色ずらし
     scale: 0.9 + Math.min(0.5, (skill.power ?? 1) * 0.12), // 威力で大きく
   };
+}
+
+// 通常攻撃の地味フラッシュ（SEのみ＋白くフラッシュするだけ）
+function playAttackFlash(elId) {
+  sfx('attack');
+  const host = document.getElementById(elId);
+  if (!host) return;
+  const el = document.createElement('div');
+  el.className = 'mkm-attack-flash';
+  host.appendChild(el);
+  setTimeout(() => el.remove(), 300);
 }
 
 // 対象要素にエフェクトを重ねて再生（count個＝上位技ほど多く）

@@ -408,6 +408,8 @@
 .mkm-pslot-info { flex: 1; }
 .mkm-pslot-name { font-size: 15px; font-weight: bold; }
 .mkm-pslot-sub { font-size: 12px; color: var(--mkm-muted); margin-top: 2px; }
+.mkm-pslot-expbar { height: 4px; background: #0002; border-radius: 100px; overflow: hidden; margin-top: 5px; }
+.mkm-pslot-expbar-fill { height: 100%; background: linear-gradient(90deg, #ce93d8, #ab47bc); }
 .mkm-pslot-remove {
   width: 28px; height: 28px; border-radius: 50%;
   background: var(--mkm-surface); border: 1px solid var(--mkm-border);
@@ -814,14 +816,19 @@
   left: 50%; top: 50%;
   transform: translate(-50%, -50%);
   width: 48px; height: 64px;
-  background: url('data/mokumon/player/player_down_1.webp') center/contain no-repeat;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   font-size: 0;
   z-index: 10;
   pointer-events: none;
   image-rendering: pixelated;
   filter: drop-shadow(0 3px 4px rgba(0,0,0,0.5));
 }
-.mkm-player-walk { /* スプライトアニメで表現するためCSSアニメは無効 */ }
+.mkm-player.dir-down  { background-image: url('data/mokumon/player/player_down.webp'); }
+.mkm-player.dir-up    { background-image: url('data/mokumon/player/player_up.webp'); }
+.mkm-player.dir-left  { background-image: url('data/mokumon/player/player_left.webp'); }
+.mkm-player.dir-right { background-image: url('data/mokumon/player/player_right.webp'); }
 .mkm-player-bump { animation: mkm-bump 0.2s; }
 @keyframes mkm-bump {
   0%,100% { transform: translate(-50%, -50%); }
@@ -853,10 +860,12 @@
   border-radius: var(--mkm-radius-sm); padding: 5px 8px;
 }
 .mkm-mp-ally.mkm-mp-dead { opacity: 0.45; }
+.mkm-mp-namerow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
 .mkm-mp-name {
-  font-size: 11px; font-weight: bold; display: block;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;
+  font-size: 11px; font-weight: bold;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.mkm-mp-lv { font-size: 10px; color: var(--mkm-muted); flex-shrink: 0; margin-left: 4px; }
 
 /* 十字キー */
 .mkm-dpad {
@@ -986,15 +995,15 @@
   position: relative;   /* スキルエフェクトの重ね基準 */
   display: grid;
   grid-template-columns: 44px 1fr auto auto auto;
-  grid-template-rows: auto 10px 5px;
+  grid-template-rows: auto 10px 5px 4px;
   grid-template-areas:
     "img name lv hpnum mpnum"
     "img hpbar hpbar hpbar hpbar"
-    "img mpbar mpbar mpbar mpbar";
+    "img mpbar mpbar mpbar mpbar"
+    "img exbar exbar exbar exbar";
   gap: 2px 8px; align-items: center;
   background: #f4f4ec; border: 1px solid #b0b090;
   border-radius: var(--mkm-radius-sm); padding: 6px 10px;
-  position: relative;
 }
 .mkm-bt-ally.mkm-bt-dead { opacity: 0.35; }
 .mkm-bt-ally-img {
@@ -1011,6 +1020,9 @@
 .mkm-bt-mpnum     { grid-area: mpnum; font-size: 11px; color: #2a50aa; font-weight: bold; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mkm-bt-ally .mkm-hpbar { grid-area: hpbar; height: 10px; }
 .mkm-bt-ally .mkm-mpbar { grid-area: mpbar; height: 5px; margin-top: 3px; }
+.mkm-exbar { background: #0004; border-radius: 100px; overflow: hidden; }
+.mkm-exbar-fill { height: 100%; background: linear-gradient(90deg, #ce93d8, #ab47bc); }
+.mkm-bt-ally .mkm-exbar { grid-area: exbar; height: 4px; margin-top: 2px; }
 
 /* コマンド */
 .mkm-battle-cmd {
@@ -1028,6 +1040,30 @@
 }
 .mkm-cmd-btn:active { transform: scale(0.96); background: #d8d8c8; }
 .mkm-cmd-run { background: #f4e8e8; border-color: #a07070; color: #8a2020; }
+.mkm-cmd-swap { background: #e8f0e8; border-color: #70a070; color: #1a5c1a; }
+.mkm-cmd-scout--wide { grid-column: 1 / -1; }
+/* いれかえオーバーレイ */
+.mkm-swap-ov {
+  position: fixed; inset: 0; background: #0009; z-index: 9000;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.mkm-swap-panel {
+  background: #f4f4ec; border-radius: 12px 12px 0 0; padding: 14px;
+  width: 100%; max-width: 480px; border-top: 3px solid #70a070;
+}
+.mkm-swap-title { font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 12px; color: #333; }
+.mkm-swap-list { display: flex; flex-direction: column; gap: 8px; }
+.mkm-swap-item {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid #b0b090; border-radius: 8px; padding: 8px 12px;
+  cursor: pointer; transition: background 0.15s;
+}
+.mkm-swap-item:active { background: #e0f0e0; }
+.mkm-swap-item img { width: 36px; height: 36px; object-fit: contain; }
+.mkm-swap-item-info { flex: 1; }
+.mkm-swap-item-name { font-size: 14px; font-weight: bold; }
+.mkm-swap-item-sub { font-size: 11px; color: #666; margin-top: 2px; }
+.mkm-swap-cancel { margin-top: 10px; width: 100%; background: #ddd; border: none; border-radius: 8px; padding: 10px; font-size: 14px; cursor: pointer; }
 .mkm-cmd-scout { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 14px; }
 .mkm-scout-label { font-size: 13px; font-weight: bold; }
 .mkm-scout-rate-bar {
@@ -1079,6 +1115,18 @@
   25%  { opacity: 1; transform: translate(-50%,-50%) scale(1.1) rotate(2deg); }
   70%  { opacity: 1; transform: translate(-50%,-50%) scale(1.0); }
   100% { opacity: 0; transform: translate(-50%,-50%) scale(1.05); }
+}
+
+/* 通常攻撃フラッシュ */
+.mkm-attack-flash {
+  position: absolute; inset: -10%; pointer-events: none; z-index: 8;
+  border-radius: 6px;
+  animation: mkm-attack-flash 0.28s ease-out forwards;
+}
+@keyframes mkm-attack-flash {
+  0%   { background: rgba(255,255,255,0.55); }
+  60%  { background: rgba(255,255,255,0.15); }
+  100% { background: rgba(255,255,255,0); }
 }
 
 /* エフェクト確認ギャラリー */
