@@ -1646,7 +1646,7 @@ let MAP = null;
 let _mapKeyHandler = null;
 
 // 表示設定
-const TILE = 40;            // 1マスのピクセルサイズ
+const TILE = 36;            // 1マスのピクセルサイズ
 const ENCOUNTER_RATE = 0.10; // 草むら1歩あたりの遭遇率
 const MOVE_MS = 160;        // 1マス移動アニメ時間
 

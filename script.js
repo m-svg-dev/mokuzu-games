@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.22.0';
+const CURRENT_VERSION = '2.22.1';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.22.1',
+    date: '2026/06/09',
+    title: '🗺️ マップタイルをさらに縮小',
+    items: [
+      '📐 タイルサイズ40px→36pxに縮小（より広く見えるように）',
+    ],
+  },
   {
     id: 'v2.22.0',
     date: '2026/06/09',
@@ -5958,7 +5966,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.22.0';
+import { initMokumon } from './minigame-mokumon.js?v=2.22.1';
 
 let _authMode = 'login'; // 'login' | 'register'
 
