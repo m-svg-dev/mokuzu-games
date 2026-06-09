@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.21.9';
+const CURRENT_VERSION = '2.22.0';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,21 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.22.0',
+    date: '2026/06/09',
+    title: '⚔️ 戦闘・マップUI大幅改善',
+    items: [
+      '📊 EXPバーを戦闘中・マップHUD・パーティ編成画面に追加',
+      '🔄 戦闘中「いれかえ」コマンド追加（生存2体以上で有効・1ターン消費）',
+      '✨ 通常攻撃のエフェクトを地味なフラッシュに変更（スキルとの差別化）',
+      '🚶 歩行アニメをアニメーションWebPに刷新（動きが滑らかに）',
+      '🗺️ マップHUDのパーティパネルをタップして先頭入れ替え可能に',
+      '📍 戻るボタンに遷移先を明示（村→藻クエストTOPへ、ダンジョン→始まりの村へ）',
+      '🔔 村帰還時にロケーションカード表示',
+      '📐 マップタイルを40pxに縮小（より広く見えるように）',
+    ],
+  },
   {
     id: 'v2.21.9',
     date: '2026/06/08',
@@ -5943,7 +5958,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.21.9';
+import { initMokumon } from './minigame-mokumon.js?v=2.22.0';
 
 let _authMode = 'login'; // 'login' | 'register'
 
