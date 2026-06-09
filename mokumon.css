@@ -101,7 +101,7 @@
 /* ---- ゲームヘッダー（既存の mg-game-header を流用しつつgold追加） ---- */
 /* マップ画面のヘッダーはノッチ/Dynamic Island に被るためセーフエリア分だけ上に余白を取る */
 .mkm-map-header {
-  padding-top: max(8px, env(safe-area-inset-top));
+  padding-top: 4px;
 }
 .mkm-gold {
   margin-left: auto;
@@ -490,8 +490,8 @@
 .mkm-map-viewport {
   position: relative;
   width: 100%;
-  height: 58vh;
-  max-height: 460px;
+  height: 48vh;
+  max-height: 380px;
   overflow: hidden;
   background: #16301a;
   border-bottom: 2px solid var(--mkm-border);
