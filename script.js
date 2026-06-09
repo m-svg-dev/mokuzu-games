@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.22.1';
+const CURRENT_VERSION = '2.22.2';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,15 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.22.2',
+    date: '2026/06/10',
+    title: '🔍 冒険中にモンスターのステータスを確認できるように',
+    items: [
+      '📊 マップ画面下のパーティパネルをタップするとステータス詳細が見られるようになりました',
+      '⭐ 詳細画面から「先頭にする」ボタンで並び順を変更できます',
+    ],
+  },
   {
     id: 'v2.22.1',
     date: '2026/06/09',
@@ -5966,7 +5975,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.22.1';
+import { initMokumon } from './minigame-mokumon.js?v=2.22.2';
 
 let _authMode = 'login'; // 'login' | 'register'
 
