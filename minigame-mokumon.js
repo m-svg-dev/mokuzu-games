@@ -1055,8 +1055,12 @@ function renderDetailActions(ov, inst) {
   const inParty = d.party.includes(inst.instanceId);
   const partyCount = d.party.filter(Boolean).length;
 
+  const isLeader = MAP && d.party.find(Boolean) === inst.instanceId;
+  const canPromote = MAP && inParty && !isLeader;
+
   cont.innerHTML = `
-    <button class="mkm-btn-primary" id="mkm-act-party">
+    ${canPromote ? `<button class="mkm-btn-primary mkm-btn-promote" id="mkm-act-promote">⭐ 先頭にする</button>` : ''}
+    <button class="mkm-btn-primary" id="mkm-act-party" ${MAP ? 'style="display:none"' : ''}>
       ${inParty ? '◀ パーティから外す' : '＋ パーティに入れる'}
     </button>
     <div class="mkm-detail-actions-row">
@@ -1067,6 +1071,26 @@ function renderDetailActions(ov, inst) {
       🌊 逃がす
     </button>
   `;
+
+  // 先頭にする（マップ中のみ）
+  const promoteBtn = cont.querySelector('#mkm-act-promote');
+  if (promoteBtn) {
+    promoteBtn.onclick = () => {
+      const firstId = d.party.find(Boolean);
+      const fi = d.party.indexOf(firstId);
+      const ti = d.party.indexOf(inst.instanceId);
+      if (fi !== -1 && ti !== -1) {
+        [d.party[fi], d.party[ti]] = [d.party[ti], d.party[fi]];
+        save();
+        // HUD再描画
+        const partyEl = document.getElementById('mkm-map-party');
+        if (partyEl) { partyEl.innerHTML = partyHpBarsHtml(); initPartySwapHud(); }
+        sfx('select');
+        toast(`${inst.nickname || getMonsterMaster(inst.monsterId)?.name} を先頭にした！`);
+        ov.remove();
+      }
+    };
+  }
 
   // パーティ入れ替え
   cont.querySelector('#mkm-act-party').onclick = () => {
@@ -2798,24 +2822,10 @@ function initPartySwapHud() {
   const container = document.getElementById('mkm-map-party');
   if (!container) return;
   container.querySelectorAll('.mkm-mp-ally').forEach((el, i) => {
-    if (i === 0) {
-      el.classList.add('mkm-mp-leader');
-      return;
-    }
+    if (i === 0) el.classList.add('mkm-mp-leader');
     el.onclick = () => {
-      const d = data();
-      const tappedId = el.dataset.id;
-      const firstId = d.party.find(Boolean);
-      if (!tappedId || tappedId === firstId) return;
-      // パーティ配列内で先頭と入れ替え
-      const fi = d.party.indexOf(firstId);
-      const ti = d.party.indexOf(tappedId);
-      if (fi === -1 || ti === -1) return;
-      [d.party[fi], d.party[ti]] = [d.party[ti], d.party[fi]];
-      save();
-      // HUDを再描画
-      container.innerHTML = partyHpBarsHtml();
-      initPartySwapHud();
+      const inst = data().monsters[el.dataset.id];
+      if (inst) showMonsterDetail(inst);
     };
   });
 }
