@@ -819,7 +819,7 @@
   position: absolute;
   left: 50%; top: 50%;
   transform: translate(-50%, -50%);
-  width: 48px; height: 64px;
+  width: 44px; height: 58px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -864,6 +864,9 @@
   border-radius: var(--mkm-radius-sm); padding: 5px 8px;
 }
 .mkm-mp-ally.mkm-mp-dead { opacity: 0.45; }
+.mkm-mp-ally.mkm-mp-leader { outline: 2px solid #78bb99; outline-offset: -1px; }
+.mkm-mp-ally:not(.mkm-mp-leader):not(.mkm-mp-dead) { cursor: pointer; }
+.mkm-mp-ally:not(.mkm-mp-leader):not(.mkm-mp-dead):active { background: #e0f0e8; }
 .mkm-mp-namerow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
 .mkm-mp-name {
   font-size: 11px; font-weight: bold;

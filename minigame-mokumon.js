@@ -1646,7 +1646,7 @@ let MAP = null;
 let _mapKeyHandler = null;
 
 // 表示設定
-const TILE = 44;            // 1マスのピクセルサイズ
+const TILE = 40;            // 1マスのピクセルサイズ
 const ENCOUNTER_RATE = 0.10; // 草むら1歩あたりの遭遇率
 const MOVE_MS = 160;        // 1マス移動アニメ時間
 
@@ -2784,13 +2784,40 @@ function partyHpBarsHtml() {
     const dead = hp <= 0 ? ' mkm-mp-dead' : '';
     const expPctVal = inst.level >= LEVEL_MAX ? 100 : Math.min(100, Math.floor((inst.exp ?? 0) / expToNext(inst.level) * 100));
     return `
-      <div class="mkm-mp-ally${dead}">
+      <div class="mkm-mp-ally${dead}" data-id="${id}">
         <div class="mkm-mp-namerow"><span class="mkm-mp-name">${escHtml(inst.nickname || master.name)}</span><span class="mkm-mp-lv">Lv.${inst.level}</span></div>
         <div class="mkm-hpbar small"><div class="mkm-hpbar-fill ${colorCls}" style="width:${hpPctVal}%"></div></div>
         <div class="mkm-mpbar"><div class="mkm-mpbar-fill" style="width:${mpPctVal}%"></div></div>
         <div class="mkm-exbar" style="height:3px;margin-top:2px"><div class="mkm-exbar-fill" style="width:${expPctVal}%"></div></div>
       </div>`;
   }).join('');
+}
+
+// マップHUDのパーティパネルをタップして先頭入れ替え
+function initPartySwapHud() {
+  const container = document.getElementById('mkm-map-party');
+  if (!container) return;
+  container.querySelectorAll('.mkm-mp-ally').forEach((el, i) => {
+    if (i === 0) {
+      el.classList.add('mkm-mp-leader');
+      return;
+    }
+    el.onclick = () => {
+      const d = data();
+      const tappedId = el.dataset.id;
+      const firstId = d.party.find(Boolean);
+      if (!tappedId || tappedId === firstId) return;
+      // パーティ配列内で先頭と入れ替え
+      const fi = d.party.indexOf(firstId);
+      const ti = d.party.indexOf(tappedId);
+      if (fi === -1 || ti === -1) return;
+      [d.party[fi], d.party[ti]] = [d.party[ti], d.party[fi]];
+      save();
+      // HUDを再描画
+      container.innerHTML = partyHpBarsHtml();
+      initPartySwapHud();
+    };
+  });
 }
 
 // ===== 探索中の道具メニュー（回復薬を使う）=====
@@ -2968,9 +2995,9 @@ function renderMap() {
       ${(MAP.isVillage || MAP.floorNpcs?.length) ? '<button class="mkm-dpad-talk mkm-talk-overlay" id="mkm-talk-btn">💬</button>' : ''}
     </div>
     <div class="mkm-map-hud">
-      ${MAP.isVillage ? '🏘️ 始まりの村' : `<span>👣 <span id="mkm-steps">${MAP.steps}</span> 歩${MAP.floor && MAP.area.floors ? ` &nbsp;|&nbsp; ${MAP.area.floors.length}階中 ${MAP.floor}階` : ''}</span><button class="mkm-field-item-btn" id="mkm-field-item">🎒 どうぐ</button>`}
+      ${MAP.isVillage ? '🏘️ 始まりの村' : `<span>${MAP.floor && MAP.area.floors ? `${MAP.area.floors.length}階中 ${MAP.floor}階` : ''}</span><button class="mkm-field-item-btn" id="mkm-field-item">🎒 どうぐ</button>`}
     </div>
-    <div class="mkm-map-party">${partyHpBarsHtml()}</div>
+    <div class="mkm-map-party" id="mkm-map-party">${partyHpBarsHtml()}</div>
     <!-- 保険のDパッド -->
     <div class="mkm-dpad">
       <button class="mkm-dpad-btn" data-dir="up">▲</button>
@@ -2999,6 +3026,7 @@ function renderMap() {
   }
   const fieldItemBtn = document.getElementById('mkm-field-item');
   if (fieldItemBtn) fieldItemBtn.onclick = openFieldItemMenu;
+  initPartySwapHud();
   initJoystick();
 
   // キーボード
