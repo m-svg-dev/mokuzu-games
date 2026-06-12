@@ -1674,3 +1674,14 @@
 }
 .mkm-debug-item:active { background: var(--mkm-border); }
 .mkm-debug-danger { border-color: #6a3030; color: #ff9090; }
+
+/* デバッグ：マップ直行 */
+.mkm-debug-warp-list { display: flex; flex-direction: column; gap: 6px; padding: 0 12px 16px; }
+.mkm-debug-warp-row { display: flex; align-items: center; gap: 6px; }
+.mkm-debug-warp-name { flex: 1; font-size: 12px; color: var(--mkm-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mkm-debug-warp-btn {
+  background: var(--mkm-panel); border: 1px solid var(--mkm-border);
+  border-radius: var(--mkm-radius); color: var(--mkm-text);
+  padding: 8px 6px; font-size: 12px; cursor: pointer; min-width: 44px;
+}
+.mkm-debug-warp-btn:active { background: var(--mkm-border); }

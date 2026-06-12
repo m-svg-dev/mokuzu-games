@@ -5780,9 +5780,28 @@ function renderDebug(from = 'village') {
       <button class="mkm-debug-item" data-act="heal">❤️ パーティ全回復（マップHP）</button>
       <button class="mkm-debug-item mkm-debug-danger" data-act="reset">🗑️ セーブをリセット</button>
     </div>
+    <p class="mkm-field-note">🚪 マップ直行（選んだフロアへ即移動）</p>
+    <div class="mkm-debug-warp-list">
+      ${AREAS.map(a => `
+        <div class="mkm-debug-warp-row">
+          <span class="mkm-debug-warp-name">${a.emoji} ${escHtml(a.name)}</span>
+          ${(a.floors ?? []).map((f, i) => `
+            <button class="mkm-debug-warp-btn" data-area="${a.id}" data-floor="${i + 1}">${f.isBossFloor ? '👾' : ''}B${i + 1}F</button>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>
   `;
   document.querySelectorAll('.mkm-debug-item').forEach(b => {
     b.onclick = () => debugAction(b.dataset.act);
+  });
+  document.querySelectorAll('.mkm-debug-warp-btn').forEach(b => {
+    b.onclick = () => {
+      const area = AREAS.find(a => a.id === b.dataset.area);
+      if (!area) return;
+      sfx('select');
+      enterMap(area, parseInt(b.dataset.floor, 10));
+    };
   });
   document.getElementById('mokumon-back-btn').onclick = from === 'title' ? renderTitle : enterVillage;
 }
