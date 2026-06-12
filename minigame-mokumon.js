@@ -35,6 +35,12 @@ const FAMILIES = {
   genesis:   { name: '創世', color: '#1a1a2e' },
 };
 
+// 属性の日本語表示（相性ガイド・戦闘ログ用）
+const ELEMENT_JP = {
+  fire: '🔥炎', water: '💧水', ice: '❄️氷', thunder: '⚡雷',
+  poison: '☠️毒', dark: '🌑闇', light: '✨光', wind: '🌪️風', physical: '🗡️物理',
+};
+
 const RANK_COLORS = {
   F: '#9e9e9e', E: '#8bc34a', D: '#03a9f4', C: '#ff9800',
   B: '#e91e63', A: '#9c27b0', S: '#f44336', SS: '#ffd700',
@@ -2009,6 +2015,18 @@ const VILLAGE_NPCS = [
             </div>
           </div>
         </div>
+        <div class="mkm-board-title" style="margin-top:14px">⚔️ 属性相性ガイド（系統別）</div>
+        <div class="mkm-board-floors">
+          ${familyElementGuide().map(g => `
+            <div class="mkm-board-floor">
+              <span class="mkm-board-fn" style="color:${famInfo(g.family).color}">●</span>
+              <span><b>${escHtml(famInfo(g.family).name)}系</b>　弱点: ${g.weak.map(e => ELEMENT_JP[e] ?? e).join('・') || 'なし'}　耐性: ${g.res.map(e => ELEMENT_JP[e] ?? e).join('・') || 'なし'}${g.abs.length ? `　吸収: ${g.abs.map(e => ELEMENT_JP[e] ?? e).join('・')}` : ''}</span>
+            </div>`).join('')}
+        </div>
+        <div class="mkm-board-tips">
+          🔥 弱点を突くと「こうかは ばつぐんだ！」(1.5倍)<br>
+          💧 耐性持ちには「いまひとつ…」(半減)、吸収する相手にはダメージが通らないぞ！
+        </div>
         <div class="mkm-board-tips">
           💡 冒険に出る前にパーティを整えよう！
         </div>`;
@@ -2016,6 +2034,28 @@ const VILLAGE_NPCS = [
     },
   },
 ];
+
+// 系統別の属性相性まとめ（その系統の過半数が持つ弱点・耐性を集計。吸収は1/3以上で表示）
+function familyElementGuide() {
+  const fams = {};
+  (MASTER.monsters ?? []).forEach(m => {
+    const f = fams[m.family] = fams[m.family] || { n: 0, weak: {}, res: {}, abs: {} };
+    f.n++;
+    (m.weaknesses ?? []).forEach(e => { f.weak[e] = (f.weak[e] ?? 0) + 1; });
+    (m.resistances ?? []).forEach(e => { f.res[e] = (f.res[e] ?? 0) + 1; });
+    (m.absorbs ?? []).forEach(e => { f.abs[e] = (f.abs[e] ?? 0) + 1; });
+  });
+  const major = (counts, min) => Object.entries(counts)
+    .filter(([, c]) => c >= min)
+    .sort((a, b) => b[1] - a[1])
+    .map(([e]) => e);
+  return Object.entries(fams).map(([family, f]) => ({
+    family,
+    weak: major(f.weak, f.n / 2),
+    res: major(f.res, f.n / 2),
+    abs: major(f.abs, f.n / 3),
+  }));
+}
 
 // 村マップ生成（24×20）
 function buildVillageMap() {

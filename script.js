@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.8';
+const CURRENT_VERSION = '2.23.9';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.9',
+    date: '2026/06/13',
+    title: '📋 村の掲示板に属性相性ガイドを追加',
+    items: [
+      '⚔️ 系統ごとの弱点・耐性・吸収が村の掲示板で確認できるようになりました（例: 深海系は雷が弱点・水は半減）',
+    ],
+  },
   {
     id: 'v2.23.8',
     date: '2026/06/13',
@@ -6039,7 +6047,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.8';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.9';
 
 let _authMode = 'login'; // 'login' | 'register'
 
