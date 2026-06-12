@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.4';
+const CURRENT_VERSION = '2.23.5';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.5',
+    date: '2026/06/13',
+    title: '🛟 ボスの子供を受け取りそびれる問題を修正',
+    items: [
+      '👶 牧場が満員のままボスを倒すと子供を二度と受け取れなかった問題を修正。牧場に空きを作ってボスに再び話しかければ受け取れます',
+    ],
+  },
   {
     id: 'v2.23.3',
     date: '2026/06/12',
@@ -6004,7 +6012,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.4';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.5';
 
 let _authMode = 'login'; // 'login' | 'register'
 

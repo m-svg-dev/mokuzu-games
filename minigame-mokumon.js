@@ -2424,6 +2424,28 @@ function makeBossNpc(cfg) {
     img: cfg.img,
     talk(floorInfo) {
       if (MAP.bossDefeated) {
+        // 撃破時に牧場が満員で子供を受け取れなかった場合、空きができていれば渡す
+        // （dex所持済み＝過去に受け取っているとみなし、二重配布を防ぐ）
+        const d = data();
+        d.flags = d.flags || {};
+        const childKey = `bosschild_${cfg.monsterId}`;
+        const alreadyOwned = !!d.dex?.[String(cfg.monsterId)]?.owned;
+        if (!d.flags[childKey] && !alreadyOwned && Object.keys(d.monsters).length < FARM_MAX) {
+          const master = getMonsterMaster(cfg.monsterId);
+          const inst = {
+            instanceId: uuid(), monsterId: cfg.monsterId, nickname: '',
+            level: 1, exp: 0, fusionValue: 0, mutationType: 'none',
+            skills: (master?.skills ?? []).slice(0, 2).map(s => s.skillId),
+            traits: master?.traits ?? [], isFavorite: false,
+          };
+          d.monsters[inst.instanceId] = inst;
+          registerDex(cfg.monsterId, true);
+          d.flags[childKey] = true;
+          save();
+          sfx('scoutOk');
+          showDialog(cfg.name, `おお、戻ってきたか。\n約束していた息子を連れていけ。\n「${cfg.name}の子」が 仲間に加わった！`, '', null);
+          return;
+        }
         showDialog(cfg.name, cfg.afterDefeat ?? '息子を頼んだぞ。\nよく育ててやってくれ。', '', null);
         return;
       }
@@ -5081,6 +5103,8 @@ function showBossChildScene(bossEnemy, goHome = false) {
     };
     d.monsters[childInst.instanceId] = childInst;
     registerDex(bossEnemy.monsterId, true);
+    d.flags = d.flags || {};
+    d.flags[`bosschild_${bossEnemy.monsterId}`] = true;  // 受け取り済み（満員時は未設定→再訪で受け取れる）
     save();
   }
 
@@ -5768,7 +5792,8 @@ function renderDebug(from = 'village') {
     <p class="mkm-field-note">テスト用機能（ローカルのみ表示）</p>
     <div class="mkm-debug-list">
       <button class="mkm-debug-item" data-act="gold">💰 ゴールド +100,000</button>
-      <button class="mkm-debug-item" data-act="allmon">🧪 全モンスターを1体ずつ入手（40体）</button>
+      <button class="mkm-debug-item" data-act="allmon">🧪 全モンスターを1体ずつ入手（${MASTER.monsters.length}体・牧場上限${FARM_MAX}を無視）</button>
+      <button class="mkm-debug-item" data-act="releaseall">🧹 パーティ・お気に入り以外を全部逃がす</button>
       <button class="mkm-debug-item" data-act="fusetest">⚗️ No.1〜20を2匹ずつ入手（配合テスト）</button>
       <button class="mkm-debug-item" data-act="dupe">👥 パーティ先頭をコピー（配合用）</button>
       <button class="mkm-debug-item" data-act="lv">⭐ パーティ全員 Lv+10</button>
@@ -5850,6 +5875,15 @@ function debugAction(act) {
         }
       }
       sfx('scoutOk'); toast(`No.1〜20を2匹ずつ（${n}体）入手！`);
+      break;
+    }
+    case 'releaseall': {
+      const keep = new Set(d.party.filter(Boolean));
+      let n = 0;
+      Object.values(d.monsters).forEach(m => {
+        if (!keep.has(m.instanceId) && !m.isFavorite) { delete d.monsters[m.instanceId]; n++; }
+      });
+      sfx('select'); toast(`${n}体を逃がした（牧場 ${Object.keys(d.monsters).length}体）`);
       break;
     }
     case 'dupe': {
