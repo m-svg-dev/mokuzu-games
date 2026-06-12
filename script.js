@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.11';
+const CURRENT_VERSION = '2.23.12';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.12',
+    date: '2026/06/13',
+    title: '🛟 ボス撃破後の会話を途中で閉じられないように',
+    items: [
+      '👶 子供を授かる大事な場面で「✕閉じる」を押すと会話が飛んでしまうため、このイベント中は閉じるボタンを出さないようにしました',
+    ],
+  },
   {
     id: 'v2.23.11',
     date: '2026/06/13',
@@ -6066,7 +6074,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.11';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.12';
 
 let _authMode = 'login'; // 'login' | 'register'
 

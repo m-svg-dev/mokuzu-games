@@ -2178,7 +2178,7 @@ function showAreaSelect() {
 }
 
 // ダイアログ表示（村NPC会話用）
-function showDialog(name, text, extra = '', onMount = null) {
+function showDialog(name, text, extra = '', onMount = null, opts = {}) {
   closeDialog();
   const ov = document.createElement('div');
   ov.id = 'mkm-dialog-ov';
@@ -2189,11 +2189,12 @@ function showDialog(name, text, extra = '', onMount = null) {
       <div class="mkm-dialog-name" style="color:#4a6a20;font-weight:bold;font-size:12px;margin-bottom:4px">${escHtml(name)}</div>
       ${text ? `<div class="mkm-dialog-text" style="color:#222;font-size:14px;line-height:1.6;margin-bottom:10px">${escHtml(text)}</div>` : ''}
       ${extra}
-      <button class="mkm-dialog-close" id="mkm-dialog-close" style="color:#444;background:#deded0">✕ 閉じる</button>
+      ${opts.closable === false ? '' : '<button class="mkm-dialog-close" id="mkm-dialog-close" style="color:#444;background:#deded0">✕ 閉じる</button>'}
     </div>
   `;
   document.body.appendChild(ov);
-  document.getElementById('mkm-dialog-close').onclick = closeDialog;
+  const closeBtn = document.getElementById('mkm-dialog-close');
+  if (closeBtn) closeBtn.onclick = closeDialog;
   if (onMount) onMount();
 }
 
@@ -5208,12 +5209,13 @@ function showBossChildScene(bossEnemy, goHome = false) {
       return;
     }
     const l = lines[i++];
+    // 重要イベント（子供贈呈→画面遷移）なので途中で閉じられないようにする
     showDialog(l.speaker, l.text, `
       <button class="mkm-btn-primary" id="mkm-bosschild-next">
         ${i >= lines.length ? '✅ わかった' : '▼ つぎへ'}
       </button>`, () => {
       document.getElementById('mkm-bosschild-next').onclick = next;
-    });
+    }, { closable: false });
   };
   next();
 }
