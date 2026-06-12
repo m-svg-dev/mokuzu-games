@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.12';
+const CURRENT_VERSION = '2.23.13';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.13',
+    date: '2026/06/13',
+    title: '🚶 連続エンカウントを緩和',
+    items: [
+      '⚔️ 戦闘直後とマップ入場直後の3歩は敵が出なくなりました（連戦のストレス対策。エンカウント率自体は据え置き）',
+    ],
+  },
   {
     id: 'v2.23.12',
     date: '2026/06/13',
@@ -6074,7 +6082,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.12';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.13';
 
 let _authMode = 'login'; // 'login' | 'register'
 

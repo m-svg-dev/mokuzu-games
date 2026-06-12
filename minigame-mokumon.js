@@ -1678,6 +1678,7 @@ let _mapKeyHandler = null;
 // 表示設定
 const TILE = 36;            // 1マスのピクセルサイズ
 const ENCOUNTER_RATE = 0.10; // 草むら1歩あたりの遭遇率
+const ENCOUNTER_GRACE_STEPS = 3; // エンカウント後・マップ入場直後にこの歩数は敵が出ない（連戦ストレス対策）
 const MOVE_MS = 160;        // 1マス移動アニメ時間
 
 // タイル文字 → 種別
@@ -3436,6 +3437,7 @@ function move(dir) {
   MAP.px = nx;
   MAP.py = ny;
   MAP.steps++;
+  MAP.stepsSinceEnc = (MAP.stepsSinceEnc ?? 0) + 1;
   const stepsEl = document.getElementById('mkm-steps');
   if (stepsEl) stepsEl.textContent = MAP.steps;
   MAP.moving = true;
@@ -3451,7 +3453,10 @@ function move(dir) {
     const type = tileInfo(ch).type;
     if (type === 'exit') { onReachExit(); return; }
     if (type === 'chest') { openChest(nx, ny); return; }
-    if (type === 'grass' && !MAP.isVillage && Math.random() < ENCOUNTER_RATE) {
+    if (type === 'grass' && !MAP.isVillage
+        && (MAP.stepsSinceEnc ?? 0) > ENCOUNTER_GRACE_STEPS
+        && Math.random() < ENCOUNTER_RATE) {
+      MAP.stepsSinceEnc = 0;   // クールダウン開始（次の3歩は敵が出ない）
       const enemy = rollEnemy(MAP.area);
       detachMapInput();
       showEncounter(MAP.area, enemy);
