@@ -13,14 +13,15 @@ import os
 
 S = 18          # 論理ピクセル
 SCALE = 2       # 出力倍率（36px）
+TILESET_VER = '2'  # タイル画像のキャッシュバスター（絵柄を変えたら上げる）
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, 'data', 'mokumon', 'tiles_v2')
 os.makedirs(OUT, exist_ok=True)
 
-# ---- 村パレット（FRLG風） ----
-GRASS      = (136, 200, 104)
-GRASS_ALT  = (124, 190, 92)
-GRASS_DOT  = (104, 172, 76)
+# ---- 村パレット（RSE風・HQ版） ----
+GRASS      = (168, 216, 152)   # ミントグリーン
+GRASS_ALT  = (136, 192, 124)   # ディザの点
+GRASS_DOT  = (112, 168, 104)   # ディザの濃い点
 TGRASS_D   = (56, 128, 56)
 TGRASS_M   = (84, 160, 72)
 SAND       = (232, 212, 156)
@@ -31,10 +32,11 @@ WATER      = (72, 132, 228)
 WATER_LT   = (132, 180, 248)
 WATER_HL   = (196, 224, 255)
 WATER_DK   = (36, 72, 156)
-TREE_OUT   = (28, 80, 44)
-TREE_DK    = (52, 132, 64)
-TREE_MD    = (84, 172, 84)
-TREE_LT    = (128, 208, 108)
+TREE_OUT   = (24, 72, 40)
+TREE_DK    = (48, 112, 56)
+TREE_MD    = (80, 152, 80)
+TREE_LT    = (120, 196, 104)
+TREE_HL    = (160, 224, 136)
 TRUNK      = (124, 84, 52)
 TRUNK_DK   = (88, 56, 36)
 ROOF_R     = (220, 96, 68)
@@ -75,13 +77,11 @@ def ground_tile(base, tex, style='dots'):
     im, d = new(base)
     if style == 'dots':
         texture_dots(d, tex)
-    elif style == 'grasscheck':  # 草地（市松＋刈り込み）
-        for qy in range(2):
-            for qx in range(2):
-                if (qx + qy) % 2:
-                    d.rectangle([qx*9, qy*9, qx*9+8, qy*9+8], fill=tex)
-        for (x, y) in [(3,4),(12,2),(7,8),(15,11),(4,13),(11,15)]:
-            d.point([(x, y), (x+1, y)], fill=GRASS_DOT)
+    elif style == 'grasscheck':  # 草地（RSE風：3点クラスタのディザ）
+        dk = tuple(int(c * 0.86) for c in tex)
+        for (x, y) in [(2,2),(10,4),(5,8),(13,10),(3,14),(11,15),(15,2),(8,12)]:
+            d.point([(x, y), (x+1, y), (x, y+1)], fill=tex)
+            d.point([(x+1, y+1)], fill=dk)
     elif style == 'panel':       # コンクリパネル（継ぎ目）
         texture_dots(d, tex, ((4,4),(13,7),(7,12),(15,15)))
         d.line([(0,8),(S-1,8)], fill=tex)
@@ -142,6 +142,7 @@ def water_tile(pal, sides=()):
     for (x, y, w) in [(2,4,5),(10,7,5),(4,11,4),(11,14,5)]:
         d.line([(x,y),(x+w,y)], fill=lt)
         d.point([(x+1,y+1)], fill=lt)
+    d.point([(4,3),(12,8)], fill=hl)   # きらめき
     E = S - 1
     if 'top' in sides:
         d.line([(0,0),(E,0)], fill=dk); d.line([(0,1),(E,1)], fill=hl); d.line([(0,2),(E,2)], fill=lt)
@@ -173,19 +174,27 @@ def make_road(sides=()):
 def make_water_v(sides=()):
     return water_tile((WATER, WATER_LT, WATER_HL, WATER_DK), sides)
 
-def tree_on(base_im, out=TREE_OUT, dk=TREE_DK, md=TREE_MD, lt=TREE_LT):
-    """隣接タイルと樹冠が繋がる木"""
+def tree_on(base_im, out=TREE_OUT, dk=TREE_DK, md=TREE_MD, lt=TREE_LT, hl=TREE_HL):
+    """HQ版の木：輪郭＋4段陰影＋スカラップ（左右はタイル端まで広げて隣と馴染む）"""
     im = base_im.copy()
     d = ImageDraw.Draw(im)
-    d.rectangle([7,13,10,17], fill=TRUNK, outline=TRUNK_DK)
-    d.ellipse([-5,4,9,15], fill=dk, outline=out)
-    d.ellipse([8,4,22,15], fill=dk, outline=out)
-    d.ellipse([1,0,16,12], fill=md, outline=out)
-    d.ellipse([4,1,13,7], fill=lt)
-    d.ellipse([0,7,7,12], fill=md)
-    d.ellipse([10,7,17,12], fill=md)
-    d.point([(6,2),(10,2),(4,6),(12,6),(8,8)], fill=lt)
-    d.point([(2,11),(15,11),(9,12),(5,13),(13,13)], fill=dk)
+    # 幹
+    d.rectangle([7, 13, 10, 17], fill=TRUNK, outline=TRUNK_DK)
+    d.line([(8, 14), (8, 16)], fill=(168, 124, 84))
+    d.line([(5, 17), (12, 17)], fill=GRASS_DOT)        # 根元の影
+    # 樹冠：縦長の楕円＋輪郭
+    d.ellipse([0, 1, 17, 14], fill=dk, outline=out)
+    d.ellipse([2, 0, 15, 9], fill=md, outline=out)
+    # 左上からの光
+    d.ellipse([4, 1, 11, 6], fill=lt)
+    d.ellipse([5, 2, 8, 4], fill=hl)
+    # スカラップ（もこもこの縁）
+    for (x, y) in [(2, 10), (5, 12), (9, 13), (13, 11), (15, 8)]:
+        d.ellipse([x-1, y-1, x+1, y+1], fill=md)
+    for (x, y) in [(4, 7), (12, 4), (10, 7), (14, 6)]:
+        d.point([(x, y)], fill=lt)
+    # 葉の谷間（影）
+    d.point([(3, 12), (7, 11), (11, 12), (14, 10), (8, 9)], fill=out)
     return im
 
 def canopy_fill(out=TREE_OUT, dk=TREE_DK, md=TREE_MD, lt=TREE_LT):
@@ -200,14 +209,18 @@ def canopy_fill(out=TREE_OUT, dk=TREE_DK, md=TREE_MD, lt=TREE_LT):
     return im
 
 def make_flower():
+    """HQ版：茎と葉のある花（ピンク＋白）"""
     im = make_grass().copy()
     d = ImageDraw.Draw(im)
-    def flower(cx, cy, petal):
-        d.point([(cx-1,cy),(cx+1,cy),(cx,cy-1),(cx,cy+1)], fill=petal)
-        d.point([(cx,cy)], fill=(252,228,96))
-        d.point([(cx,cy+2),(cx-1,cy+3)], fill=TGRASS_M)
-    flower(5, 5, (248,248,248))
-    flower(12, 11, (240,88,96))
+    def bloom(cx, cy, petal, petal_d):
+        d.line([(cx, cy+2), (cx, cy+5)], fill=(72, 136, 64))       # 茎
+        d.point([(cx-1, cy+4), (cx-2, cy+4)], fill=(96, 176, 88))  # 葉
+        d.point([(cx+1, cy+5)], fill=(96, 176, 88))
+        d.ellipse([cx-2, cy-2, cx+2, cy+2], fill=petal, outline=petal_d)
+        d.point([(cx, cy)], fill=(252, 228, 96))                   # 花芯
+        d.point([(cx-1, cy-1)], fill=(255, 255, 255))              # ハイライト
+    bloom(5, 4, (248, 160, 192), (200, 96, 140))
+    bloom(12, 10, (250, 250, 250), (176, 176, 188))
     return im
 
 def make_sign():
@@ -221,13 +234,17 @@ def make_sign():
     return im
 
 def make_fence():
+    """HQ版：白いピケットフェンス（RSE風）"""
     im = make_grass().copy()
     d = ImageDraw.Draw(im)
+    F_W, F_S, F_O = (244, 244, 244), (192, 196, 204), (104, 108, 120)
     for x0 in (2, 11):
-        d.polygon([(x0,6),(x0+4,6),(x0+4,15),(x0,15)], fill=WOOD, outline=WOOD_OUT)
-        d.polygon([(x0,6),(x0+2,3),(x0+4,6)], fill=WOOD, outline=WOOD_OUT)
-        d.line([(x0+1,7),(x0+1,14)], fill=(224,184,128))
-    d.rectangle([0,9,17,11], fill=WOOD_DK, outline=WOOD_OUT)
+        d.rectangle([x0, 4, x0+3, 14], fill=F_W, outline=F_O)               # 支柱
+        d.polygon([(x0, 4), (x0+1, 2), (x0+2, 2), (x0+3, 4)], fill=F_W, outline=F_O)  # とがり頭
+        d.line([(x0+3, 5), (x0+3, 13)], fill=F_S)                           # 右面の影
+    d.rectangle([0, 7, 17, 9], fill=F_W, outline=F_O)                       # 横板
+    d.line([(1, 9), (16, 9)], fill=F_S)
+    d.line([(0, 16), (17, 16)], fill=GRASS_DOT)                             # 接地影
     return im
 
 def roof_colors(kind):
@@ -427,7 +444,7 @@ def wall_conifer(base_im, out, body, lt):
 AREA_DEFS = {
     'wetland': dict(  # 大湿原：草原ベース
         ground=(GRASS, GRASS_ALT, 'grasscheck'),
-        edge=((100,160,76), (116,180,88)),
+        edge=((112,168,104), (136,192,124)),
         tuft=(TGRASS_M, TGRASS_D, None),
         water=(WATER, WATER_LT, WATER_HL, WATER_DK),
         wall=lambda b: tree_on(b),
@@ -510,8 +527,9 @@ def build_css():
     L.append('.mkm-map-layer[class*="mkm-area-"] [class*="mkm-t-"] { background-size: cover; background-position: center; background-repeat: no-repeat; box-shadow: none; }')
     L.append('.mkm-map-layer[class*="mkm-area-"] [class*="mkm-t-"]::after { content: \'\'; }')
     U = "data/mokumon/tiles_v2"
+    V = TILESET_VER
     def rule(area, t, f):
-        L.append(f".mkm-area-{area} .mkm-t-{t} {{ background-image: url('{U}/{f}.webp'); }}")
+        L.append(f".mkm-area-{area} .mkm-t-{t} {{ background-image: url('{U}/{f}.webp?v={V}'); }}")
     # 村
     L.append('')
     L.append('/* 村 */')
@@ -530,7 +548,7 @@ def build_css():
         for pos in ('l', 'm', 'r'):
             rule('village', f'rooftop{kind}-{pos}', f'tile_rooftop{kind}-{pos}')
             rule('village', f'roofbot{kind}-{pos}', f'tile_roofbot{kind}-{pos}')
-    L.append(".mkm-area-village .mkm-t-chest-open { background-image: url('%s/tile_chest-open.webp') !important; }" % U)
+    L.append(".mkm-area-village .mkm-t-chest-open { background-image: url('%s/tile_chest-open.webp?v=%s') !important; }" % (U, V))
     # 各エリア
     for area in AREA_DEFS:
         L.append('')
@@ -541,7 +559,7 @@ def build_css():
         for t, f in [('grass', f'{area}_grass'), ('tree', f'{area}_tree'), ('tree-deep', f'{area}_tree-deep'),
                      ('chest', f'{area}_chest-closed'), ('exit', f'{area}_exit')]:
             rule(area, t, f)
-        L.append(f".mkm-area-{area} .mkm-t-chest-open {{ background-image: url('{U}/{area}_chest-open.webp') !important; }}")
+        L.append(f".mkm-area-{area} .mkm-t-chest-open {{ background-image: url('{U}/{area}_chest-open.webp?v={V}') !important; }}")
     L.append('')
     L.append('.mkm-t-door-closed { background: #6a4a2a; }')
     L.append('')

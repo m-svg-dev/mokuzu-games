@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.13';
+const CURRENT_VERSION = '2.24.0';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,17 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.24.0',
+    date: '2026/06/13',
+    title: '🎨 マップがさらに美しく！タイル品質アップ',
+    items: [
+      '🌳 木に陰影とハイライトが入り、森がぐっと立体的になりました',
+      '🌿 草原がやさしいミントグリーンのディザ柄に',
+      '🤍 村の柵が白いピケットフェンスに、花は茎と葉のある花に',
+      '💧 水面にきらめきを追加',
+    ],
+  },
   {
     id: 'v2.23.13',
     date: '2026/06/13',
@@ -6082,7 +6093,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.13';
+import { initMokumon } from './minigame-mokumon.js?v=2.24.0';
 
 let _authMode = 'login'; // 'login' | 'register'
 
