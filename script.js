@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.10';
+const CURRENT_VERSION = '2.23.11';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.11',
+    date: '2026/06/13',
+    title: '🛟 エリア解放まわりの不具合をまとめて修正',
+    items: [
+      '🏆 ボスを倒した時点でエリア踏破扱いになりました（今までは出口まで歩かずに村へ戻ると次のエリアが解放されませんでした）',
+      '🗺️ 勝利画面に「あたらしいエリアが解放された！」を表示するようになりました',
+      '💂 門番からのエリア選択で、踏破済みエリアの次が選べなかった不具合を修正',
+    ],
+  },
   {
     id: 'v2.23.10',
     date: '2026/06/13',
@@ -6056,7 +6066,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.10';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.11';
 
 let _authMode = 'login'; // 'login' | 'register'
 

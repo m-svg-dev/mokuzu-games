@@ -2152,9 +2152,10 @@ function enterVillage() {
 function showAreaSelect() {
   const areas = AREAS;
   const d = data();
-  const unlocked = d.unlockedAreas || ['wetland'];
+  d.clearedAreas = d.clearedAreas || {};
   const html = areas.map(a => {
-    const ok = unlocked.includes(a.id);
+    // 解放判定は冒険メニュー（renderField）と同じ：前提エリアを踏破していれば入れる
+    const ok = !a.requires || !!d.clearedAreas[a.requires];
     return `<button class="mkm-area-btn ${ok ? '' : 'mkm-area-locked'}"
       data-id="${a.id}" ${ok ? '' : 'disabled'}>
       ${ok ? '🗺️' : '🔒'} ${escHtml(a.name)}
@@ -3077,6 +3078,12 @@ function preloadPlayerSprites() {
 
 function enterMap(area, floorNo = 1, keepHp = false) {
   preloadPlayerSprites();
+  // 準備中エリアは本番では入場不可（経路を問わず入口で防ぐ。デバッグのみ可）
+  if (area.unimplemented && !isDebug()) {
+    showDialog(area.emoji + ' ' + area.name, '',
+      '<p style="text-align:center;color:var(--mkm-muted);padding:12px 0">（現在準備中です。\nアップデートをお楽しみに！）</p>');
+    return;
+  }
   const d = data();
   const validParty = d.party.filter(id => id && d.monsters[id]);
   if (validParty.length === 0) {
@@ -3727,19 +3734,21 @@ function showBossEncounter(bossInst) {
   }, 1400);
 }
 
-// 出口に到達＝エリア踏破。次エリア解放
-function clearArea() {
+// エリア踏破を記録し、初回なら新規解放エリアを返す（出口到達・ボス撃破の両方から呼ぶ）
+function markAreaCleared(areaId) {
   const d = data();
   d.clearedAreas = d.clearedAreas || {};
-  const areaId = MAP.area.id;
   const firstClear = !d.clearedAreas[areaId];
   d.clearedAreas[areaId] = true;
   save();
+  return firstClear ? (AREAS.find(a => a.requires === areaId) ?? null) : null;
+}
+
+// 出口に到達＝エリア踏破。次エリア解放
+function clearArea() {
+  const unlocked = markAreaCleared(MAP.area.id);
   detachMapInput();
   MAP = null;
-
-  // 新エリア解放チェック
-  const unlocked = firstClear ? AREAS.find(a => a.requires === areaId) : null;
 
   const ov = document.createElement('div');
   ov.className = 'mkm-result-ov';
@@ -4986,7 +4995,9 @@ function winBattle() {
     d.flags[flagKey] = true;
     MAP.bossDefeated = true;
     save();
-    showBattleResult({ exp, gold, isBossClear: true, bossEnemy: firstDefeat ? B.enemies[0] : null });
+    // ボス撃破＝エリア踏破（出口まで歩かず村へ戻っても次エリアが解放される）
+    const unlockedArea = markAreaCleared(MAP.area.id);
+    showBattleResult({ exp, gold, isBossClear: true, bossEnemy: firstDefeat ? B.enemies[0] : null, unlockedArea });
   } else {
     showBattleResult({ exp, gold });
   }
@@ -5030,7 +5041,7 @@ function calcGold(enemies) {
 
 // ---- 戦闘結果＋経験値＋レベルアップ ----
 
-function showBattleResult({ exp, gold, scouted, scoutedInst, isBossClear = false, bossEnemy = null }) {
+function showBattleResult({ exp, gold, scouted, scoutedInst, isBossClear = false, bossEnemy = null, unlockedArea = null }) {
   const d = data();
   const levelUps = [];
 
@@ -5058,7 +5069,7 @@ function showBattleResult({ exp, gold, scouted, scoutedInst, isBossClear = false
   ov.innerHTML = `
     <div class="mkm-result mkm-result-win">
       <h3>${isBossClear ? '🏆 ボス撃破！' : scouted ? '🎣 スカウト成功！' : '⚔️ しょうり！'}</h3>
-      ${isBossClear ? `<p class="mkm-result-scout">出口が解放された！</p>` : ''}
+      ${isBossClear ? `<p class="mkm-result-scout">エリア踏破！${unlockedArea ? `<br>🗺️ あたらしいエリア「${escHtml(unlockedArea.name)}」が 解放された！` : ''}</p>` : ''}
       ${scouted ? `<p class="mkm-result-scout">${escHtml(scouted.name)} が なかまに！</p>` : ''}
       <div class="mkm-result-rewards">
         <div>獲得経験値　<b>${exp}</b></div>
