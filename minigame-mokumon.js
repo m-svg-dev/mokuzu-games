@@ -1687,6 +1687,25 @@ const TILE_TYPE = {
   'C': { type: 'chest',       walk: true  },
   'N': { type: 'npc',         walk: false },
   'D': { type: 'door-closed', walk: false },
+  // ---- 村の装飾タイル（tiles_v2） ----
+  'f': { type: 'flower',         walk: true  },
+  'F': { type: 'fence',          walk: false },
+  'q': { type: 'wall-l',         walk: false },
+  'W': { type: 'wall',           walk: false },
+  'p': { type: 'wall-r',         walk: false },
+  'V': { type: 'window',         walk: false },
+  '1': { type: 'rooftop-l',      walk: false },
+  '2': { type: 'rooftop-m',      walk: false },
+  '3': { type: 'rooftop-r',      walk: false },
+  '4': { type: 'roofbot-l',      walk: false },
+  '5': { type: 'roofbot-m',      walk: false },
+  '6': { type: 'roofbot-r',      walk: false },
+  'x': { type: 'rooftop-blue-l', walk: false },
+  'y': { type: 'rooftop-blue-m', walk: false },
+  'z': { type: 'rooftop-blue-r', walk: false },
+  'u': { type: 'roofbot-blue-l', walk: false },
+  'o': { type: 'roofbot-blue-m', walk: false },
+  'v': { type: 'roofbot-blue-r', walk: false },
 };
 
 function tileInfo(ch) {
@@ -1821,6 +1840,38 @@ function placeStartExitLarge(grid, W = 32, H = 28) {
   grid[sy - 1][sx]  = '.';
   grid[ey + 1][ex]  = '.';
   return { grid, w: W, h: H, sx, sy, ex, ey };
+}
+
+// 指定マスを塞いでも S→E が繋がるか（幅優先探索）
+function pathExists(m, bx, by) {
+  const seen = new Set([`${m.sx},${m.sy}`]);
+  const q = [[m.sx, m.sy]];
+  while (q.length) {
+    const [x, y] = q.shift();
+    if (x === m.ex && y === m.ey) return true;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      const key = `${nx},${ny}`;
+      if (seen.has(key) || (nx === bx && ny === by)) continue;
+      const ch = m.grid[ny]?.[nx];
+      if (!ch || !tileInfo(ch).walk) continue;
+      seen.add(key);
+      q.push([nx, ny]);
+    }
+  }
+  return false;
+}
+
+// フロア看板の設置場所をスタート周辺から自動で探す（道を塞がない歩けるマス）
+function findBoardSpot(m) {
+  const cand = [[1, 0], [-1, 0], [1, -1], [-1, -1], [0, -2], [1, -2], [-1, -2], [2, 0], [-2, 0], [2, -1], [-2, -1]];
+  for (const [dx, dy] of cand) {
+    const x = m.sx + dx, y = m.sy + dy;
+    const ch = m.grid[y]?.[x];
+    if (!ch || !tileInfo(ch).walk || ch === 'S' || ch === 'E' || ch === 'C') continue;
+    if (pathExists(m, x, y)) return { x, y };
+  }
+  return null;
 }
 
 // ========================================
@@ -1971,18 +2022,56 @@ function buildVillageMap() {
   const W = 24, H = 20;
   const grid = [];
 
-  // ベース：全部草
-  for (let y = 0; y < H; y++) grid.push(Array(W).fill('.'));
+  // ベース：全部芝生（村ではエンカウントしない）
+  for (let y = 0; y < H; y++) grid.push(Array(W).fill(','));
 
-  // 外周を木で囲む
-  for (let x = 0; x < W; x++) { grid[0][x] = '#'; grid[H-1][x] = '#'; }
-  for (let y = 0; y < H; y++) { grid[y][0] = '#'; grid[y][W-1] = '#'; }
+  // 外周＋内側の木立ち（森に囲まれた村）
+  fillRect(grid, 0, 0, W - 1, 0, '#'); fillRect(grid, 0, H - 1, W - 1, H - 1, '#');
+  fillRect(grid, 0, 0, 0, H - 1, '#'); fillRect(grid, W - 1, 0, W - 1, H - 1, '#');
+  fillRect(grid, 1, 1, 1, 6, '#');   fillRect(grid, 1, 12, 1, 18, '#');
+  fillRect(grid, 22, 1, 22, 5, '#'); fillRect(grid, 22, 9, 22, 18, '#');
+  for (const [x, y] of [[2, 1], [3, 1], [20, 1], [21, 1], [2, 18], [21, 18]]) grid[y][x] = '#';
+
+  // 道（北門 → 泉の広場 → 南へ。横道2本＋家への小道）
+  fillRect(grid, 11, 1, 12, 7, '.');
+  fillRect(grid, 9, 7, 13, 7, '.');  fillRect(grid, 9, 11, 13, 11, '.');
+  fillRect(grid, 9, 8, 9, 10, '.');  fillRect(grid, 13, 8, 13, 10, '.');
+  fillRect(grid, 11, 11, 12, 18, '.');
+  fillRect(grid, 3, 7, 20, 7, '.');
+  fillRect(grid, 3, 15, 20, 16, '.');
+  fillRect(grid, 5, 13, 5, 15, '.'); fillRect(grid, 18, 13, 18, 15, '.');
+
+  // 泉（中央 3×3、真ん中に回復の泉NPC）と南の池2つ
+  fillRect(grid, 10, 8, 12, 10, '~');
+  fillRect(grid, 3, 17, 6, 18, '~'); fillRect(grid, 17, 17, 20, 18, '~');
+
+  // 家：屋根2段＋壁1段（窓・ドア付き）。NPCの真後ろに建てる
+  const house = (hx, hy, blue) => {
+    const top = blue ? 'xyz' : '123';
+    const bot = blue ? 'uov' : '456';
+    for (let i = 0; i < 5; i++) {
+      grid[hy][hx + i]     = i === 0 ? top[0] : (i === 4 ? top[2] : top[1]);
+      grid[hy + 1][hx + i] = i === 0 ? bot[0] : (i === 4 ? bot[2] : bot[1]);
+    }
+    grid[hy + 2][hx]     = 'q';
+    grid[hy + 2][hx + 1] = 'V';
+    grid[hy + 2][hx + 2] = 'D';
+    grid[hy + 2][hx + 3] = 'V';
+    grid[hy + 2][hx + 4] = 'p';
+  };
+  house(3, 3, false);   // ショップ（NPC: 5,6）
+  house(16, 3, true);   // 配合研究所（NPC: 18,6）
+  house(3, 9, false);   // 牧場（NPC: 5,12）
+  house(16, 9, false);  // 図鑑館（NPC: 18,12）
+
+  // 北門わきの柵と花
+  fillRect(grid, 8, 1, 10, 1, 'F'); fillRect(grid, 13, 1, 15, 1, 'F');
+  for (const [x, y] of [[8, 2], [15, 2], [2, 8], [21, 8], [8, 13], [15, 13], [3, 14], [20, 14], [8, 17], [14, 17]]) {
+    grid[y][x] = 'f';
+  }
 
   // 北の入口（門）
   grid[0][11] = 'D';
-
-  // 泉（中央 3×3、真ん中にNPC）
-  fillRect(grid, 10, 8, 12, 10, '~');
 
   // スタート地点
   grid[H-2][11] = 'S';
@@ -2426,7 +2515,7 @@ function buildDeepseaB3F() {
 // 奈落海溝 B4F：最深部。ボス「海ぬし」が待つ広間
 function buildDeepseaB4F() {
   const W = 32, H = 28;
-  const grid = makeGrid('~', '~'); // 全面水
+  const grid = makeGrid('~', '~', W, H); // 全面水
 
   // 下部スタート広場（藻場）
   fillRect(grid, 8, 22, 23, H - 2, ',');
@@ -2941,7 +3030,8 @@ function enterMap(area, floorNo = 1, keepHp = false) {
   const floorInfo = area.floors?.[floorNo - 1];
   d.flags = d.flags || {};
   const floorNpcs = [...(m.npcs || [])];
-  // フロア看板を動的追加
+  // フロア看板を動的追加（座標未指定のフロアはスタート周辺に自動設置）
+  if (!m.addBoardAt && floorInfo) m.addBoardAt = findBoardSpot(m);
   if (m.addBoardAt && floorInfo) {
     floorNpcs.push(makeFloorBoard(floorInfo, m.addBoardAt.x, m.addBoardAt.y));
   }
@@ -3083,6 +3173,12 @@ function tileClass(x, y) {
   const info = tileInfo(ch);
   const type = info.type;
 
+  // 木の壁が縦に連なる場合、内側は樹冠のみのタイルで「森」に見せる
+  if (type === 'tree') {
+    const below = tileInfo(MAP.grid[y+1]?.[x] ?? '.').type;
+    if (below === 'tree') return 'mkm-t-tree-deep';
+  }
+
   // 道・水のエッジ判定（草に接している面を検出）
   if (type === 'road' || type === 'water') {
     const top    = tileInfo(MAP.grid[y-1]?.[x] ?? '#').type;
@@ -3090,7 +3186,7 @@ function tileClass(x, y) {
     const left   = tileInfo(MAP.grid[y]?.[x-1] ?? '#').type;
     const right  = tileInfo(MAP.grid[y]?.[x+1] ?? '#').type;
 
-    const adjGrass = (t) => t === 'grass' || t === 'tree';
+    const adjGrass = (t) => t === 'grass' || t === 'tree' || t === 'flower';
     const topG    = adjGrass(top);
     const bottomG = adjGrass(bottom);
     const leftG   = adjGrass(left);
@@ -3277,7 +3373,7 @@ function move(dir) {
     const type = tileInfo(ch).type;
     if (type === 'exit') { onReachExit(); return; }
     if (type === 'chest') { openChest(nx, ny); return; }
-    if (type === 'grass' && Math.random() < ENCOUNTER_RATE) {
+    if (type === 'grass' && !MAP.isVillage && Math.random() < ENCOUNTER_RATE) {
       const enemy = rollEnemy(MAP.area);
       detachMapInput();
       showEncounter(MAP.area, enemy);
@@ -3498,9 +3594,13 @@ function onReachExit() {
   }
 
   if (MAP.floor < totalFloors) {
-    // 次の階へ
+    // 次の階へ（村へ戻るは左上ボタンに任せ、ここは「進む／前の階へ戻る／キャンセル」）
     const nextFloor = MAP.floor + 1;
     const nextInfo = MAP.area.floors[nextFloor - 1];
+    const prevInfo = MAP.floor > 1 ? MAP.area.floors[MAP.floor - 2] : null;
+    // エリア参照を保持（enterMap後にMAPが書き変わるため）
+    const savedArea = MAP.area;
+    const savedFloor = MAP.floor;
     detachMapInput();
     const ov = document.createElement('div');
     ov.className = 'mkm-result-ov';
@@ -3509,22 +3609,25 @@ function onReachExit() {
         <h3>${nextInfo.isBossFloor ? '⚠️' : '🚪'} ${nextInfo.name} へ進みますか？</h3>
         <p class="mkm-result-scout">${nextInfo.isBossFloor ? '次の階にはボスが待ち構えているぞ…' : ''}</p>
         <button class="mkm-btn-primary" id="mkm-nextfloor-ok">進む</button>
-        <button class="mkm-btn-sec" style="width:100%;margin-top:8px" id="mkm-nextfloor-back">村へ戻る</button>
+        ${prevInfo ? `<button class="mkm-btn-sec" style="width:100%;margin-top:8px" id="mkm-nextfloor-prev">⬆️ ${escHtml(prevInfo.name)} に戻る</button>` : ''}
+        <button class="mkm-btn-sec" style="width:100%;margin-top:8px" id="mkm-nextfloor-cancel">キャンセル</button>
       </div>
     `;
     document.body.appendChild(ov);
     sfx('select');
     ov.querySelector('#mkm-nextfloor-ok').onclick = () => {
       ov.remove();
-      enterMap(MAP?.area ?? ov._area, nextFloor, true);
-    };
-    // エリア参照を保持（enterMap後にMAPが書き変わるため）
-    const savedArea = MAP.area;
-    ov.querySelector('#mkm-nextfloor-ok').onclick = () => {
-      ov.remove();
       enterMap(savedArea, nextFloor, true);
     };
-    ov.querySelector('#mkm-nextfloor-back').onclick = () => { ov.remove(); MAP = null; enterVillage(); };
+    const prevBtn = ov.querySelector('#mkm-nextfloor-prev');
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        ov.remove();
+        enterMap(savedArea, savedFloor - 1, true);
+      };
+    }
+    // キャンセル：その場（出口マスの上）に留まる
+    ov.querySelector('#mkm-nextfloor-cancel').onclick = () => { ov.remove(); renderMap(); };
   } else {
     clearArea();
   }

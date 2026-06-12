@@ -539,144 +539,240 @@
   font-size: 26px;
 }
 /* ---- エリア別タイル見た目 ---- */
+/* ※このブロックは make_tiles_v2.py が自動生成（手で編集しても再生成で消えます） */
+.mkm-map-layer[class*="mkm-area-"] [class*="mkm-t-"] { background-size: cover; background-position: center; background-repeat: no-repeat; box-shadow: none; }
+.mkm-map-layer[class*="mkm-area-"] [class*="mkm-t-"]::after { content: ''; }
 
-/* 共通タイル画像ヘルパー */
-.mkm-img-tile { background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; box-shadow: none !important; }
-.mkm-img-tile::after { content: '' !important; }
+/* 村 */
+.mkm-area-village .mkm-t-grass { background-image: url('data/mokumon/tiles_v2/tile_grass2.webp'); }
+.mkm-area-village .mkm-t-road { background-image: url('data/mokumon/tiles_v2/tile_road.webp'); }
+.mkm-area-village .mkm-t-water { background-image: url('data/mokumon/tiles_v2/tile_water.webp'); }
+.mkm-area-village .mkm-t-road-top { background-image: url('data/mokumon/tiles_v2/tile_road-top.webp'); }
+.mkm-area-village .mkm-t-water-top { background-image: url('data/mokumon/tiles_v2/tile_water-top.webp'); }
+.mkm-area-village .mkm-t-road-bottom { background-image: url('data/mokumon/tiles_v2/tile_road-bottom.webp'); }
+.mkm-area-village .mkm-t-water-bottom { background-image: url('data/mokumon/tiles_v2/tile_water-bottom.webp'); }
+.mkm-area-village .mkm-t-road-left { background-image: url('data/mokumon/tiles_v2/tile_road-left.webp'); }
+.mkm-area-village .mkm-t-water-left { background-image: url('data/mokumon/tiles_v2/tile_water-left.webp'); }
+.mkm-area-village .mkm-t-road-right { background-image: url('data/mokumon/tiles_v2/tile_road-right.webp'); }
+.mkm-area-village .mkm-t-water-right { background-image: url('data/mokumon/tiles_v2/tile_water-right.webp'); }
+.mkm-area-village .mkm-t-road-corner-tl { background-image: url('data/mokumon/tiles_v2/tile_road-corner-tl.webp'); }
+.mkm-area-village .mkm-t-water-corner-tl { background-image: url('data/mokumon/tiles_v2/tile_water-corner-tl.webp'); }
+.mkm-area-village .mkm-t-road-corner-tr { background-image: url('data/mokumon/tiles_v2/tile_road-corner-tr.webp'); }
+.mkm-area-village .mkm-t-water-corner-tr { background-image: url('data/mokumon/tiles_v2/tile_water-corner-tr.webp'); }
+.mkm-area-village .mkm-t-road-corner-bl { background-image: url('data/mokumon/tiles_v2/tile_road-corner-bl.webp'); }
+.mkm-area-village .mkm-t-water-corner-bl { background-image: url('data/mokumon/tiles_v2/tile_water-corner-bl.webp'); }
+.mkm-area-village .mkm-t-road-corner-br { background-image: url('data/mokumon/tiles_v2/tile_road-corner-br.webp'); }
+.mkm-area-village .mkm-t-water-corner-br { background-image: url('data/mokumon/tiles_v2/tile_water-corner-br.webp'); }
+.mkm-area-village .mkm-t-tree { background-image: url('data/mokumon/tiles_v2/tile_tree.webp'); }
+.mkm-area-village .mkm-t-tree-deep { background-image: url('data/mokumon/tiles_v2/tile_tree-deep.webp'); }
+.mkm-area-village .mkm-t-flower { background-image: url('data/mokumon/tiles_v2/tile_flower.webp'); }
+.mkm-area-village .mkm-t-fence { background-image: url('data/mokumon/tiles_v2/tile_fence.webp'); }
+.mkm-area-village .mkm-t-sign { background-image: url('data/mokumon/tiles_v2/tile_sign.webp'); }
+.mkm-area-village .mkm-t-wall { background-image: url('data/mokumon/tiles_v2/tile_wall.webp'); }
+.mkm-area-village .mkm-t-wall-l { background-image: url('data/mokumon/tiles_v2/tile_wall-l.webp'); }
+.mkm-area-village .mkm-t-wall-r { background-image: url('data/mokumon/tiles_v2/tile_wall-r.webp'); }
+.mkm-area-village .mkm-t-window { background-image: url('data/mokumon/tiles_v2/tile_window.webp'); }
+.mkm-area-village .mkm-t-door-closed { background-image: url('data/mokumon/tiles_v2/tile_door-closed.webp'); }
+.mkm-area-village .mkm-t-door-open { background-image: url('data/mokumon/tiles_v2/tile_door-open.webp'); }
+.mkm-area-village .mkm-t-chest { background-image: url('data/mokumon/tiles_v2/tile_chest-closed.webp'); }
+.mkm-area-village .mkm-t-exit { background-image: url('data/mokumon/tiles_v2/tile_exit.webp'); }
+.mkm-area-village .mkm-t-rooftop-l { background-image: url('data/mokumon/tiles_v2/tile_rooftop-l.webp'); }
+.mkm-area-village .mkm-t-roofbot-l { background-image: url('data/mokumon/tiles_v2/tile_roofbot-l.webp'); }
+.mkm-area-village .mkm-t-rooftop-m { background-image: url('data/mokumon/tiles_v2/tile_rooftop-m.webp'); }
+.mkm-area-village .mkm-t-roofbot-m { background-image: url('data/mokumon/tiles_v2/tile_roofbot-m.webp'); }
+.mkm-area-village .mkm-t-rooftop-r { background-image: url('data/mokumon/tiles_v2/tile_rooftop-r.webp'); }
+.mkm-area-village .mkm-t-roofbot-r { background-image: url('data/mokumon/tiles_v2/tile_roofbot-r.webp'); }
+.mkm-area-village .mkm-t-rooftop-blue-l { background-image: url('data/mokumon/tiles_v2/tile_rooftop-blue-l.webp'); }
+.mkm-area-village .mkm-t-roofbot-blue-l { background-image: url('data/mokumon/tiles_v2/tile_roofbot-blue-l.webp'); }
+.mkm-area-village .mkm-t-rooftop-blue-m { background-image: url('data/mokumon/tiles_v2/tile_rooftop-blue-m.webp'); }
+.mkm-area-village .mkm-t-roofbot-blue-m { background-image: url('data/mokumon/tiles_v2/tile_roofbot-blue-m.webp'); }
+.mkm-area-village .mkm-t-rooftop-blue-r { background-image: url('data/mokumon/tiles_v2/tile_rooftop-blue-r.webp'); }
+.mkm-area-village .mkm-t-roofbot-blue-r { background-image: url('data/mokumon/tiles_v2/tile_roofbot-blue-r.webp'); }
+.mkm-area-village .mkm-t-chest-open { background-image: url('data/mokumon/tiles_v2/tile_chest-open.webp') !important; }
 
-/* ---- 村 & 湿原 共通タイル画像 ---- */
-/* pseudoリセット共通 */
-.mkm-area-village [class*="mkm-t-"]::after,
-.mkm-area-wetland [class*="mkm-t-"]::after { content: ''; }
-.mkm-area-village [class*="mkm-t-"],
-.mkm-area-wetland [class*="mkm-t-"] { box-shadow: none; }
+/* wetland */
+.mkm-area-wetland .mkm-t-road { background-image: url('data/mokumon/tiles_v2/wetland_road.webp'); }
+.mkm-area-wetland .mkm-t-water { background-image: url('data/mokumon/tiles_v2/wetland_water.webp'); }
+.mkm-area-wetland .mkm-t-road-top { background-image: url('data/mokumon/tiles_v2/wetland_road-top.webp'); }
+.mkm-area-wetland .mkm-t-water-top { background-image: url('data/mokumon/tiles_v2/wetland_water-top.webp'); }
+.mkm-area-wetland .mkm-t-road-bottom { background-image: url('data/mokumon/tiles_v2/wetland_road-bottom.webp'); }
+.mkm-area-wetland .mkm-t-water-bottom { background-image: url('data/mokumon/tiles_v2/wetland_water-bottom.webp'); }
+.mkm-area-wetland .mkm-t-road-left { background-image: url('data/mokumon/tiles_v2/wetland_road-left.webp'); }
+.mkm-area-wetland .mkm-t-water-left { background-image: url('data/mokumon/tiles_v2/wetland_water-left.webp'); }
+.mkm-area-wetland .mkm-t-road-right { background-image: url('data/mokumon/tiles_v2/wetland_road-right.webp'); }
+.mkm-area-wetland .mkm-t-water-right { background-image: url('data/mokumon/tiles_v2/wetland_water-right.webp'); }
+.mkm-area-wetland .mkm-t-road-corner-tl { background-image: url('data/mokumon/tiles_v2/wetland_road-corner-tl.webp'); }
+.mkm-area-wetland .mkm-t-water-corner-tl { background-image: url('data/mokumon/tiles_v2/wetland_water-corner-tl.webp'); }
+.mkm-area-wetland .mkm-t-road-corner-tr { background-image: url('data/mokumon/tiles_v2/wetland_road-corner-tr.webp'); }
+.mkm-area-wetland .mkm-t-water-corner-tr { background-image: url('data/mokumon/tiles_v2/wetland_water-corner-tr.webp'); }
+.mkm-area-wetland .mkm-t-road-corner-bl { background-image: url('data/mokumon/tiles_v2/wetland_road-corner-bl.webp'); }
+.mkm-area-wetland .mkm-t-water-corner-bl { background-image: url('data/mokumon/tiles_v2/wetland_water-corner-bl.webp'); }
+.mkm-area-wetland .mkm-t-road-corner-br { background-image: url('data/mokumon/tiles_v2/wetland_road-corner-br.webp'); }
+.mkm-area-wetland .mkm-t-water-corner-br { background-image: url('data/mokumon/tiles_v2/wetland_water-corner-br.webp'); }
+.mkm-area-wetland .mkm-t-grass { background-image: url('data/mokumon/tiles_v2/wetland_grass.webp'); }
+.mkm-area-wetland .mkm-t-tree { background-image: url('data/mokumon/tiles_v2/wetland_tree.webp'); }
+.mkm-area-wetland .mkm-t-tree-deep { background-image: url('data/mokumon/tiles_v2/wetland_tree-deep.webp'); }
+.mkm-area-wetland .mkm-t-chest { background-image: url('data/mokumon/tiles_v2/wetland_chest-closed.webp'); }
+.mkm-area-wetland .mkm-t-exit { background-image: url('data/mokumon/tiles_v2/wetland_exit.webp'); }
+.mkm-area-wetland .mkm-t-chest-open { background-image: url('data/mokumon/tiles_v2/wetland_chest-open.webp') !important; }
 
-/* 草 */
-.mkm-area-village .mkm-t-grass,
-.mkm-area-wetland .mkm-t-grass { background: url('data/mokumon/tiles/tile_grass.webp') center/cover no-repeat; }
+/* deepsea */
+.mkm-area-deepsea .mkm-t-road { background-image: url('data/mokumon/tiles_v2/deepsea_road.webp'); }
+.mkm-area-deepsea .mkm-t-water { background-image: url('data/mokumon/tiles_v2/deepsea_water.webp'); }
+.mkm-area-deepsea .mkm-t-road-top { background-image: url('data/mokumon/tiles_v2/deepsea_road-top.webp'); }
+.mkm-area-deepsea .mkm-t-water-top { background-image: url('data/mokumon/tiles_v2/deepsea_water-top.webp'); }
+.mkm-area-deepsea .mkm-t-road-bottom { background-image: url('data/mokumon/tiles_v2/deepsea_road-bottom.webp'); }
+.mkm-area-deepsea .mkm-t-water-bottom { background-image: url('data/mokumon/tiles_v2/deepsea_water-bottom.webp'); }
+.mkm-area-deepsea .mkm-t-road-left { background-image: url('data/mokumon/tiles_v2/deepsea_road-left.webp'); }
+.mkm-area-deepsea .mkm-t-water-left { background-image: url('data/mokumon/tiles_v2/deepsea_water-left.webp'); }
+.mkm-area-deepsea .mkm-t-road-right { background-image: url('data/mokumon/tiles_v2/deepsea_road-right.webp'); }
+.mkm-area-deepsea .mkm-t-water-right { background-image: url('data/mokumon/tiles_v2/deepsea_water-right.webp'); }
+.mkm-area-deepsea .mkm-t-road-corner-tl { background-image: url('data/mokumon/tiles_v2/deepsea_road-corner-tl.webp'); }
+.mkm-area-deepsea .mkm-t-water-corner-tl { background-image: url('data/mokumon/tiles_v2/deepsea_water-corner-tl.webp'); }
+.mkm-area-deepsea .mkm-t-road-corner-tr { background-image: url('data/mokumon/tiles_v2/deepsea_road-corner-tr.webp'); }
+.mkm-area-deepsea .mkm-t-water-corner-tr { background-image: url('data/mokumon/tiles_v2/deepsea_water-corner-tr.webp'); }
+.mkm-area-deepsea .mkm-t-road-corner-bl { background-image: url('data/mokumon/tiles_v2/deepsea_road-corner-bl.webp'); }
+.mkm-area-deepsea .mkm-t-water-corner-bl { background-image: url('data/mokumon/tiles_v2/deepsea_water-corner-bl.webp'); }
+.mkm-area-deepsea .mkm-t-road-corner-br { background-image: url('data/mokumon/tiles_v2/deepsea_road-corner-br.webp'); }
+.mkm-area-deepsea .mkm-t-water-corner-br { background-image: url('data/mokumon/tiles_v2/deepsea_water-corner-br.webp'); }
+.mkm-area-deepsea .mkm-t-grass { background-image: url('data/mokumon/tiles_v2/deepsea_grass.webp'); }
+.mkm-area-deepsea .mkm-t-tree { background-image: url('data/mokumon/tiles_v2/deepsea_tree.webp'); }
+.mkm-area-deepsea .mkm-t-tree-deep { background-image: url('data/mokumon/tiles_v2/deepsea_tree-deep.webp'); }
+.mkm-area-deepsea .mkm-t-chest { background-image: url('data/mokumon/tiles_v2/deepsea_chest-closed.webp'); }
+.mkm-area-deepsea .mkm-t-exit { background-image: url('data/mokumon/tiles_v2/deepsea_exit.webp'); }
+.mkm-area-deepsea .mkm-t-chest-open { background-image: url('data/mokumon/tiles_v2/deepsea_chest-open.webp') !important; }
 
-/* 道（中央）*/
-/* 村は床が全部road型なので草タイルを使う */
-.mkm-area-village .mkm-t-road  { background: url('data/mokumon/tiles/tile_grass.webp') center/cover no-repeat; }
-.mkm-area-wetland .mkm-t-road  { background: url('data/mokumon/tiles/tile_road.webp') center/cover no-repeat; }
+/* machine */
+.mkm-area-machine .mkm-t-road { background-image: url('data/mokumon/tiles_v2/machine_road.webp'); }
+.mkm-area-machine .mkm-t-water { background-image: url('data/mokumon/tiles_v2/machine_water.webp'); }
+.mkm-area-machine .mkm-t-road-top { background-image: url('data/mokumon/tiles_v2/machine_road-top.webp'); }
+.mkm-area-machine .mkm-t-water-top { background-image: url('data/mokumon/tiles_v2/machine_water-top.webp'); }
+.mkm-area-machine .mkm-t-road-bottom { background-image: url('data/mokumon/tiles_v2/machine_road-bottom.webp'); }
+.mkm-area-machine .mkm-t-water-bottom { background-image: url('data/mokumon/tiles_v2/machine_water-bottom.webp'); }
+.mkm-area-machine .mkm-t-road-left { background-image: url('data/mokumon/tiles_v2/machine_road-left.webp'); }
+.mkm-area-machine .mkm-t-water-left { background-image: url('data/mokumon/tiles_v2/machine_water-left.webp'); }
+.mkm-area-machine .mkm-t-road-right { background-image: url('data/mokumon/tiles_v2/machine_road-right.webp'); }
+.mkm-area-machine .mkm-t-water-right { background-image: url('data/mokumon/tiles_v2/machine_water-right.webp'); }
+.mkm-area-machine .mkm-t-road-corner-tl { background-image: url('data/mokumon/tiles_v2/machine_road-corner-tl.webp'); }
+.mkm-area-machine .mkm-t-water-corner-tl { background-image: url('data/mokumon/tiles_v2/machine_water-corner-tl.webp'); }
+.mkm-area-machine .mkm-t-road-corner-tr { background-image: url('data/mokumon/tiles_v2/machine_road-corner-tr.webp'); }
+.mkm-area-machine .mkm-t-water-corner-tr { background-image: url('data/mokumon/tiles_v2/machine_water-corner-tr.webp'); }
+.mkm-area-machine .mkm-t-road-corner-bl { background-image: url('data/mokumon/tiles_v2/machine_road-corner-bl.webp'); }
+.mkm-area-machine .mkm-t-water-corner-bl { background-image: url('data/mokumon/tiles_v2/machine_water-corner-bl.webp'); }
+.mkm-area-machine .mkm-t-road-corner-br { background-image: url('data/mokumon/tiles_v2/machine_road-corner-br.webp'); }
+.mkm-area-machine .mkm-t-water-corner-br { background-image: url('data/mokumon/tiles_v2/machine_water-corner-br.webp'); }
+.mkm-area-machine .mkm-t-grass { background-image: url('data/mokumon/tiles_v2/machine_grass.webp'); }
+.mkm-area-machine .mkm-t-tree { background-image: url('data/mokumon/tiles_v2/machine_tree.webp'); }
+.mkm-area-machine .mkm-t-tree-deep { background-image: url('data/mokumon/tiles_v2/machine_tree-deep.webp'); }
+.mkm-area-machine .mkm-t-chest { background-image: url('data/mokumon/tiles_v2/machine_chest-closed.webp'); }
+.mkm-area-machine .mkm-t-exit { background-image: url('data/mokumon/tiles_v2/machine_exit.webp'); }
+.mkm-area-machine .mkm-t-chest-open { background-image: url('data/mokumon/tiles_v2/machine_chest-open.webp') !important; }
 
-/* 道エッジ */
-.mkm-area-village .mkm-t-road-top,
-.mkm-area-wetland .mkm-t-road-top    { background: url('data/mokumon/tiles/tile_road-top.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-road-bottom,
-.mkm-area-wetland .mkm-t-road-bottom { background: url('data/mokumon/tiles/tile_road-bottom.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-road-left,
-.mkm-area-wetland .mkm-t-road-left   { background: url('data/mokumon/tiles/tile_road-left.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-road-right,
-.mkm-area-wetland .mkm-t-road-right  { background: url('data/mokumon/tiles/tile_road-right.webp') center/cover no-repeat; }
+/* spirit */
+.mkm-area-spirit .mkm-t-road { background-image: url('data/mokumon/tiles_v2/spirit_road.webp'); }
+.mkm-area-spirit .mkm-t-water { background-image: url('data/mokumon/tiles_v2/spirit_water.webp'); }
+.mkm-area-spirit .mkm-t-road-top { background-image: url('data/mokumon/tiles_v2/spirit_road-top.webp'); }
+.mkm-area-spirit .mkm-t-water-top { background-image: url('data/mokumon/tiles_v2/spirit_water-top.webp'); }
+.mkm-area-spirit .mkm-t-road-bottom { background-image: url('data/mokumon/tiles_v2/spirit_road-bottom.webp'); }
+.mkm-area-spirit .mkm-t-water-bottom { background-image: url('data/mokumon/tiles_v2/spirit_water-bottom.webp'); }
+.mkm-area-spirit .mkm-t-road-left { background-image: url('data/mokumon/tiles_v2/spirit_road-left.webp'); }
+.mkm-area-spirit .mkm-t-water-left { background-image: url('data/mokumon/tiles_v2/spirit_water-left.webp'); }
+.mkm-area-spirit .mkm-t-road-right { background-image: url('data/mokumon/tiles_v2/spirit_road-right.webp'); }
+.mkm-area-spirit .mkm-t-water-right { background-image: url('data/mokumon/tiles_v2/spirit_water-right.webp'); }
+.mkm-area-spirit .mkm-t-road-corner-tl { background-image: url('data/mokumon/tiles_v2/spirit_road-corner-tl.webp'); }
+.mkm-area-spirit .mkm-t-water-corner-tl { background-image: url('data/mokumon/tiles_v2/spirit_water-corner-tl.webp'); }
+.mkm-area-spirit .mkm-t-road-corner-tr { background-image: url('data/mokumon/tiles_v2/spirit_road-corner-tr.webp'); }
+.mkm-area-spirit .mkm-t-water-corner-tr { background-image: url('data/mokumon/tiles_v2/spirit_water-corner-tr.webp'); }
+.mkm-area-spirit .mkm-t-road-corner-bl { background-image: url('data/mokumon/tiles_v2/spirit_road-corner-bl.webp'); }
+.mkm-area-spirit .mkm-t-water-corner-bl { background-image: url('data/mokumon/tiles_v2/spirit_water-corner-bl.webp'); }
+.mkm-area-spirit .mkm-t-road-corner-br { background-image: url('data/mokumon/tiles_v2/spirit_road-corner-br.webp'); }
+.mkm-area-spirit .mkm-t-water-corner-br { background-image: url('data/mokumon/tiles_v2/spirit_water-corner-br.webp'); }
+.mkm-area-spirit .mkm-t-grass { background-image: url('data/mokumon/tiles_v2/spirit_grass.webp'); }
+.mkm-area-spirit .mkm-t-tree { background-image: url('data/mokumon/tiles_v2/spirit_tree.webp'); }
+.mkm-area-spirit .mkm-t-tree-deep { background-image: url('data/mokumon/tiles_v2/spirit_tree-deep.webp'); }
+.mkm-area-spirit .mkm-t-chest { background-image: url('data/mokumon/tiles_v2/spirit_chest-closed.webp'); }
+.mkm-area-spirit .mkm-t-exit { background-image: url('data/mokumon/tiles_v2/spirit_exit.webp'); }
+.mkm-area-spirit .mkm-t-chest-open { background-image: url('data/mokumon/tiles_v2/spirit_chest-open.webp') !important; }
 
-/* 水（中央） */
-.mkm-area-village .mkm-t-water,
-.mkm-area-wetland .mkm-t-water { background: url('data/mokumon/tiles/tile_water.webp') center/cover no-repeat; }
+/* ghost */
+.mkm-area-ghost .mkm-t-road { background-image: url('data/mokumon/tiles_v2/ghost_road.webp'); }
+.mkm-area-ghost .mkm-t-water { background-image: url('data/mokumon/tiles_v2/ghost_water.webp'); }
+.mkm-area-ghost .mkm-t-road-top { background-image: url('data/mokumon/tiles_v2/ghost_road-top.webp'); }
+.mkm-area-ghost .mkm-t-water-top { background-image: url('data/mokumon/tiles_v2/ghost_water-top.webp'); }
+.mkm-area-ghost .mkm-t-road-bottom { background-image: url('data/mokumon/tiles_v2/ghost_road-bottom.webp'); }
+.mkm-area-ghost .mkm-t-water-bottom { background-image: url('data/mokumon/tiles_v2/ghost_water-bottom.webp'); }
+.mkm-area-ghost .mkm-t-road-left { background-image: url('data/mokumon/tiles_v2/ghost_road-left.webp'); }
+.mkm-area-ghost .mkm-t-water-left { background-image: url('data/mokumon/tiles_v2/ghost_water-left.webp'); }
+.mkm-area-ghost .mkm-t-road-right { background-image: url('data/mokumon/tiles_v2/ghost_road-right.webp'); }
+.mkm-area-ghost .mkm-t-water-right { background-image: url('data/mokumon/tiles_v2/ghost_water-right.webp'); }
+.mkm-area-ghost .mkm-t-road-corner-tl { background-image: url('data/mokumon/tiles_v2/ghost_road-corner-tl.webp'); }
+.mkm-area-ghost .mkm-t-water-corner-tl { background-image: url('data/mokumon/tiles_v2/ghost_water-corner-tl.webp'); }
+.mkm-area-ghost .mkm-t-road-corner-tr { background-image: url('data/mokumon/tiles_v2/ghost_road-corner-tr.webp'); }
+.mkm-area-ghost .mkm-t-water-corner-tr { background-image: url('data/mokumon/tiles_v2/ghost_water-corner-tr.webp'); }
+.mkm-area-ghost .mkm-t-road-corner-bl { background-image: url('data/mokumon/tiles_v2/ghost_road-corner-bl.webp'); }
+.mkm-area-ghost .mkm-t-water-corner-bl { background-image: url('data/mokumon/tiles_v2/ghost_water-corner-bl.webp'); }
+.mkm-area-ghost .mkm-t-road-corner-br { background-image: url('data/mokumon/tiles_v2/ghost_road-corner-br.webp'); }
+.mkm-area-ghost .mkm-t-water-corner-br { background-image: url('data/mokumon/tiles_v2/ghost_water-corner-br.webp'); }
+.mkm-area-ghost .mkm-t-grass { background-image: url('data/mokumon/tiles_v2/ghost_grass.webp'); }
+.mkm-area-ghost .mkm-t-tree { background-image: url('data/mokumon/tiles_v2/ghost_tree.webp'); }
+.mkm-area-ghost .mkm-t-tree-deep { background-image: url('data/mokumon/tiles_v2/ghost_tree-deep.webp'); }
+.mkm-area-ghost .mkm-t-chest { background-image: url('data/mokumon/tiles_v2/ghost_chest-closed.webp'); }
+.mkm-area-ghost .mkm-t-exit { background-image: url('data/mokumon/tiles_v2/ghost_exit.webp'); }
+.mkm-area-ghost .mkm-t-chest-open { background-image: url('data/mokumon/tiles_v2/ghost_chest-open.webp') !important; }
 
-/* 水エッジ */
-.mkm-area-village .mkm-t-water-top,
-.mkm-area-wetland .mkm-t-water-top    { background: url('data/mokumon/tiles/tile_water-top.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-water-bottom,
-.mkm-area-wetland .mkm-t-water-bottom { background: url('data/mokumon/tiles/tile_water-bottom.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-water-left,
-.mkm-area-wetland .mkm-t-water-left   { background: url('data/mokumon/tiles/tile_water-left.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-water-right,
-.mkm-area-wetland .mkm-t-water-right  { background: url('data/mokumon/tiles/tile_water-right.webp') center/cover no-repeat; }
+/* corporate */
+.mkm-area-corporate .mkm-t-road { background-image: url('data/mokumon/tiles_v2/corporate_road.webp'); }
+.mkm-area-corporate .mkm-t-water { background-image: url('data/mokumon/tiles_v2/corporate_water.webp'); }
+.mkm-area-corporate .mkm-t-road-top { background-image: url('data/mokumon/tiles_v2/corporate_road-top.webp'); }
+.mkm-area-corporate .mkm-t-water-top { background-image: url('data/mokumon/tiles_v2/corporate_water-top.webp'); }
+.mkm-area-corporate .mkm-t-road-bottom { background-image: url('data/mokumon/tiles_v2/corporate_road-bottom.webp'); }
+.mkm-area-corporate .mkm-t-water-bottom { background-image: url('data/mokumon/tiles_v2/corporate_water-bottom.webp'); }
+.mkm-area-corporate .mkm-t-road-left { background-image: url('data/mokumon/tiles_v2/corporate_road-left.webp'); }
+.mkm-area-corporate .mkm-t-water-left { background-image: url('data/mokumon/tiles_v2/corporate_water-left.webp'); }
+.mkm-area-corporate .mkm-t-road-right { background-image: url('data/mokumon/tiles_v2/corporate_road-right.webp'); }
+.mkm-area-corporate .mkm-t-water-right { background-image: url('data/mokumon/tiles_v2/corporate_water-right.webp'); }
+.mkm-area-corporate .mkm-t-road-corner-tl { background-image: url('data/mokumon/tiles_v2/corporate_road-corner-tl.webp'); }
+.mkm-area-corporate .mkm-t-water-corner-tl { background-image: url('data/mokumon/tiles_v2/corporate_water-corner-tl.webp'); }
+.mkm-area-corporate .mkm-t-road-corner-tr { background-image: url('data/mokumon/tiles_v2/corporate_road-corner-tr.webp'); }
+.mkm-area-corporate .mkm-t-water-corner-tr { background-image: url('data/mokumon/tiles_v2/corporate_water-corner-tr.webp'); }
+.mkm-area-corporate .mkm-t-road-corner-bl { background-image: url('data/mokumon/tiles_v2/corporate_road-corner-bl.webp'); }
+.mkm-area-corporate .mkm-t-water-corner-bl { background-image: url('data/mokumon/tiles_v2/corporate_water-corner-bl.webp'); }
+.mkm-area-corporate .mkm-t-road-corner-br { background-image: url('data/mokumon/tiles_v2/corporate_road-corner-br.webp'); }
+.mkm-area-corporate .mkm-t-water-corner-br { background-image: url('data/mokumon/tiles_v2/corporate_water-corner-br.webp'); }
+.mkm-area-corporate .mkm-t-grass { background-image: url('data/mokumon/tiles_v2/corporate_grass.webp'); }
+.mkm-area-corporate .mkm-t-tree { background-image: url('data/mokumon/tiles_v2/corporate_tree.webp'); }
+.mkm-area-corporate .mkm-t-tree-deep { background-image: url('data/mokumon/tiles_v2/corporate_tree-deep.webp'); }
+.mkm-area-corporate .mkm-t-chest { background-image: url('data/mokumon/tiles_v2/corporate_chest-closed.webp'); }
+.mkm-area-corporate .mkm-t-exit { background-image: url('data/mokumon/tiles_v2/corporate_exit.webp'); }
+.mkm-area-corporate .mkm-t-chest-open { background-image: url('data/mokumon/tiles_v2/corporate_chest-open.webp') !important; }
 
-/* 道コーナー */
-.mkm-area-village .mkm-t-road-corner-tl,
-.mkm-area-wetland .mkm-t-road-corner-tl { background: url('data/mokumon/tiles/tile_road-corner-tl.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-road-corner-tr,
-.mkm-area-wetland .mkm-t-road-corner-tr { background: url('data/mokumon/tiles/tile_road-corner-tr.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-road-corner-bl,
-.mkm-area-wetland .mkm-t-road-corner-bl { background: url('data/mokumon/tiles/tile_road-corner-bl.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-road-corner-br,
-.mkm-area-wetland .mkm-t-road-corner-br { background: url('data/mokumon/tiles/tile_road-corner-br.webp') center/cover no-repeat; }
+/* disaster */
+.mkm-area-disaster .mkm-t-road { background-image: url('data/mokumon/tiles_v2/disaster_road.webp'); }
+.mkm-area-disaster .mkm-t-water { background-image: url('data/mokumon/tiles_v2/disaster_water.webp'); }
+.mkm-area-disaster .mkm-t-road-top { background-image: url('data/mokumon/tiles_v2/disaster_road-top.webp'); }
+.mkm-area-disaster .mkm-t-water-top { background-image: url('data/mokumon/tiles_v2/disaster_water-top.webp'); }
+.mkm-area-disaster .mkm-t-road-bottom { background-image: url('data/mokumon/tiles_v2/disaster_road-bottom.webp'); }
+.mkm-area-disaster .mkm-t-water-bottom { background-image: url('data/mokumon/tiles_v2/disaster_water-bottom.webp'); }
+.mkm-area-disaster .mkm-t-road-left { background-image: url('data/mokumon/tiles_v2/disaster_road-left.webp'); }
+.mkm-area-disaster .mkm-t-water-left { background-image: url('data/mokumon/tiles_v2/disaster_water-left.webp'); }
+.mkm-area-disaster .mkm-t-road-right { background-image: url('data/mokumon/tiles_v2/disaster_road-right.webp'); }
+.mkm-area-disaster .mkm-t-water-right { background-image: url('data/mokumon/tiles_v2/disaster_water-right.webp'); }
+.mkm-area-disaster .mkm-t-road-corner-tl { background-image: url('data/mokumon/tiles_v2/disaster_road-corner-tl.webp'); }
+.mkm-area-disaster .mkm-t-water-corner-tl { background-image: url('data/mokumon/tiles_v2/disaster_water-corner-tl.webp'); }
+.mkm-area-disaster .mkm-t-road-corner-tr { background-image: url('data/mokumon/tiles_v2/disaster_road-corner-tr.webp'); }
+.mkm-area-disaster .mkm-t-water-corner-tr { background-image: url('data/mokumon/tiles_v2/disaster_water-corner-tr.webp'); }
+.mkm-area-disaster .mkm-t-road-corner-bl { background-image: url('data/mokumon/tiles_v2/disaster_road-corner-bl.webp'); }
+.mkm-area-disaster .mkm-t-water-corner-bl { background-image: url('data/mokumon/tiles_v2/disaster_water-corner-bl.webp'); }
+.mkm-area-disaster .mkm-t-road-corner-br { background-image: url('data/mokumon/tiles_v2/disaster_road-corner-br.webp'); }
+.mkm-area-disaster .mkm-t-water-corner-br { background-image: url('data/mokumon/tiles_v2/disaster_water-corner-br.webp'); }
+.mkm-area-disaster .mkm-t-grass { background-image: url('data/mokumon/tiles_v2/disaster_grass.webp'); }
+.mkm-area-disaster .mkm-t-tree { background-image: url('data/mokumon/tiles_v2/disaster_tree.webp'); }
+.mkm-area-disaster .mkm-t-tree-deep { background-image: url('data/mokumon/tiles_v2/disaster_tree-deep.webp'); }
+.mkm-area-disaster .mkm-t-chest { background-image: url('data/mokumon/tiles_v2/disaster_chest-closed.webp'); }
+.mkm-area-disaster .mkm-t-exit { background-image: url('data/mokumon/tiles_v2/disaster_exit.webp'); }
+.mkm-area-disaster .mkm-t-chest-open { background-image: url('data/mokumon/tiles_v2/disaster_chest-open.webp') !important; }
 
-/* 水コーナー */
-.mkm-area-village .mkm-t-water-corner-tl,
-.mkm-area-wetland .mkm-t-water-corner-tl { background: url('data/mokumon/tiles/tile_water-corner-tl.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-water-corner-tr,
-.mkm-area-wetland .mkm-t-water-corner-tr { background: url('data/mokumon/tiles/tile_water-corner-tr.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-water-corner-bl,
-.mkm-area-wetland .mkm-t-water-corner-bl { background: url('data/mokumon/tiles/tile_water-corner-bl.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-water-corner-br,
-.mkm-area-wetland .mkm-t-water-corner-br { background: url('data/mokumon/tiles/tile_water-corner-br.webp') center/cover no-repeat; }
-
-/* 木（湿原）/ 壁（村） */
-.mkm-area-wetland .mkm-t-tree { background: url('data/mokumon/tiles/tile_tree.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-tree { background: url('data/mokumon/tiles/tile_wall.webp') center/cover no-repeat; }
-
-/* 建物屋根（村の '#' 上段） */
-.mkm-area-village .mkm-t-roof { background: url('data/mokumon/tiles/tile_roof.webp') center/cover no-repeat; }
-
-/* ドア */
-.mkm-area-village .mkm-t-door-closed { background: url('data/mokumon/tiles/tile_door-closed.webp') center/cover no-repeat; }
-.mkm-area-village .mkm-t-door-open   { background: url('data/mokumon/tiles/tile_door-open.webp')   center/cover no-repeat; }
-
-/* 宝箱 */
-.mkm-area-village .mkm-t-chest,
-.mkm-area-wetland .mkm-t-chest { background: url('data/mokumon/tiles/tile_chest-closed.webp') center/cover no-repeat; }
-.mkm-t-chest-open               { background: url('data/mokumon/tiles/tile_chest-open.webp') center/cover no-repeat !important; }
-
-/* 出口 */
-.mkm-area-village .mkm-t-exit,
-.mkm-area-wetland .mkm-t-exit { background: url('data/mokumon/tiles/tile_exit.webp') center/cover no-repeat; }
-
-/* 村の門ドア */
-.mkm-area-village .mkm-t-door-closed { background: url('data/mokumon/tiles/tile_door-closed.webp') center/cover no-repeat; }
 .mkm-t-door-closed { background: #6a4a2a; }
-
-/* 奈落海溝：壁=岩礁、道=砂地、草=藻場 */
-.mkm-area-deepsea .mkm-t-road  { background: #c2b280; }              /* 砂地 */
-.mkm-area-deepsea .mkm-t-grass { background: #2e7d6e; background-image:
-  radial-gradient(circle at 30% 40%, #3a9d88 2px, transparent 3px),
-  radial-gradient(circle at 70% 65%, #3a9d88 2px, transparent 3px); }
-.mkm-area-deepsea .mkm-t-tree  { background: #5a5a6a; box-shadow: inset 0 0 0 2px #44444f; }
-.mkm-area-deepsea .mkm-t-tree::after { content: '🪨'; }
-
-/* 機械都市：壁=建物、道=コンクリ、草=配線の隙間 */
-.mkm-area-machine .mkm-t-road  { background: #7a7a82; }              /* コンクリ舗装 */
-.mkm-area-machine .mkm-t-grass { background: #4a6a4a; background-image:
-  radial-gradient(circle at 30% 40%, #5c8c5c 2px, transparent 3px),
-  radial-gradient(circle at 70% 65%, #5c8c5c 2px, transparent 3px); }
-.mkm-area-machine .mkm-t-tree  { background: #44464e; box-shadow: inset 0 0 0 2px #2a2c33; }
-.mkm-area-machine .mkm-t-tree::after { content: '🏢'; }
-
-/* 世界樹の神域：濃い森 */
-.mkm-area-spirit .mkm-t-road  { background: #8a7a4e; }
-.mkm-area-spirit .mkm-t-grass { background: #3a6e2e; background-image:
-  radial-gradient(circle at 30% 40%, #4d8a3c 2px, transparent 3px),
-  radial-gradient(circle at 70% 65%, #4d8a3c 2px, transparent 3px); }
-.mkm-area-spirit .mkm-t-tree::after { content: '🌲'; }
-
-/* 黄昏墓地：薄暗い・墓石 */
-.mkm-area-ghost .mkm-t-road  { background: #4a4a52; }
-.mkm-area-ghost .mkm-t-grass { background: #3a4a3e; background-image:
-  radial-gradient(circle at 30% 40%, #4a5a4e 2px, transparent 3px),
-  radial-gradient(circle at 70% 65%, #4a5a4e 2px, transparent 3px); }
-.mkm-area-ghost .mkm-t-tree  { background: #3a3a42; box-shadow: inset 0 0 0 2px #2a2a30; }
-.mkm-area-ghost .mkm-t-tree::after { content: '🪦'; }
-
-/* 超巨大企業都市：ビル街 */
-.mkm-area-corporate .mkm-t-road  { background: #6a6a72; }
-.mkm-area-corporate .mkm-t-grass { background: #4a6a4a; background-image:
-  radial-gradient(circle at 30% 40%, #5c8c5c 2px, transparent 3px),
-  radial-gradient(circle at 70% 65%, #5c8c5c 2px, transparent 3px); }
-.mkm-area-corporate .mkm-t-tree  { background: #54565e; box-shadow: inset 0 0 0 2px #3a3c43; }
-.mkm-area-corporate .mkm-t-tree::after { content: '🏙️'; }
-
-/* 終焉火山：溶岩・焦土 */
-.mkm-area-disaster .mkm-t-road  { background: #6a4a3a; }              /* 岩の足場 */
-.mkm-area-disaster .mkm-t-grass { background: #5a3a2a; background-image:
-  radial-gradient(circle at 30% 40%, #7a4a30 2px, transparent 3px),
-  radial-gradient(circle at 70% 65%, #7a4a30 2px, transparent 3px); }
-.mkm-area-disaster .mkm-t-water { background: #c0392b;               /* 溶岩 */
-  background-image: linear-gradient(180deg, #e25a3a 50%, #c0392b 50%); background-size: 100% 8px; }
-.mkm-area-disaster .mkm-t-tree  { background: #4a3530; box-shadow: inset 0 0 0 2px #33241f; }
-.mkm-area-disaster .mkm-t-tree::after { content: '🪨'; }
-
 .mkm-t-chest { background: #4a7a3a; }
 .mkm-t-chest::after {
   content: '📦'; position: absolute; inset: 0;
@@ -698,7 +794,7 @@
 /* 大きな出口ワープ（タイルの上に重ねる立派な門） */
 .mkm-warp {
   position: absolute; z-index: 2; pointer-events: none;
-  background: url('data/mokumon/tiles/tile_exit.webp') center bottom / contain no-repeat;
+  background: url('data/mokumon/tiles_v2/tile_warp.webp') center bottom / contain no-repeat;
   image-rendering: pixelated;
   /* filter(drop-shadow)は重い（カメラ移動のたびに再描画）。
      光彩は再描画の起きない radial-gradient(::before) で表現する */

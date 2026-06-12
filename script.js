@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.22.2';
+const CURRENT_VERSION = '2.23.0';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,19 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.0',
+    date: '2026/06/12',
+    title: '🎨 マップグラフィック大刷新！ポケモン風タイルに',
+    items: [
+      '🏘️ 始まりの村がリニューアル！4軒の家・泉の広場・花・柵のある村になりました',
+      '🗺️ 全7エリアのマップをテーマ別の新タイルに一新（海底・ビル街・神域の森・墓地・火山など）',
+      '⚡ タイル画像を大幅軽量化（合計約660KB→約25KB）、マップ表示が軽くなりました',
+      '📋 出現モンスター情報の看板が全フロアに設置されるようになりました',
+      '🚪 フロア出口の選択肢を改善：「進む／前の階に戻る／キャンセル」になりました（村へは左上ボタンから）',
+      '🛟 奈落海溝B4F（海ぬしの間）に入るとエラーになる不具合を修正',
+    ],
+  },
   {
     id: 'v2.22.2',
     date: '2026/06/10',
@@ -5975,7 +5988,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.22.2';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.0';
 
 let _authMode = 'login'; // 'login' | 'register'
 
