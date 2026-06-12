@@ -4482,14 +4482,30 @@ function doSkill(actor, skill) {
     return;
   }
 
-  // ⑤ ダメージ系（全体・多段対応）＋属性エフェクト
+  // ⑤ ダメージ系（全体・多段・ランダム多段対応）＋属性エフェクト
   const fxKind = effectKindForSkill(skill);
   const fxN = fxCount(skill);
   const vr = fxVariant(skill);
-  targets.forEach(tg => playSkillEffect(`mkm-enemy-${B.enemies.indexOf(tg)}`, fxKind, fxN, vr));
-  const hits = Math.max(1, skill.hitCount || 1);
+  // 多段回数：hitCount は数値 または {min,max}（ランダム多段。連続藻撃・連続雷撃など）
+  const hc = skill.hitCount;
+  const hits = Math.max(1, (hc && typeof hc === 'object')
+    ? hc.min + Math.floor(Math.random() * (hc.max - hc.min + 1))
+    : (hc || 1));
+  // 1ヒットごとの対象リスト（random_enemyは毎回ランダムに選び直す）
+  const hitTargets = [];
+  for (let h = 0; h < hits; h++) {
+    if (skill.target === 'random_enemy') {
+      const alive = B.enemies.filter(e => e.alive);
+      if (!alive.length) break;
+      hitTargets.push(alive[Math.floor(Math.random() * alive.length)]);
+    } else {
+      targets.forEach(tg => hitTargets.push(tg));
+    }
+  }
+  [...new Set(hitTargets)].forEach(tg => playSkillEffect(`mkm-enemy-${B.enemies.indexOf(tg)}`, fxKind, fxN, vr));
   let pending = 0;
   let critShown = false;
+  let absorbShown = false;
   const finish = () => {
     if (--pending > 0) return;
     // 複合：ダメージ＋状態異常（先頭の生存敵に付与）
@@ -4502,25 +4518,28 @@ function doSkill(actor, skill) {
     }
     afterAction();
   };
-  targets.forEach(tg => {
-    for (let h = 0; h < hits; h++) {
-      if (!tg.alive) break;
-      pending++;
-      let crit = false;
-      if (skill.category === 'physical') {
-        crit = rollCrit(actor, tg);
-        if (crit && !critShown) { pushLog('⚡ 会心の一撃！'); critShown = true; }
-      }
-      const dmg = skill.category === 'physical'
-        ? calcPhysical(actor, tg, skill.power, crit)
-        : calcSpell(actor, tg, skill);
-      applyDamage(tg, dmg, 'enemy', () => {
-        pushLog(`${tg.name} に ${dmg} のダメージ！`);
-        finish();
-      }, { crit, noHitSfx: true });   // 着弾音は属性エフェクトSEに任せる
+  hitTargets.forEach(tg => {
+    if (!tg.alive) return;
+    // 属性吸収：ダメージ無効（従来は負のダメージが1に丸められ「1ダメージ」になっていた）
+    if (skill.element && tg.master?.absorbs?.includes(skill.element)) {
+      if (!absorbShown) { pushLog(`しかし ${tg.name} は こうげきを 吸収した！`); absorbShown = true; }
+      return;
     }
+    pending++;
+    let crit = false;
+    if (skill.category === 'physical') {
+      crit = rollCrit(actor, tg);
+      if (crit && !critShown) { pushLog('⚡ 会心の一撃！'); critShown = true; }
+    }
+    const dmg = skill.category === 'physical'
+      ? calcPhysical(actor, tg, skill.power, crit)
+      : calcSpell(actor, tg, skill);
+    applyDamage(tg, dmg, 'enemy', () => {
+      pushLog(`${tg.name} に ${dmg} のダメージ！`);
+      finish();
+    }, { crit, noHitSfx: true });   // 着弾音は属性エフェクトSEに任せる
   });
-  if (pending === 0) afterAction();   // 念のため（対象が全て即死等）
+  if (pending === 0) afterAction();   // 全ヒット吸収・対象消滅などでダメージ処理が無い場合
 }
 
 // ---- ダメージ計算（05_08準拠の簡易版） ----

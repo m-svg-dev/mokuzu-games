@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.6';
+const CURRENT_VERSION = '2.23.7';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,16 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.7',
+    date: '2026/06/13',
+    title: '🛟 連続攻撃の特技が不発だった不具合を修正',
+    items: [
+      '⚔️ 「連続藻撃」「連続雷撃」などのランダム多段技がMPを消費するだけでダメージが出ていなかった問題を修正（3〜5回など正しく連続ヒットします）',
+      '🎯 ランダム多段技は1発ごとに狙う敵が変わるようになりました',
+      '🌀 属性を吸収する敵への攻撃が「1ダメージ」と表示されていたのを「吸収した！」表示に修正',
+    ],
+  },
   {
     id: 'v2.23.6',
     date: '2026/06/13',
@@ -6020,7 +6030,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.6';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.7';
 
 let _authMode = 'login'; // 'login' | 'register'
 
