@@ -2015,17 +2015,22 @@ const VILLAGE_NPCS = [
             </div>
           </div>
         </div>
-        <div class="mkm-board-title" style="margin-top:14px">⚔️ 属性相性ガイド（系統別）</div>
+        <div class="mkm-board-title" style="margin-top:14px">⚔️ どの技が効く？（敵の系統べつ）</div>
         <div class="mkm-board-floors">
-          ${familyElementGuide().map(g => `
-            <div class="mkm-board-floor">
+          ${familyElementGuide().map(g => {
+            const jp = a => a.map(e => ELEMENT_JP[e] ?? e).join('・');
+            const eff = jp(g.weak), bad = jp(g.res), abs = jp(g.abs);
+            return `<div class="mkm-board-floor">
               <span class="mkm-board-fn" style="color:${famInfo(g.family).color}">●</span>
-              <span><b>${escHtml(famInfo(g.family).name)}系</b>　弱点: ${g.weak.map(e => ELEMENT_JP[e] ?? e).join('・') || 'なし'}　耐性: ${g.res.map(e => ELEMENT_JP[e] ?? e).join('・') || 'なし'}${g.abs.length ? `　吸収: ${g.abs.map(e => ELEMENT_JP[e] ?? e).join('・')}` : ''}</span>
-            </div>`).join('')}
+              <span><b>${escHtml(famInfo(g.family).name)}系の敵</b><br>
+                ${eff ? `${eff}の技が ばつぐん！` : '目立った弱点なし'}
+                ${bad ? `<br>${bad}の技は 効きにくい…` : ''}
+                ${abs ? `<br>⚠️ ${abs}の技は 吸収されてダメージ0！` : ''}</span>
+            </div>`;
+          }).join('')}
         </div>
         <div class="mkm-board-tips">
-          🔥 弱点を突くと「こうかは ばつぐんだ！」(1.5倍)<br>
-          💧 耐性持ちには「いまひとつ…」(半減)、吸収する相手にはダメージが通らないぞ！
+          💡 自分の技の属性は「とくぎ」画面の 🔥💧⚡ マークで確認できるぞ！
         </div>
         <div class="mkm-board-tips">
           💡 冒険に出る前にパーティを整えよう！
@@ -4301,8 +4306,9 @@ function openSkillMenu(actor) {
       <div class="mkm-skill-choices">
         ${usable.map((s, i) => {
           const ng = s.mpCost > actor.mp;
+          const el = (s.element && s.element !== 'none') ? `${ELEMENT_JP[s.element] ?? s.element} ` : '';
           return `<button class="mkm-skill-choice ${ng?'mkm-skill-ng':''}" data-i="${i}" ${ng?'disabled':''}>
-            <span class="mkm-skill-cn">${escHtml(s.name)}</span>
+            <span class="mkm-skill-cn">${el}${escHtml(s.name)}</span>
             <span class="mkm-skill-cmp">MP${s.mpCost}</span>
             <span class="mkm-skill-cd">${escHtml(s.description ?? '')}</span>
           </button>`;

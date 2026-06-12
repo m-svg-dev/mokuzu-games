@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.9';
+const CURRENT_VERSION = '2.23.10';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,15 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.10',
+    date: '2026/06/13',
+    title: '⚔️ 属性のわかりやすさを改善',
+    items: [
+      '📋 掲示板の相性ガイドを「藻系の敵には🔥炎の技がばつぐん！」という読み方に書き直しました',
+      '🔥 とくぎ選択画面に技の属性マーク（🔥💧⚡など）を表示するようにしました',
+    ],
+  },
   {
     id: 'v2.23.9',
     date: '2026/06/13',
@@ -6047,7 +6056,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.9';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.10';
 
 let _authMode = 'login'; // 'login' | 'register'
 
