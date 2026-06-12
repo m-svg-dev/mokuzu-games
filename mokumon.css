@@ -1027,7 +1027,9 @@
   background: #f0f0e8;
 }
 .mkm-battle-enemies {
-  height: 220px; flex-shrink: 0;
+  /* ボス（180px大型表示）は220pxに収まらないため最小高さ＋自動拡張
+     （固定heightだと名前・HPバーがはみ出してログ欄に重なる） */
+  min-height: 220px; flex-shrink: 0;
   display: flex; flex-wrap: wrap; gap: 10px;
   align-items: center; justify-content: center;
   padding: 24px 12px 12px;

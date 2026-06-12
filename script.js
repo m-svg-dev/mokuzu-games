@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.2';
+const CURRENT_VERSION = '2.23.3';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.3',
+    date: '2026/06/12',
+    title: '🛟 ボス戦の表示くずれを修正',
+    items: [
+      '👾 ボス戦で敵のHPバーがメッセージ欄に重なって見づらかった問題を修正しました',
+    ],
+  },
   {
     id: 'v2.23.1',
     date: '2026/06/12',
@@ -5996,7 +6004,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.2';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.3';
 
 let _authMode = 'login'; // 'login' | 'register'
 
