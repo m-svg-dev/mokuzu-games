@@ -2381,7 +2381,7 @@ function buildWetlandB4F() {
     makeBossNpc({
       id: 'boss_wetland', monsterId: 20, name: '藻ぬし',
       img: 'data/mokumon/tiles/boss_monster_20.webp',
-      x: 14, y: 3, tileW: 3, tileH: 2,
+      x: 14, y: 3, tileW: 3, tileH: 3,
       lines: [
         { text: 'ぬぅ……よくここまで来たな、小僧。' },
         { text: 'この大湿原の最深部……\nここはわしの領域じゃ。' },
@@ -2420,7 +2420,7 @@ function makeBossNpc(cfg) {
     id: cfg.id, x: cfg.x, y: cfg.y,
     name: cfg.name, icon: cfg.icon ?? '👾',
     isBoss: true,
-    tileW: cfg.tileW ?? 3, tileH: cfg.tileH ?? 2,
+    tileW: cfg.tileW ?? 3, tileH: cfg.tileH ?? 3,  // 縦長のボス画像が映えるよう3×3マス
     img: cfg.img,
     talk(floorInfo) {
       if (MAP.bossDefeated) {
@@ -2564,7 +2564,7 @@ function buildDeepseaB4F() {
     makeBossNpc({
       id: 'boss_deepsea', monsterId: 122, name: '海ぬし',
       img: monImg(122),
-      x: 14, y: 3, tileW: 3, tileH: 2,
+      x: 14, y: 3, tileW: 3, tileH: 3,
       lines: [
         { text: 'ゴポポ……よくぞ この深淵まで 来たな。' },
         { text: 'ここは光ひとつ届かぬ\n奈落海溝の底……\nわしの治める領域だ。' },
