@@ -5772,6 +5772,7 @@ function renderDebug(from = 'village') {
       <button class="mkm-debug-item" data-act="fusetest">⚗️ No.1〜20を2匹ずつ入手（配合テスト）</button>
       <button class="mkm-debug-item" data-act="dupe">👥 パーティ先頭をコピー（配合用）</button>
       <button class="mkm-debug-item" data-act="lv">⭐ パーティ全員 Lv+10</button>
+      <button class="mkm-debug-item" data-act="lvmax">⭐ パーティ全員 Lv${LEVEL_MAX}（最大・特技も補充）</button>
       <button class="mkm-debug-item" data-act="items">🎁 全アイテム ×10 入手</button>
       <button class="mkm-debug-item" data-act="filldex">📖 図鑑を全部うめる（全部発見済み）</button>
       <button class="mkm-debug-item" data-act="fxgallery">🎬 エフェクト確認モード</button>
@@ -5863,9 +5864,24 @@ function debugAction(act) {
     case 'lv': {
       d.party.filter(Boolean).forEach(id => {
         const m = d.monsters[id];
-        if (m) m.level = Math.min(99, m.level + 10);
+        if (m) m.level = Math.min(LEVEL_MAX, m.level + 10);
       });
       sfx('levelup'); toast('パーティ Lv+10');
+      break;
+    }
+    case 'lvmax': {
+      d.party.filter(Boolean).forEach(id => {
+        const m = d.monsters[id];
+        if (!m) return;
+        m.level = LEVEL_MAX;
+        m.exp = 0;
+        // レベル相応の特技をマスターから補充（配合継承分は残す・最大8枠）
+        const master = getMonsterMaster(m.monsterId);
+        (master?.skills ?? []).forEach(s => {
+          if (m.skills.length < 8 && !m.skills.includes(s.skillId)) m.skills.push(s.skillId);
+        });
+      });
+      sfx('levelup'); toast(`パーティ全員 Lv${LEVEL_MAX}（最大）！`);
       break;
     }
     case 'items':
