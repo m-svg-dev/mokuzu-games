@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.7';
+const CURRENT_VERSION = '2.23.8';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,15 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.8',
+    date: '2026/06/13',
+    title: '⚔️ 属性相性がわかりやすくなりました',
+    items: [
+      '🔥 弱点を突くと「こうかは ばつぐんだ！」、耐性持ちには「こうかは いまひとつ…」と表示されるようになりました（深海の敵に水技が半減なのが見えなかった問題の対策）',
+      '⚡ 属性付き物理技（電光石火など）に相性が反映されていなかったのを修正',
+    ],
+  },
   {
     id: 'v2.23.7',
     date: '2026/06/13',
@@ -6030,7 +6039,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.7';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.8';
 
 let _authMode = 'login'; // 'login' | 'register'
 

@@ -4506,6 +4506,7 @@ function doSkill(actor, skill) {
   let pending = 0;
   let critShown = false;
   let absorbShown = false;
+  let effShown = false;
   const finish = () => {
     if (--pending > 0) return;
     // 複合：ダメージ＋状態異常（先頭の生存敵に付与）
@@ -4532,8 +4533,14 @@ function doSkill(actor, skill) {
       if (crit && !critShown) { pushLog('⚡ 会心の一撃！'); critShown = true; }
     }
     const dmg = skill.category === 'physical'
-      ? calcPhysical(actor, tg, skill.power, crit)
+      ? calcPhysical(actor, tg, skill.power, crit, skill.element)
       : calcSpell(actor, tg, skill);
+    // 属性相性のフィードバック（ポケモン式：半減・弱点を必ず伝える）
+    if (!effShown && skill.element && skill.element !== 'none') {
+      const em = elementMult(skill.element, tg);
+      if (em > 1)            { pushLog('🔥 こうかは ばつぐんだ！'); effShown = true; }
+      else if (em > 0 && em < 1) { pushLog('💧 こうかは いまひとつ…'); effShown = true; }
+    }
     applyDamage(tg, dmg, 'enemy', () => {
       pushLog(`${tg.name} に ${dmg} のダメージ！`);
       finish();
@@ -4565,12 +4572,12 @@ function rollCrit(actor, target) {
   return Math.random() < rate;
 }
 
-function calcPhysical(actor, target, power, crit = false) {
+function calcPhysical(actor, target, power, crit = false, element = 'none') {
   if (isMetal(target)) return metalDamage();
   const a = statOf(actor, 'atk');
   const def = target.defending ? statOf(target, 'def') * 1.5 : statOf(target, 'def');
   let base = (a * a) / (a + def) * power;
-  base *= elementMult('none', target);
+  base *= elementMult(element, target);   // 属性付き物理技（電光石火等）も相性を反映
   base *= rand(0.9, 1.1);
   if (crit) {
     base *= 1.8;                      // 会心：1.8倍＋ガード貫通（防御の0.5減衰を無視）
