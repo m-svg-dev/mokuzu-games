@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.23.0';
+const CURRENT_VERSION = '2.23.1';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,14 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.23.1',
+    date: '2026/06/12',
+    title: '🛟 ボスに話しかけられないことがある不具合を修正',
+    items: [
+      '👾 ボスの目の前でタップしても「もう少し近づこう！」と言われる問題を修正（大型モンスターの当たり判定を改善）',
+    ],
+  },
   {
     id: 'v2.23.0',
     date: '2026/06/12',
@@ -5988,7 +5996,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.23.0';
+import { initMokumon } from './minigame-mokumon.js?v=2.23.1';
 
 let _authMode = 'login'; // 'login' | 'register'
 

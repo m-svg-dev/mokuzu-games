@@ -3263,8 +3263,11 @@ function buildFloorNpcSprites() {
       el.innerHTML = `<span class="mkm-npc-icon">${npc.icon}</span>`;
     }
     el.onclick = () => {
-      const dist = Math.abs(MAP.px - npc.x) + Math.abs(MAP.py - npc.y);
-      if (dist <= 2) {
+      // 大型NPC（ボス3×2等）は占有矩形までの距離で判定（左上タイルだけだと正面から届かない）
+      const w = npc.tileW ?? 1, h = npc.tileH ?? 1;
+      const dx = Math.max(npc.x - MAP.px, 0, MAP.px - (npc.x + w - 1));
+      const dy = Math.max(npc.y - MAP.py, 0, MAP.py - (npc.y + h - 1));
+      if (dx + dy <= 2) {
         sfx('talk');
         npc.talk(currentFloorInfo());
       } else {
