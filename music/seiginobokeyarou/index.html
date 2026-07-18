@@ -5,13 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>正義のボケ野郎 | MOKUZU MUSIC</title>
   <meta name="description" content="MOKUZU MUSIC オリジナルソング「正義のボケ野郎」を歌詞付きで公開中。">
-  <meta name="robots" content="noindex">
 
   <!-- OGP -->
   <meta property="og:title" content="正義のボケ野郎 | MOKUZU MUSIC">
   <meta property="og:description" content="オリジナルソング「正義のボケ野郎」を歌詞付きで公開中。">
   <meta property="og:type" content="music.song">
-  <meta property="og:url" content="https://m-svg-dev.github.io/mokuzu-games/music/matahajimatta/">
+  <meta property="og:url" content="https://m-svg-dev.github.io/mokuzu-games/music/seiginobokeyarou/">
   <meta property="og:image" content="https://m-svg-dev.github.io/mokuzu-games/assets/icon/icon.png">
   <meta property="og:locale" content="ja_JP">
   <meta name="twitter:card" content="summary">
@@ -46,9 +45,19 @@
     }
 
     /* ===== ヘッダー ===== */
+    .back-link {
+      display: inline-block;
+      margin-top: calc(16px + env(safe-area-inset-top));
+      color: #78bb99;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #3dff7a; }
+
     .song-header {
       text-align: center;
-      padding: calc(52px + env(safe-area-inset-top)) 0 28px;
+      padding: 36px 0 28px;
     }
 
     .song-label {
@@ -126,6 +135,8 @@
 </head>
 <body>
   <div class="container">
+    <a class="back-link" href="../">← MUSIC 一覧へ</a>
+
     <header class="song-header">
       <div class="song-label">MOKUZU MUSIC</div>
       <h1 class="song-title">正義のボケ野郎</h1>
