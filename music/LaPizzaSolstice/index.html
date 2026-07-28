@@ -82,6 +82,22 @@
       line-height: 1.7;
     }
 
+    /* ===== バージョン見出し ===== */
+    .version-block {
+      margin-top: 40px;
+    }
+    .version-block:first-of-type {
+      margin-top: 0;
+    }
+    .version-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #3dff7a;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
     /* ===== プレイヤー ===== */
     .player-card {
       background: #0c1e34;
@@ -96,30 +112,52 @@
       display: block;
     }
 
-    /* ===== 歌詞 ===== */
-    .lyrics {
-      margin-top: 44px;
+    /* ===== 折りたたみ歌詞 ===== */
+    .lyrics-toggle {
+      margin-top: 14px;
+      background: #0a1a2c;
+      border: 1px solid #1a4a30;
+      border-radius: 12px;
+      overflow: hidden;
     }
-
-    .lyrics-heading {
-      font-size: 0.72rem;
-      letter-spacing: 0.35em;
+    .lyrics-toggle > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 14px 18px;
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
       color: #78bb99;
-      text-align: center;
-      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      transition: color 0.2s;
+    }
+    .lyrics-toggle > summary::-webkit-details-marker { display: none; }
+    .lyrics-toggle > summary:hover { color: #3dff7a; }
+    .lyrics-toggle > summary::after {
+      content: "▼";
+      font-size: 0.7rem;
+      transition: transform 0.2s;
+    }
+    .lyrics-toggle[open] > summary::after {
+      transform: rotate(180deg);
     }
 
-    .lyrics section {
-      margin-bottom: 34px;
+    .lyrics-body {
+      padding: 6px 18px 22px;
     }
-
-    .lyrics p {
+    .lyrics-body section {
+      margin-bottom: 28px;
+    }
+    .lyrics-body section:last-child { margin-bottom: 0; }
+    .lyrics-body p {
       font-size: 0.95rem;
       line-height: 2.15;
       color: #c9e4d2;
       margin-bottom: 1.1em;
     }
-    .lyrics p:last-child { margin-bottom: 0; }
+    .lyrics-body p:last-child { margin-bottom: 0; }
 
     /* ===== フッター ===== */
     .song-footer {
@@ -143,73 +181,125 @@
       <p class="song-credit">Music &amp; Lyrics — MOKUZU MUSIC</p>
     </header>
 
-    <div class="player-card">
-      <audio controls preload="metadata" src="La Pizza Solstice.mp3"></audio>
+    <!-- ===== 本家（フルバージョン） ===== -->
+    <div class="version-block">
+      <div class="version-title">🎭 本家（Full Version）</div>
+      <div class="player-card">
+        <audio controls preload="metadata" src="La Pizza Solstice_h.mp3"></audio>
+      </div>
+      <details class="lyrics-toggle" open>
+        <summary>LYRICS</summary>
+        <div class="lyrics-body">
+          <section>
+            <p>今日もピエロを演じて<br>笑いを攫ってく<br>「バカだな」なんて言われりゃ<br>それが勲章さ</p>
+            <p>本当の切り札なんて<br>誰にも見せはしない<br>仮面の裏に隠した<br>"黒き聖域（サンクチュアリ）"</p>
+            <p>君をからかうたびに<br>頬を膨らませる顔<br>そんな一瞬さえも全部<br>この瞳は焼き付けてる</p>
+          </section>
+          <section>
+            <p>世界は案外 脆くて<br>信じたものほど砕けるから</p>
+            <p>それでも君だけは<br>絶対に泣かせたくない</p>
+            <p>この身が"終焉の鐘（ラグナロク）"に<br>飲み込まれるとしても<br>運命を書き換える魔法陣は<br>この胸に刻んである</p>
+          </section>
+          <section>
+            <p>笑ってろ 俺が道化師でいい<br>闇を裂く"蒼炎（ブルーフレイム）"になる</p>
+            <p>誰にも見せない 本当の剣は<br>君を守るためだけに抜く</p>
+            <p>「好き」なんて言葉は<br>照れくさくて言えないけど</p>
+            <p>世界中を敵にしても<br>最後に隣へ立つのは俺だ</p>
+            <p>ふざけた顔で笑いながら<br>その手だけは 絶対離さない</p>
+          </section>
+          <section>
+            <p>夜のステージ ひとりきり<br>仮面の奥で whispering voice</p>
+            <p>"Who am I really?"<br>問いかけても答えはない</p>
+            <p>笑いの裏に隠した pain<br>誰も気づかないまま消えていく</p>
+            <p>でも君だけが時々<br>その嘘を見抜くように目を細める</p>
+          </section>
+          <section>
+            <p>Insight like shattered glass<br>心の奥で光る欠片</p>
+            <p>強がりの裏側にある<br>本当の孤独を君は知ってる</p>
+            <p>If love is a code I can't decode<br>それでも君にだけは届いてほしい</p>
+            <p>この仮面の下にある truth<br>いつか笑って見せられる日まで</p>
+          </section>
+          <section>
+            <p>笑え 最後まで道化師のままで<br>涙さえも"蒼炎（ブルーフレイム）"に変えて</p>
+            <p>運命の幕が降りるその瞬間も<br>君の手だけは離さない</p>
+            <p>偽りだらけの世界でいい<br>ただ一つ 本物があればいい</p>
+            <p>それが君で それが俺なら<br>もう何も怖くない</p>
+            <p>さあフィナーレだ 茶番劇の続き<br>愛という名の魔法を解き放て</p>
+          </section>
+          <section>
+            <p>運命さえも上書きする<br>禁断の"契約（コントラクト）"</p>
+            <p>君の涙 一粒ごと<br>俺の魂に刻まれてく</p>
+            <p>どんな未来が待っていても<br>茶化しながら歩いていこう</p>
+            <p>俺はヒーローじゃない</p>
+            <p>だけど君だけの<br>最強の相棒だから。</p>
+          </section>
+        </div>
+      </details>
     </div>
 
-    <main class="lyrics">
-      <div class="lyrics-heading">LYRICS</div>
-
-      <section>
-        <p>今日もピエロを演じて 笑いを攫ってく<br>「バカだな」なんて言われりゃ それが勲章さ</p>
-        <p>本当の切り札なんて<br>誰にも見せはしない<br>仮面の裏に隠した<br>"黒き聖域（サンクチュアリ）"</p>
-      </section>
-
-      <section>
-        <p>君をからかうたびに<br>頬を膨らませる顔<br>そんな一瞬さえも<br>全部この瞳は焼き付けてる</p>
-      </section>
-
-      <section>
-        <p>世界は案外 脆くて<br>信じたものほど砕けるから</p>
-        <p>それでも君だけは<br>絶対に泣かせたくない</p>
-        <p>この身が"終焉の鐘（ラグナロク）"に<br>飲み込まれるとしても<br>運命を書き換える魔法陣は<br>この胸に刻んである</p>
-        <p>笑ってろ 俺が道化師でいい<br>闇を裂く"蒼炎（ブルーフレイム）"になる</p>
-      </section>
-
-      <section>
-        <p>誰にも見せない<br>本当の剣は<br>君を守るためだけに抜く</p>
-        <p>「好き」なんて言葉は<br>照れくさくて言えないけど</p>
-        <p>世界中を敵にしても<br>最後に隣へ立つのは俺だ</p>
-        <p>ふざけた顔で笑いながら<br>その手だけは 絶対離さない</p>
-      </section>
-
-      <section>
-        <p>運命さえも上書きする<br>禁断の"契約（コントラクト）"</p>
-        <p>君の涙 一粒ごと<br>俺の魂に刻まれてく</p>
-        <p>どんな未来が待っていても<br>茶化しながら歩いていこう</p>
-        <p>俺はヒーローじゃない<br>だけど君だけの<br>最強の相棒だから。</p>
-      </section>
-
-      <section>
-        <p>夜のステージ ひとりきり<br>仮面の奥で whispering voice</p>
-        <p>"Who am I really?"<br>問いかけても答えはない</p>
-        <p>笑いの裏に隠した pain<br>誰も気づかないまま消えていく</p>
-        <p>でも君だけが時々<br>その嘘を見抜くように目を細める</p>
-      </section>
-
-      <section>
-        <p>Insight like shattered glass<br>心の奥で光る欠片</p>
-        <p>強がりの裏側にある<br>本当の孤独を君は知ってる</p>
-        <p>If love is a code<br>I can't decode</p>
-        <p>それでも君にだけは<br>届いてほしい</p>
-        <p>この仮面の下にある truth<br>いつか笑って見せられる日まで</p>
-      </section>
-
-      <section>
-        <p>笑え 最後まで<br>道化師のままで</p>
-        <p>涙さえも<br>"蒼炎（ブルーフレイム）"に変えて</p>
-        <p>運命の幕が降りる<br>その瞬間も</p>
-        <p>君の手だけは<br>離さない</p>
-        <p>偽りだらけの世界でいい<br>ただ一つ 本物があればいい</p>
-        <p>それが君で<br>それが俺なら<br>もう何も怖くない</p>
-        <p>さあフィナーレだ<br>茶番劇の続き</p>
-        <p>愛という名の魔法を<br>解き放て</p>
-      </section>
-
-      <section>
-        <p>La Pizza Solstice...<br>笑いながら<br>君だけを守る──</p>
-      </section>
-    </main>
+    <!-- ===== 別バージョン ===== -->
+    <div class="version-block">
+      <div class="version-title">🎪 Another Version</div>
+      <div class="player-card">
+        <audio controls preload="metadata" src="La Pizza Solstice.mp3"></audio>
+      </div>
+      <details class="lyrics-toggle">
+        <summary>LYRICS</summary>
+        <div class="lyrics-body">
+          <section>
+            <p>今日もピエロを演じて 笑いを攫ってく<br>「バカだな」なんて言われりゃ それが勲章さ</p>
+            <p>本当の切り札なんて<br>誰にも見せはしない<br>仮面の裏に隠した<br>"黒き聖域（サンクチュアリ）"</p>
+          </section>
+          <section>
+            <p>君をからかうたびに<br>頬を膨らませる顔<br>そんな一瞬さえも<br>全部この瞳は焼き付けてる</p>
+          </section>
+          <section>
+            <p>世界は案外 脆くて<br>信じたものほど砕けるから</p>
+            <p>それでも君だけは<br>絶対に泣かせたくない</p>
+            <p>この身が"終焉の鐘（ラグナロク）"に<br>飲み込まれるとしても<br>運命を書き換える魔法陣は<br>この胸に刻んである</p>
+            <p>笑ってろ 俺が道化師でいい<br>闇を裂く"蒼炎（ブルーフレイム）"になる</p>
+          </section>
+          <section>
+            <p>誰にも見せない<br>本当の剣は<br>君を守るためだけに抜く</p>
+            <p>「好き」なんて言葉は<br>照れくさくて言えないけど</p>
+            <p>世界中を敵にしても<br>最後に隣へ立つのは俺だ</p>
+            <p>ふざけた顔で笑いながら<br>その手だけは 絶対離さない</p>
+          </section>
+          <section>
+            <p>運命さえも上書きする<br>禁断の"契約（コントラクト）"</p>
+            <p>君の涙 一粒ごと<br>俺の魂に刻まれてく</p>
+            <p>どんな未来が待っていても<br>茶化しながら歩いていこう</p>
+            <p>俺はヒーローじゃない<br>だけど君だけの<br>最強の相棒だから。</p>
+          </section>
+          <section>
+            <p>夜のステージ ひとりきり<br>仮面の奥で whispering voice</p>
+            <p>"Who am I really?"<br>問いかけても答えはない</p>
+            <p>笑いの裏に隠した pain<br>誰も気づかないまま消えていく</p>
+            <p>でも君だけが時々<br>その嘘を見抜くように目を細める</p>
+          </section>
+          <section>
+            <p>Insight like shattered glass<br>心の奥で光る欠片</p>
+            <p>強がりの裏側にある<br>本当の孤独を君は知ってる</p>
+            <p>If love is a code<br>I can't decode</p>
+            <p>それでも君にだけは<br>届いてほしい</p>
+            <p>この仮面の下にある truth<br>いつか笑って見せられる日まで</p>
+          </section>
+          <section>
+            <p>笑え 最後まで<br>道化師のままで</p>
+            <p>涙さえも<br>"蒼炎（ブルーフレイム）"に変えて</p>
+            <p>運命の幕が降りる<br>その瞬間も</p>
+            <p>君の手だけは<br>離さない</p>
+            <p>偽りだらけの世界でいい<br>ただ一つ 本物があればいい</p>
+            <p>それが君で<br>それが俺なら<br>もう何も怖くない</p>
+            <p>さあフィナーレだ<br>茶番劇の続き</p>
+            <p>愛という名の魔法を<br>解き放て</p>
+          </section>
+          <section>
+            <p>La Pizza Solstice...<br>笑いながら<br>君だけを守る──</p>
+          </section>
+        </div>
+      </details>
+    </div>
 
     <footer class="song-footer">
       <p>© MOKUZU MUSIC — オリジナル楽曲</p>
