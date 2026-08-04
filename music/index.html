@@ -19,15 +19,8 @@
   <meta name="theme-color" content="#071420">
 
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      overscroll-behavior: none;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overscroll-behavior: none; }
 
     body {
       font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -39,86 +32,105 @@
       padding-bottom: calc(60px + env(safe-area-inset-bottom));
     }
 
-    .container {
-      max-width: 480px;
-      margin: 0 auto;
-    }
+    .container { max-width: 480px; margin: 0 auto; }
 
     /* ===== ヘッダー ===== */
-    .site-header {
-      text-align: center;
-      padding: calc(64px + env(safe-area-inset-top)) 0 40px;
-    }
-
+    .site-header { text-align: center; padding: calc(40px + env(safe-area-inset-top)) 0 24px; }
     .site-title {
-      font-size: 1.8rem;
-      font-weight: bold;
-      letter-spacing: 0.28em;
-      color: #eafff0;
-      text-shadow: 0 0 24px rgba(61, 255, 122, 0.25);
-      margin-bottom: 12px;
+      font-size: 1.8rem; font-weight: bold; letter-spacing: 0.28em;
+      color: #eafff0; text-shadow: 0 0 24px rgba(61, 255, 122, 0.25); margin-bottom: 12px;
     }
+    .site-catch { font-size: 0.8rem; color: #6f9683; letter-spacing: 0.08em; }
 
-    .site-catch {
-      font-size: 0.8rem;
-      color: #6f9683;
-      letter-spacing: 0.08em;
+    /* ===== 連続再生プレイヤー ===== */
+    .player-bar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: #0a1a2c;
+      border: 1px solid #1a4a30;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 22px;
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.55);
     }
+    .now-playing {
+      font-size: 0.9rem; color: #eafff0; font-weight: bold;
+      margin-bottom: 10px; letter-spacing: 0.03em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .now-playing .np-label { color: #3dff7a; }
+    .player-bar audio { width: 100%; display: block; margin-bottom: 10px; }
+    .controls { display: flex; gap: 8px; margin-bottom: 8px; }
+    .controls button {
+      flex: 1; padding: 10px 6px; border-radius: 10px;
+      border: 1px solid #1a4a30; background: #0c1e34; color: #d8eedd;
+      font-size: 0.8rem; cursor: pointer; transition: all .18s; white-space: nowrap;
+    }
+    .controls button:hover { border-color: #3dff7a; }
+    #btnPlay { color: #071420; background: #3dff7a; border-color: #3dff7a; font-weight: bold; flex: 1.6; }
+    #btnPlay:hover { background: #63ff92; }
+    .toggle-on { color: #071420 !important; background: #3dff7a !important; border-color: #3dff7a !important; font-weight: bold; }
+    .sub-controls { display: flex; gap: 8px; }
+    .sub-controls button {
+      flex: 1; padding: 7px; border-radius: 9px; border: 1px solid #1a4a30;
+      background: transparent; color: #78bb99; font-size: 0.72rem; cursor: pointer; transition: all .18s;
+    }
+    .sub-controls button:hover { color: #3dff7a; border-color: #3dff7a; }
 
     /* ===== 曲リスト ===== */
     .songs-heading {
-      font-size: 0.72rem;
-      letter-spacing: 0.35em;
-      color: #78bb99;
-      text-align: center;
-      margin-bottom: 22px;
+      font-size: 0.72rem; letter-spacing: 0.35em; color: #78bb99;
+      text-align: center; margin-bottom: 16px;
+    }
+    .song-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+
+    .song-item {
+      display: flex; align-items: center; gap: 12px;
+      background: #0c1e34; border: 1px solid #1a4a30; border-radius: 14px;
+      padding: 14px 16px; box-shadow: 0 6px 30px rgba(0, 0, 0, 0.45);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .song-item.playing { border-color: #3dff7a; background: #0e2740; }
+
+    .pl-check {
+      appearance: none; -webkit-appearance: none;
+      width: 22px; height: 22px; flex-shrink: 0;
+      border: 1.5px solid #2f6b4a; border-radius: 6px; background: #071420;
+      cursor: pointer; position: relative; transition: all .15s;
+    }
+    .pl-check:checked { background: #3dff7a; border-color: #3dff7a; }
+    .pl-check:checked::after {
+      content: "✓"; position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center; color: #071420;
+      font-size: 14px; font-weight: bold;
     }
 
-    .song-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .song-card {
-      display: block;
-      background: #0c1e34;
-      border: 1px solid #1a4a30;
-      border-radius: 14px;
-      padding: 18px 20px;
-      text-decoration: none;
-      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.45);
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .song-card:hover {
-      border-color: #3dff7a;
-      transform: translateY(-2px);
-    }
-
+    .card-main { flex: 1; min-width: 0; cursor: pointer; }
     .song-card-title {
-      font-size: 1.05rem;
-      font-weight: bold;
-      color: #eafff0;
-      letter-spacing: 0.04em;
-      margin-bottom: 6px;
+      font-size: 1.0rem; font-weight: bold; color: #eafff0;
+      letter-spacing: 0.03em; margin-bottom: 5px; line-height: 1.35;
+    }
+    .song-item.playing .song-card-title { color: #3dff7a; }
+    .song-card-meta { font-size: 0.72rem; color: #78bb99; letter-spacing: 0.04em; line-height: 1.5; }
+
+    .card-version {
+      margin-top: 8px; font-size: 0.72rem; color: #d8eedd;
+      background: #0a1a2c; border: 1px solid #1a4a30; border-radius: 8px;
+      padding: 5px 8px; cursor: pointer; max-width: 100%;
     }
 
-    .song-card-meta {
-      font-size: 0.75rem;
-      color: #78bb99;
-      letter-spacing: 0.05em;
+    .card-lyrics {
+      flex-shrink: 0; align-self: center; font-size: 0.72rem; color: #78bb99;
+      text-decoration: none; padding: 6px 8px; border-radius: 8px;
+      border: 1px solid #1a4a30; transition: all .18s; white-space: nowrap;
     }
+    .card-lyrics:hover { color: #3dff7a; border-color: #3dff7a; }
 
     /* ===== フッター ===== */
     .site-footer {
-      margin-top: 64px;
-      padding-top: 24px;
-      border-top: 1px solid #1a4a30;
-      text-align: center;
-      font-size: 0.75rem;
-      color: #6f9683;
-      line-height: 1.8;
+      margin-top: 48px; padding-top: 24px; border-top: 1px solid #1a4a30;
+      text-align: center; font-size: 0.75rem; color: #6f9683; line-height: 1.8;
     }
   </style>
   <!-- Google tag (gtag.js) -->
@@ -137,164 +149,238 @@
       <p class="site-catch">オリジナルソングを歌詞付きで公開中</p>
     </header>
 
+    <div class="player-bar">
+      <div class="now-playing" id="nowPlaying">🎵 曲をタップ、または下のボタンで連続再生</div>
+      <audio id="player" controls preload="none"></audio>
+      <div class="controls">
+        <button id="btnPlay" type="button">▶ 再生</button>
+        <button id="btnShuffle" type="button">🔀 シャッフル</button>
+        <button id="btnRepeat" type="button">🔁 リピート</button>
+      </div>
+      <div class="sub-controls">
+        <button id="btnAll" type="button">全選択</button>
+        <button id="btnNone" type="button">全解除</button>
+      </div>
+    </div>
+
     <main>
       <div class="songs-heading">SONGS</div>
-      <ul class="song-list">
-        <li>
-          <a class="song-card" href="umibudourenbo/">
-            <div class="song-card-title">海ぶどう恋慕</div>
-            <div class="song-card-meta">昭和歌謡ネタ ・ 2:55 ・ 2026 ・ 海ぶどうファンソング</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="RoyalFlash/">
-            <div class="song-card-title">Royal Flash</div>
-            <div class="song-card-meta">ハイテンポJ-POP ・ 2026 ・ 熱唱／女声／ぴざ／原曲</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="sinkokyuu/">
-            <div class="song-card-title">深呼吸</div>
-            <div class="song-card-meta">Lo-fi Hip Hop ・ 3:44 ・ 2026 ・ 疲れた君へ</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="LaPizzaSolstice/">
-            <div class="song-card-title">La Pizza Solstice</div>
-            <div class="song-card-meta">Symphonic Rock ・ 3:49 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="kidokutukanaimama/">
-            <div class="song-card-title">既読、つかないまま</div>
-            <div class="song-card-meta">民族調ポップ ・ 4:09 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="nanimonaihiwokimito/">
-            <div class="song-card-title">何もない日を君と</div>
-            <div class="song-card-meta">Ballad ・ 4:24 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="kyouhamouyasume/">
-            <div class="song-card-title">今日はもう休め</div>
-            <div class="song-card-meta">Lo-fi Hip Hop ・ 3:03 ・ 2026 ・ 疲れた君へ</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="sikaigaharetahi/">
-            <div class="song-card-title">視界が晴れた日</div>
-            <div class="song-card-meta">Ballad ・ 6:35 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="minaihuri/">
-            <div class="song-card-title">見ないふり</div>
-            <div class="song-card-meta">Ballad ・ 4:29 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="saigonikaerubasyo/">
-            <div class="song-card-title">最後に帰る場所</div>
-            <div class="song-card-meta">Ballad ・ 5:29 ・ 2026 ・ 不倫三部作・完結編</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="getuyoubinoasa/">
-            <div class="song-card-title">月曜日の朝</div>
-            <div class="song-card-meta">R&amp;B ・ 4:00 ・ 2026 ・ 「日曜日のあなた」アンサー</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="nitiyoubinoanata/">
-            <div class="song-card-title">日曜日のあなた</div>
-            <div class="song-card-meta">R&amp;B ・ 4:04 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="zenbuseigi/">
-            <div class="song-card-title">ぜんぶ正義♡</div>
-            <div class="song-card-meta">Idol Pop ・ 3:06 ・ 2026 ・ 「正義のボケ野郎」アンサー</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="seiginobokeyarou/">
-            <div class="song-card-title">正義のボケ野郎</div>
-            <div class="song-card-meta">Rap ・ 1:29 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="usotukinalip/">
-            <div class="song-card-title">嘘つきなリップ</div>
-            <div class="song-card-meta">R&amp;B ・ 4:05 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="sayonarahaodorinagara/">
-            <div class="song-card-title">さよならは踊りながら</div>
-            <div class="song-card-meta">Dance ・ 4:35 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="kimiwokiraininarusainouganai/">
-            <div class="song-card-title">君を嫌いになる才能がない</div>
-            <div class="song-card-meta">Rock ・ 4:22 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="nemurenaiyoruni/">
-            <div class="song-card-title">眠れない夜に</div>
-            <div class="song-card-meta">Ballad ・ 3:51 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="AshTale-aruaru-keikokuchu-to-deaizigoku/">
-            <div class="song-card-title">アシュテあるあるラップ ～警告厨と出会い地獄～</div>
-            <div class="song-card-meta">Rap ・ 2:10 ・ 2026</div>
-          </a>
-        </li>
-        <li>
-          <a class="song-card" href="anatano-bunmade-naketanara/">
-            <div class="song-card-title">あなたの分まで泣けたなら</div>
-            <div class="song-card-meta">Ballad ・ 4:01 ・ 2026</div>
-          </a>
-        </li>
-      </ul>
+      <ul class="song-list" id="songList"></ul>
     </main>
 
     <footer class="site-footer">
       <p>© MOKUZU MUSIC — オリジナル楽曲</p>
     </footer>
   </div>
+
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var song = document.title.replace(/\s*\|\s*MOKUZU MUSIC.*$/, '').trim();
-      document.querySelectorAll('audio').forEach(function (a) {
-        var ver = decodeURIComponent((a.getAttribute('src') || '').replace(/\.mp3$/i, ''));
-        function track(name) { if (typeof gtag === 'function') gtag('event', name, { song_title: song, version: ver }); }
-        a.addEventListener('play', function () { track('song_play'); });
-        a.addEventListener('ended', function () {
-          track('song_complete');
-          if (a.dataset.repeat === '1') { a.currentTime = 0; a.play(); }
+    var SONGS = [
+      { folder: "umibudourenbo/", title: "海ぶどう恋慕", meta: "昭和歌謡ネタ ・ 2:55 ・ 2026 ・ 海ぶどうファンソング", versions: [{ label: "", file: "umibudourenbo/海ぶどう恋慕（うみぶどうれんぼ）.mp3" }] },
+      { folder: "RoyalFlash/", title: "Royal Flash", meta: "ハイテンポJ-POP ・ 2026 ・ 熱唱／女声／ぴざ／原曲", versions: [
+        { label: "熱唱", file: "RoyalFlash/Royal Flash (1).mp3" },
+        { label: "女声", file: "RoyalFlash/Royal Flash_onnna.mp3" },
+        { label: "ぴざ", file: "RoyalFlash/Royal Flash_piza.mp3" },
+        { label: "原曲", file: "RoyalFlash/Royal Flash.mp3" }
+      ] },
+      { folder: "sinkokyuu/", title: "深呼吸", meta: "Lo-fi Hip Hop ・ 3:44 ・ 2026 ・ 疲れた君へ", versions: [{ label: "", file: "sinkokyuu/深呼吸.mp3" }] },
+      { folder: "LaPizzaSolstice/", title: "La Pizza Solstice", meta: "Symphonic Rock ・ 3:49 ・ 2026", versions: [
+        { label: "本家", file: "LaPizzaSolstice/La Pizza Solstice_h.mp3" },
+        { label: "別バージョン", file: "LaPizzaSolstice/La Pizza Solstice.mp3" }
+      ] },
+      { folder: "kidokutukanaimama/", title: "既読、つかないまま", meta: "民族調ポップ ・ 4:09 ・ 2026", versions: [{ label: "", file: "kidokutukanaimama/既読、つかないまま.mp3" }] },
+      { folder: "nanimonaihiwokimito/", title: "何もない日を君と", meta: "Ballad ・ 4:24 ・ 2026", versions: [{ label: "", file: "nanimonaihiwokimito/何もない日を君と.mp3" }] },
+      { folder: "kyouhamouyasume/", title: "今日はもう休め", meta: "Lo-fi Hip Hop ・ 3:03 ・ 2026 ・ 疲れた君へ", versions: [{ label: "", file: "kyouhamouyasume/今日はもう休め.mp3" }] },
+      { folder: "sikaigaharetahi/", title: "視界が晴れた日", meta: "Ballad ・ 6:35 ・ 2026", versions: [{ label: "", file: "sikaigaharetahi/視界が晴れた日.mp3" }] },
+      { folder: "minaihuri/", title: "見ないふり", meta: "Ballad ・ 4:29 ・ 2026", versions: [{ label: "", file: "minaihuri/みないふり.mp3" }] },
+      { folder: "saigonikaerubasyo/", title: "最後に帰る場所", meta: "Ballad ・ 5:29 ・ 2026 ・ 不倫三部作・完結編", versions: [{ label: "", file: "saigonikaerubasyo/最後に帰る場所.mp3" }] },
+      { folder: "getuyoubinoasa/", title: "月曜日の朝", meta: "R&B ・ 4:00 ・ 2026 ・ 「日曜日のあなた」アンサー", versions: [{ label: "", file: "getuyoubinoasa/月曜日の朝.mp3" }] },
+      { folder: "nitiyoubinoanata/", title: "日曜日のあなた", meta: "R&B ・ 4:04 ・ 2026", versions: [{ label: "", file: "nitiyoubinoanata/日曜日のあなた.mp3" }] },
+      { folder: "zenbuseigi/", title: "ぜんぶ正義♡", meta: "Idol Pop ・ 3:06 ・ 2026 ・ 「正義のボケ野郎」アンサー", versions: [{ label: "", file: "zenbuseigi/ぜんぶ正義.mp3" }] },
+      { folder: "seiginobokeyarou/", title: "正義のボケ野郎", meta: "Rap ・ 1:29 ・ 2026", versions: [{ label: "", file: "seiginobokeyarou/またはじまった.mp3" }] },
+      { folder: "usotukinalip/", title: "嘘つきなリップ", meta: "R&B ・ 4:05 ・ 2026", versions: [{ label: "", file: "usotukinalip/嘘つきなリップ.mp3" }] },
+      { folder: "sayonarahaodorinagara/", title: "さよならは踊りながら", meta: "Dance ・ 4:35 ・ 2026", versions: [{ label: "", file: "sayonarahaodorinagara/さよならは踊りながら.mp3" }] },
+      { folder: "kimiwokiraininarusainouganai/", title: "君を嫌いになる才能がない", meta: "Rock ・ 4:22 ・ 2026", versions: [{ label: "", file: "kimiwokiraininarusainouganai/君を嫌いになる才能がない.mp3" }] },
+      { folder: "nemurenaiyoruni/", title: "眠れない夜に", meta: "Ballad ・ 3:51 ・ 2026", versions: [{ label: "", file: "nemurenaiyoruni/眠れない夜に.mp3" }] },
+      { folder: "AshTale-aruaru-keikokuchu-to-deaizigoku/", title: "アシュテあるあるラップ ～警告厨と出会い地獄～", meta: "Rap ・ 2:10 ・ 2026", versions: [{ label: "", file: "AshTale-aruaru-keikokuchu-to-deaizigoku/アシュテあるあるラップ ～警告厨と出会い地獄～.mp3" }] },
+      { folder: "anatano-bunmade-naketanara/", title: "あなたの分まで泣けたなら", meta: "Ballad ・ 4:01 ・ 2026", versions: [{ label: "", file: "anatano-bunmade-naketanara/あなたの分まで泣けたなら.mp3" }] }
+    ];
+
+    var listEl = document.getElementById("songList");
+    var player = document.getElementById("player");
+    var nowPlaying = document.getElementById("nowPlaying");
+    var btnPlay = document.getElementById("btnPlay");
+    var btnShuffle = document.getElementById("btnShuffle");
+    var btnRepeat = document.getElementById("btnRepeat");
+    var btnAll = document.getElementById("btnAll");
+    var btnNone = document.getElementById("btnNone");
+
+    var queue = [];
+    var qpos = -1;
+    var repeatOn = false;
+
+    function basename(file) {
+      var name = file.split("/").pop();
+      return decodeURIComponent(name).replace(/\.mp3$/i, "");
+    }
+    function track(name, title, ver) {
+      if (typeof gtag === "function") gtag("event", name, { song_title: title, version: ver });
+    }
+
+    SONGS.forEach(function (s, i) {
+      var li = document.createElement("li");
+      li.className = "song-item";
+      li.dataset.idx = i;
+
+      var chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.className = "pl-check";
+      chk.setAttribute("aria-label", s.title + " をプレイリストに追加");
+      chk.addEventListener("change", updatePlayLabel);
+
+      var main = document.createElement("div");
+      main.className = "card-main";
+      var t = document.createElement("div");
+      t.className = "song-card-title";
+      t.textContent = s.title;
+      var m = document.createElement("div");
+      m.className = "song-card-meta";
+      m.textContent = s.meta;
+      main.appendChild(t);
+      main.appendChild(m);
+
+      if (s.versions.length > 1) {
+        var sel = document.createElement("select");
+        sel.className = "card-version";
+        sel.setAttribute("aria-label", s.title + " のバージョン選択");
+        s.versions.forEach(function (v, vi) {
+          var opt = document.createElement("option");
+          opt.value = vi;
+          opt.textContent = "🎧 " + v.label;
+          sel.appendChild(opt);
         });
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.setAttribute('aria-label', 'リピート再生の切り替え');
-        btn.textContent = '🔁 リピート：オフ';
-        btn.style.cssText = 'margin-top:12px;width:100%;padding:11px;border-radius:12px;border:1px solid #1a4a30;background:#0a1a2c;color:#78bb99;font-size:0.82rem;letter-spacing:0.08em;cursor:pointer;transition:all .2s;';
-        btn.addEventListener('click', function () {
-          var on = a.dataset.repeat === '1';
-          a.dataset.repeat = on ? '0' : '1';
-          btn.textContent = on ? '🔁 リピート：オフ' : '🔂 リピート：オン';
-          btn.style.color = on ? '#78bb99' : '#071420';
-          btn.style.background = on ? '#0a1a2c' : '#3dff7a';
-          btn.style.borderColor = on ? '#1a4a30' : '#3dff7a';
-        });
-        var card = a.closest('.player-card') || a.parentElement;
-        card.parentElement.insertBefore(btn, card.nextSibling);
-      });
+        sel.addEventListener("click", function (e) { e.stopPropagation(); });
+        main.appendChild(sel);
+        li._sel = sel;
+      }
+
+      main.addEventListener("click", function () { playFrom(i); });
+
+      var lyr = document.createElement("a");
+      lyr.className = "card-lyrics";
+      lyr.href = s.folder;
+      lyr.textContent = "歌詞 ›";
+
+      li.appendChild(chk);
+      li.appendChild(main);
+      li.appendChild(lyr);
+      li._chk = chk;
+      listEl.appendChild(li);
     });
+
+    function chosenVersion(i) {
+      var li = listEl.children[i];
+      var vi = li._sel ? parseInt(li._sel.value, 10) : 0;
+      var v = SONGS[i].versions[vi];
+      return { idx: i, title: SONGS[i].title, label: v.label, file: v.file };
+    }
+
+    function activeIndexes() {
+      var checked = [];
+      for (var i = 0; i < SONGS.length; i++) {
+        if (listEl.children[i]._chk.checked) checked.push(i);
+      }
+      if (checked.length === 0) {
+        checked = SONGS.map(function (_, i) { return i; });
+      }
+      return checked;
+    }
+
+    function updatePlayLabel() {
+      var checkedCount = 0;
+      for (var i = 0; i < SONGS.length; i++) if (listEl.children[i]._chk.checked) checkedCount++;
+      btnPlay.textContent = checkedCount === 0
+        ? "▶ 全" + SONGS.length + "曲"
+        : "▶ 選択" + checkedCount + "曲";
+    }
+
+    function highlight(idx) {
+      for (var i = 0; i < listEl.children.length; i++) {
+        listEl.children[i].classList.toggle("playing", i === idx);
+      }
+    }
+
+    function loadCurrent() {
+      if (qpos < 0 || qpos >= queue.length) return;
+      var t = queue[qpos];
+      player.src = t.file;
+      player.play();
+      nowPlaying.innerHTML = "▶ " + escapeHtml(t.title) + (t.label ? " <span class='np-label'>（" + escapeHtml(t.label) + "）</span>" : "");
+      highlight(t.idx);
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function playQueue(list, startPos) {
+      queue = list;
+      qpos = startPos;
+      loadCurrent();
+    }
+
+    function playFrom(i) {
+      var act = activeIndexes();
+      var pos = act.indexOf(i);
+      if (pos === -1) {
+        playQueue([chosenVersion(i)], 0);
+      } else {
+        playQueue(act.map(chosenVersion), pos);
+      }
+    }
+
+    btnPlay.addEventListener("click", function () {
+      playQueue(activeIndexes().map(chosenVersion), 0);
+    });
+
+    btnShuffle.addEventListener("click", function () {
+      var arr = activeIndexes().map(chosenVersion);
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+      }
+      playQueue(arr, 0);
+    });
+
+    btnRepeat.addEventListener("click", function () {
+      repeatOn = !repeatOn;
+      btnRepeat.textContent = repeatOn ? "🔁 リピート中" : "🔁 リピート";
+      btnRepeat.classList.toggle("toggle-on", repeatOn);
+    });
+
+    btnAll.addEventListener("click", function () {
+      for (var i = 0; i < SONGS.length; i++) listEl.children[i]._chk.checked = true;
+      updatePlayLabel();
+    });
+    btnNone.addEventListener("click", function () {
+      for (var i = 0; i < SONGS.length; i++) listEl.children[i]._chk.checked = false;
+      updatePlayLabel();
+    });
+
+    player.addEventListener("play", function () {
+      if (qpos >= 0 && qpos < queue.length) track("song_play", queue[qpos].title, basename(queue[qpos].file));
+    });
+    player.addEventListener("ended", function () {
+      if (qpos >= 0 && qpos < queue.length) track("song_complete", queue[qpos].title, basename(queue[qpos].file));
+      qpos++;
+      if (qpos >= queue.length) {
+        if (repeatOn && queue.length > 0) { qpos = 0; loadCurrent(); }
+        else { qpos = -1; highlight(-1); nowPlaying.innerHTML = "🎵 再生が終わりました"; }
+      } else {
+        loadCurrent();
+      }
+    });
+
+    updatePlayLabel();
   </script>
 </body>
 </html>
