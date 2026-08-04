@@ -139,6 +139,14 @@
       line-height: 1.8;
     }
   </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SKB9HGSF9K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-SKB9HGSF9K');
+  </script>
 </head>
 <body>
   <div class="container">
@@ -206,5 +214,18 @@
       <p>© MOKUZU MUSIC — オリジナル楽曲</p>
     </footer>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var song = document.title.replace(/\s*\|\s*MOKUZU MUSIC.*$/, '').trim();
+      document.querySelectorAll('audio').forEach(function (a) {
+        a.addEventListener('play', function () {
+          var ver = decodeURIComponent((a.getAttribute('src') || '').replace(/\.mp3$/i, ''));
+          if (typeof gtag === 'function') {
+            gtag('event', 'song_play', { song_title: song, version: ver });
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>

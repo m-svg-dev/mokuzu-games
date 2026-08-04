@@ -136,6 +136,14 @@
     }
     .song-footer a:hover { color: #3dff7a; }
   </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SKB9HGSF9K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-SKB9HGSF9K');
+  </script>
 </head>
 <body>
   <div class="container">
@@ -205,5 +213,18 @@
       <p>不倫三部作：<a href="../nitiyoubinoanata/">日曜日のあなた</a> ／ 月曜日の朝 ／ <a href="../saigonikaerubasyo/">最後に帰る場所</a></p>
     </footer>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var song = document.title.replace(/\s*\|\s*MOKUZU MUSIC.*$/, '').trim();
+      document.querySelectorAll('audio').forEach(function (a) {
+        a.addEventListener('play', function () {
+          var ver = decodeURIComponent((a.getAttribute('src') || '').replace(/\.mp3$/i, ''));
+          if (typeof gtag === 'function') {
+            gtag('event', 'song_play', { song_title: song, version: ver });
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>
