@@ -202,12 +202,28 @@
     document.addEventListener('DOMContentLoaded', function () {
       var song = document.title.replace(/\s*\|\s*MOKUZU MUSIC.*$/, '').trim();
       document.querySelectorAll('audio').forEach(function (a) {
-        a.addEventListener('play', function () {
-          var ver = decodeURIComponent((a.getAttribute('src') || '').replace(/\.mp3$/i, ''));
-          if (typeof gtag === 'function') {
-            gtag('event', 'song_play', { song_title: song, version: ver });
-          }
+        var ver = decodeURIComponent((a.getAttribute('src') || '').replace(/\.mp3$/i, ''));
+        function track(name) { if (typeof gtag === 'function') gtag('event', name, { song_title: song, version: ver }); }
+        a.addEventListener('play', function () { track('song_play'); });
+        a.addEventListener('ended', function () {
+          track('song_complete');
+          if (a.dataset.repeat === '1') { a.currentTime = 0; a.play(); }
         });
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('aria-label', 'リピート再生の切り替え');
+        btn.textContent = '🔁 リピート：オフ';
+        btn.style.cssText = 'margin-top:12px;width:100%;padding:11px;border-radius:12px;border:1px solid #1a4a30;background:#0a1a2c;color:#78bb99;font-size:0.82rem;letter-spacing:0.08em;cursor:pointer;transition:all .2s;';
+        btn.addEventListener('click', function () {
+          var on = a.dataset.repeat === '1';
+          a.dataset.repeat = on ? '0' : '1';
+          btn.textContent = on ? '🔁 リピート：オフ' : '🔂 リピート：オン';
+          btn.style.color = on ? '#78bb99' : '#071420';
+          btn.style.background = on ? '#0a1a2c' : '#3dff7a';
+          btn.style.borderColor = on ? '#1a4a30' : '#3dff7a';
+        });
+        var card = a.closest('.player-card') || a.parentElement;
+        card.parentElement.insertBefore(btn, card.nextSibling);
       });
     });
   </script>
