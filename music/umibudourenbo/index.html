@@ -216,10 +216,10 @@
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      var song = document.title.replace(/\s*\|\s*MOKUZU MUSIC.*$/, '').trim();
+      var song = document.title.replace(/\s*\|\s*MOKUZU MUSIC.*$/, '').trim() || (document.querySelector('h1') ? document.querySelector('h1').textContent.trim() : '');
       document.querySelectorAll('audio').forEach(function (a) {
         var ver = decodeURIComponent((a.getAttribute('src') || '').replace(/\.mp3$/i, ''));
-        function track(name) { if (typeof gtag === 'function') gtag('event', name, { song_title: song, version: ver }); }
+        function track(name) { if (typeof gtag === 'function' && song) gtag('event', name, { song_title: song, version: ver }); }
         a.addEventListener('play', function () { track('song_play'); });
         a.addEventListener('ended', function () {
           track('song_complete');

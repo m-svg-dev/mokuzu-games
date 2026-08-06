@@ -223,7 +223,7 @@
       return decodeURIComponent(name).replace(/\.mp3$/i, "");
     }
     function track(name, title, ver) {
-      if (typeof gtag === "function") gtag("event", name, { song_title: title, version: ver });
+      if (typeof gtag === "function" && title) gtag("event", name, { song_title: title, version: ver });
     }
 
     SONGS.forEach(function (s, i) {
