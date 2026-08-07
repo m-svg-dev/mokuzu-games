@@ -232,10 +232,15 @@
       document.querySelectorAll('audio').forEach(function (a) {
         var ver = decodeURIComponent((a.getAttribute('src') || '').replace(/\.mp3$/i, ''));
         function track(name) { if (typeof gtag === 'function' && song) gtag('event', name, { song_title: song, version: ver }); }
-        a.addEventListener('play', function () { track('song_play'); });
+        a.addEventListener('play', function () {
+          if (a.dataset.counted === '1') return;
+          a.dataset.counted = '1';
+          track('song_play');
+        });
         a.addEventListener('ended', function () {
+          a.dataset.counted = '';
           track('song_complete');
-          if (a.dataset.repeat === '1') { a.currentTime = 0; a.play(); }
+          if (a.dataset.repeat === '1') { a.currentTime = 0; var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); }
         });
         var btn = document.createElement('button');
         btn.type = 'button';

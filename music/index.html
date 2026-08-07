@@ -219,6 +219,8 @@
     var queue = [];
     var qpos = -1;
     var repeatOn = false;
+    var current = null;   // 最後に読み込んだ曲（キュー終了後も保持＝単発再生の計測用）
+    var counted = false;  // この曲で song_play を送信済みか（一時停止→再開の二重計上防止）
 
     function basename(file) {
       var name = file.split("/").pop();
@@ -314,8 +316,12 @@
     function loadCurrent() {
       if (qpos < 0 || qpos >= queue.length) return;
       var t = queue[qpos];
+      current = t;
+      counted = false;
       player.src = t.file;
-      player.play();
+      // 曲を素早く切り替えると直前の play() が中断され AbortError になるため握りつぶす
+      var pr = player.play();
+      if (pr && pr.catch) pr.catch(function () {});
       nowPlaying.innerHTML = "▶ " + escapeHtml(t.title) + (t.label ? " <span class='np-label'>（" + escapeHtml(t.label) + "）</span>" : "");
       highlight(t.idx);
     }
@@ -369,10 +375,14 @@
     });
 
     player.addEventListener("play", function () {
-      if (qpos >= 0 && qpos < queue.length) track("song_play", queue[qpos].title, basename(queue[qpos].file));
+      if (!current || counted) return;
+      counted = true;
+      track("song_play", current.title, basename(current.file));
     });
     player.addEventListener("ended", function () {
-      if (qpos >= 0 && qpos < queue.length) track("song_complete", queue[qpos].title, basename(queue[qpos].file));
+      counted = false;
+      if (current) track("song_complete", current.title, basename(current.file));
+      if (qpos < 0) return; // キュー終了後の単発再生。曲送りはしない
       qpos++;
       if (qpos >= queue.length) {
         if (repeatOn && queue.length > 0) { qpos = 0; loadCurrent(); }
