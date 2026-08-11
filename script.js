@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.24.0';
+const CURRENT_VERSION = '2.24.1';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,17 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.24.1',
+    date: '2026/08/11',
+    title: '🛟 藻クエスト：取れない宝箱と、配合プレビューの表示を修正',
+    items: [
+      '📦 大湿原B3F・奈落海溝B1Fに、まわりを完全に囲まれていて絶対に取れない宝箱がありました。道を繋いで全部拾えるようにしました（全28フロアを自動チェック済み）',
+      '⚗️ 配合の「生まれる子」が、実際に生まれる子と一致していませんでした。表示のたびに抽選し直していたのが原因です',
+      '⚗️ 1体だけ見せるのをやめて、生まれる可能性のある子を全部ならべる形にしました。確定する組み合わせは今まで通り「（確定）」と出ます',
+      '✨ 同じ系統どうしの配合は、まれに系統が変化することがあります。これも隠さず表示するようにしました',
+    ],
+  },
   {
     id: 'v2.24.0',
     date: '2026/06/13',
@@ -6093,7 +6104,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.24.0';
+import { initMokumon } from './minigame-mokumon.js?v=2.24.1';
 
 let _authMode = 'login'; // 'login' | 'register'
 

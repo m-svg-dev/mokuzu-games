@@ -1397,6 +1397,16 @@
   padding: 4px 0;
 }
 .mkm-fusion-result-row b { color: var(--mkm-accent); }
+/* 配合プレビュー：ランダム抽選になるときの候補一覧 */
+.mkm-fusion-cands {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  margin: 2px 0 6px;
+}
+.mkm-fusion-cands .mkm-fusion-chip { font-size: 11px; padding: 1px 8px; }
+.mkm-fusion-rare {
+  font-size: 10px; color: var(--mkm-muted); line-height: 1.5;
+  margin: -2px 0 6px;
+}
 .mkm-fusion-actions { margin-bottom: 18px; }
 .mkm-fusion-actions .mkm-btn-primary { width: 100%; }
 .mkm-fusion-actions .mkm-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }

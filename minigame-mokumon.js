@@ -2362,10 +2362,12 @@ function buildWetlandB3F() {
   fillRect(grid, 27, 8, 28, 15, ',');
   fillRect(grid, 16, 14, 28, 15, ',');
 
-  // 行き止まり宝箱ポケット
+  // 行き止まり宝箱ポケット（それぞれ本道から入れるよう繋ぐこと）
   fillRect(grid, 1, 7, 6, 9, ',');
   fillRect(grid, 1, 7, 2, 15, ',');
   fillRect(grid, 25, 19, 30, 21, ',');
+  fillRect(grid, 27, 15, 28, 19, ',');   // 右ルート → 南東ポケットへの下り
+  fillRect(grid, 20, 4, 20, 5, ',');     // 上部開通 → 北東の宝箱へ
 
   // 水辺（迷路の一部）
   fillRect(grid, 7, 5, 12, 8, '~');
@@ -2534,6 +2536,9 @@ function buildDeepseaMap() {
   fillRect(grid, 3, 12, 9, 16, ',');
   fillRect(grid, 14, 16, 20, 17, ',');
   fillRect(grid, 6, 11, 17, 12, ',');
+  // 東側の藻場へ渡る足場（これが無いと北東・南東の藻場に入れない）
+  fillRect(grid, 13, 4, 13, 5, '.');
+  fillRect(grid, 16, 15, 17, 15, '.');
   // 岩礁（障害物＝木文字を岩として扱う）
   fillRect(grid, 8, 4, 8, 4, '#');
   fillRect(grid, 16, 9, 17, 9, '#');
@@ -5400,17 +5405,74 @@ function resolveChildMonster(mA, mB) {
   return pickChildMonster(fuseRank(mA, mB), fuseFamily(mA, mB));
 }
 
-// 指定ランク・系統に合致する子モンスター候補を選ぶ（fusionResultなし時のフォールバック）
-function pickChildMonster(rank, family) {
+// 指定ランク・系統で抽選対象になるモンスターの一覧。
+// pickChildMonster とプレビューの両方がここを見るので、表示と結果がズレない。
+function candidatesFor(rank, family) {
   const exact = MASTER.monsters.filter(m => m.rank === rank && m.family === family);
-  if (exact.length) return exact[Math.floor(Math.random() * exact.length)];
+  if (exact.length) return exact;
   const sameFam = MASTER.monsters.filter(m => m.family === family)
     .sort((a, b) => Math.abs(RANK_ORDER.indexOf(a.rank) - RANK_ORDER.indexOf(rank))
                   - Math.abs(RANK_ORDER.indexOf(b.rank) - RANK_ORDER.indexOf(rank)));
-  if (sameFam.length) return sameFam[0];
+  if (sameFam.length) return [sameFam[0]];
   const sameRank = MASTER.monsters.filter(m => m.rank === rank);
-  if (sameRank.length) return sameRank[Math.floor(Math.random() * sameRank.length)];
-  return MASTER.monsters[0];
+  if (sameRank.length) return sameRank;
+  return [MASTER.monsters[0]];
+}
+
+// 指定ランク・系統に合致する子モンスター候補を選ぶ（fusionResultなし時のフォールバック）
+function pickChildMonster(rank, family) {
+  const pool = candidatesFor(rank, family);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// プレビュー用：この2親から生まれうる子を洗い出す。
+// fuseRank（同系統は30%でランクアップ）と fuseFamily（同系統は20%で別系統／
+// 異系統は50%ずつ）の分岐を全部たどるので、実際に出る子は必ずこの中に入る。
+//   main … 高確率で出る本命の系統
+//   rare … 系統変化で出る可能性がある子
+function listChildCandidates(mA, mB) {
+  const idA = mA.monsterId, idB = mB.monsterId;
+
+  const recipe = (MASTER.recipes ?? []).find(r =>
+    (r.a === idA && r.b === idB) || (r.a === idB && r.b === idA)
+  );
+  if (recipe) {
+    const m = getMonsterMaster(recipe.result);
+    if (m) return { fixed: true, main: [m], rare: [] };
+  }
+
+  const rA = mA.fusionResult ?? null;
+  const rB = mB.fusionResult ?? null;
+  if (rA || rB) {
+    const resultId = (rA && rB)
+      ? (RANK_ORDER.indexOf(mA.rank) >= RANK_ORDER.indexOf(mB.rank) ? rA : rB)
+      : (rA ?? rB);
+    const m = getMonsterMaster(resultId);
+    if (m) return { fixed: true, main: [m], rare: [] };
+  }
+
+  const base = Math.min(RANK_ORDER.indexOf(mA.rank), RANK_ORDER.indexOf(mB.rank));
+  const isSameFam = (mA.family === mB.family);
+  // 同系統は30%でランクアップするので、ランクは2通りありうる
+  const ranks = isSameFam
+    ? [...new Set([RANK_ORDER[base], RANK_ORDER[Math.min(base + 1, RANK_ORDER.length - 1)]])]
+    : [RANK_ORDER[base]];
+  const mainFams = isSameFam ? [mA.family] : [...new Set([mA.family, mB.family])];
+  const rareFams = isSameFam
+    ? Object.keys(FAMILIES).filter(f => f !== mA.family)
+    : [];
+
+  const collect = (fams) => {
+    const out = [];
+    for (const f of fams) for (const r of ranks) {
+      for (const m of candidatesFor(r, f)) if (!out.includes(m)) out.push(m);
+    }
+    return out;
+  };
+
+  const main = collect(mainFams);
+  const rare = collect(rareFams).filter(m => !main.includes(m));
+  return { fixed: main.length === 1 && rare.length === 0, main, rare };
 }
 
 // ---- 配合画面 ----
@@ -5490,19 +5552,38 @@ function renderFusionSlots() {
     const inheritCount = Math.min(3, new Set([...a.skills, ...b.skills].filter(s => {
       const sm = getSkillMaster(s); return sm && sm.inheritable;
     })).size);
-    const previewChild = resolveChildMonster(mA, mB);
-    const previewFam = famInfo(previewChild.family);
-    const isFixed = (mA.fusionResult || mB.fusionResult);
+    // 生まれうる子の一覧。抽選になる場合は候補を全部見せる
+    const cand = listChildCandidates(mA, mB);
+    const head = cand.main[0];
+    const headFam = famInfo(head.family);
+    const chip = (m) => {
+      const f = famInfo(m.family);
+      return `<span class="mkm-fusion-chip" style="border-color:${f.color};color:${f.color}">${escHtml(m.name)}</span>`;
+    };
+    const rankLabel = cand.main.every(m => m.rank === head.rank) ? head.rank : `${head.rank} か その上`;
+    const famLabel  = cand.main.every(m => m.family === head.family)
+      ? `${headFam.name}系${cand.rare.length ? '（まれに別系統）' : ''}`
+      : cand.main.map(m => famInfo(m.family).name).filter((v, i, a) => a.indexOf(v) === i).join(' か ') + '系';
+
+    const childRow = cand.fixed
+      ? `<div class="mkm-fusion-result-row">
+           <span>生まれる子</span>
+           <b style="color:${headFam.color}">${escHtml(head.name)}</b>
+           <span style="font-size:10px;color:#888">（確定）</span>
+         </div>`
+      : `<div class="mkm-fusion-result-row">
+           <span>生まれる子</span>
+           <span style="font-size:10px;color:#888">この${cand.main.length}体からランダム</span>
+         </div>
+         <div class="mkm-fusion-cands">${cand.main.map(chip).join('')}</div>
+         ${cand.rare.length ? `<div class="mkm-fusion-rare">まれに系統が変化して、別系統の子（${cand.rare.length}体）が生まれることがあります</div>` : ''}`;
+
     preview.innerHTML = `
       <div class="mkm-fusion-arrow">▼</div>
       <div class="mkm-fusion-result">
-        <div class="mkm-fusion-result-row">
-          <span>生まれる子</span>
-          <b style="color:${previewFam.color}">${escHtml(previewChild.name)}</b>
-          <span style="font-size:10px;color:#888">${isFixed ? '（確定）' : '（候補）'}</span>
-        </div>
-        <div class="mkm-fusion-result-row"><span>ランク</span><b>${previewChild.rank}</b></div>
-        <div class="mkm-fusion-result-row"><span>系統</span><b>${previewFam.name}系</b></div>
+        ${childRow}
+        <div class="mkm-fusion-result-row"><span>ランク</span><b>${rankLabel}</b></div>
+        <div class="mkm-fusion-result-row"><span>系統</span><b>${famLabel}</b></div>
         <div class="mkm-fusion-result-row"><span>配合値</span><b>${newFusionValue}</b></div>
         <div class="mkm-fusion-result-row"><span>継承できる特技</span><b>最大${inheritCount}個</b></div>
       </div>
