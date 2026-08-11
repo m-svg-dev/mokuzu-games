@@ -1343,7 +1343,6 @@ const AREAS = [
   {
     id: 'deepsea',
     name: '奈落海溝',
-    unimplemented: true,
     desc: '深海系モンスターが棲む 暗く深い海',
     emoji: '🌊',
     requires: 'wetland',   // 大湿原クリアで解放
@@ -1397,7 +1396,6 @@ const AREAS = [
   {
     id: 'machine',
     name: '機械都市クローム',
-    unimplemented: true,
     desc: '機械系モンスターが稼働する 鋼鉄の都市',
     emoji: '⚙️',
     requires: 'deepsea',   // 奈落海溝クリアで解放
@@ -1437,7 +1435,6 @@ const AREAS = [
   {
     id: 'spirit',
     name: '世界樹の神域',
-    unimplemented: true,
     desc: '精霊系モンスターが舞う 聖なる森',
     emoji: '🌳',
     requires: 'machine',
@@ -1477,7 +1474,6 @@ const AREAS = [
   {
     id: 'ghost',
     name: '黄昏墓地',
-    unimplemented: true,
     desc: '亡霊系モンスターが彷徨う 死者の地',
     emoji: '🪦',
     requires: 'spirit',
@@ -1517,7 +1513,6 @@ const AREAS = [
   {
     id: 'corporate',
     name: '超巨大企業都市',
-    unimplemented: true,
     desc: '企業系モンスターが蠢く 欲望の摩天楼',
     emoji: '🏙️',
     requires: 'ghost',
@@ -1558,7 +1553,6 @@ const AREAS = [
   {
     id: 'disaster',
     name: '終焉火山',
-    unimplemented: true,
     desc: '災厄系モンスターが暴れる 灼熱の地獄',
     emoji: '🌋',
     requires: 'corporate',
@@ -1631,11 +1625,14 @@ function renderField() {
     } else {
       const wipBadge = area.unimplemented ? ' <span class="mkm-area-wip">準備中</span>' : '';
       const clearBadge = (!area.unimplemented && d.clearedAreas[area.id]) ? ' <span class="mkm-area-clear">踏破済</span>' : '';
+      const lv = areaLevelRange(area);
+      const lvBadge = lv ? `<span class="mkm-area-lv">敵Lv ${lv.min}〜${lv.max}</span>` : '';
       el.innerHTML = `
         <span class="mkm-area-emoji">${area.emoji}</span>
         <div class="mkm-area-info">
           <div class="mkm-area-name">${escHtml(area.name)}${clearBadge}${wipBadge}</div>
           <div class="mkm-area-desc">${escHtml(area.desc)}</div>
+          ${lvBadge}
         </div>
         <span class="mg-arrow">›</span>
       `;
@@ -1645,6 +1642,24 @@ function renderField() {
   });
 
   document.getElementById('mokumon-back-btn').onclick = enterVillage;
+}
+
+// エリアに出る敵のレベル帯を enemyPool から集計する（ボスも含む）。
+// AREASに手書きの数字を持たせるとデータがズレるので、毎回そこから数える。
+function areaLevelRange(area) {
+  let min = Infinity, max = -Infinity;
+  for (const floor of area.floors ?? []) {
+    for (const e of floor.enemyPool ?? []) {
+      const [lo, hi] = Array.isArray(e.lv) ? e.lv : [e.lv, e.lv];
+      if (lo < min) min = lo;
+      if (hi > max) max = hi;
+    }
+    if (floor.boss) {
+      if (floor.boss.lv < min) min = floor.boss.lv;
+      if (floor.boss.lv > max) max = floor.boss.lv;
+    }
+  }
+  return Number.isFinite(min) ? { min, max } : null;
 }
 
 function enterArea(area) {
@@ -1728,6 +1743,44 @@ function fillRect(grid, x1, y1, x2, y2, ch) {
   }
 }
 
+// 折れ線の通路を掘る。waypoint は直前の点と x か y を共有すること。
+// w は通路の太さ（右／下方向に広がる）
+function carve(grid, pts, ch = '.', w = 2) {
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x1, y1] = pts[i], [x2, y2] = pts[i + 1];
+    const d = w - 1;
+    if (x1 === x2) fillRect(grid, x1, Math.min(y1, y2), x1 + d, Math.max(y1, y2), ch);
+    else           fillRect(grid, Math.min(x1, x2), y1, Math.max(x1, x2), y1 + d, ch);
+  }
+}
+
+// onlyCh のマスだけ置き換える（掘った通路を壊さずに草を敷ける）
+function fillRectIf(grid, x1, y1, x2, y2, ch, onlyCh) {
+  for (let y = y1; y <= y2; y++) {
+    for (let x = x1; x <= x2; x++) {
+      if (grid[y] && grid[y][x] === onlyCh) grid[y][x] = ch;
+    }
+  }
+}
+
+// 矩形の輪郭だけ描く（リング状の壁）
+function rectOutline(grid, x1, y1, x2, y2, ch) {
+  fillRect(grid, x1, y1, x2, y1, ch);
+  fillRect(grid, x1, y2, x2, y2, ch);
+  fillRect(grid, x1, y1, x1, y2, ch);
+  fillRect(grid, x2, y1, x2, y2, ch);
+}
+
+// 斜めの帯を掘る（階段状。企業都市の斜め大通り用）
+function carveDiag(grid, x1, y1, x2, y2, ch, w = 2) {
+  const n = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+  for (let i = 0; i <= n; i++) {
+    const x = Math.round(x1 + i * (x2 - x1) / n);
+    const y = Math.round(y1 + i * (y2 - y1) / n);
+    fillRect(grid, x, y, x + w - 1, y + w - 1, ch);
+  }
+}
+
 // ---- フロア対応マップ生成 ----
 function buildFloorMap(areaId, floorNo = 1) {
   if (areaId === 'wetland') {
@@ -1746,50 +1799,53 @@ function buildFloorMap(areaId, floorNo = 1) {
       default: return buildDeepseaMap();
     }
   }
-  // 機械〜厄災：B4Fは汎用ボス広間、B1〜B3は各エリア専用マップ
-  const bossFloor = BOSS_FLOORS[areaId];
-  if (bossFloor && floorNo === 4) return buildBossRoom(bossFloor.wall, bossFloor.npc);
+  // 機械〜厄災：B1F〜B4Fすべてエリア専用マップ。B4Fにはボスを載せる
   const builders = FLOOR_BUILDERS[areaId];
-  if (builders) return (builders[floorNo - 1] ?? builders[0])();
+  if (builders) {
+    const m = (builders[floorNo - 1] ?? builders[0])();
+    const bossFloor = BOSS_FLOORS[areaId];
+    if (bossFloor && floorNo === 4) m.npcs = [makeBossNpc(bossFloor.npc)];
+    return m;
+  }
   return buildAreaMap(areaId);
 }
 
 // 各エリアの B1F〜B3F マップ生成関数（floorNo-1 でインデックス）
 const FLOOR_BUILDERS = {
-  machine:   [buildMachineMap,   buildMachineB2F,   buildMachineB3F],
-  spirit:    [buildSpiritMap,    buildSpiritB2F,    buildSpiritB3F],
-  ghost:     [buildGhostMap,     buildGhostB2F,     buildGhostB3F],
-  corporate: [buildCorporateMap, buildCorporateB2F, buildCorporateB3F],
-  disaster:  [buildDisasterMap,  buildDisasterB2F,  buildDisasterB3F],
+  machine:   [buildMachineMap,   buildMachineB2F,   buildMachineB3F,   buildMachineB4F],
+  spirit:    [buildSpiritMap,    buildSpiritB2F,    buildSpiritB3F,    buildSpiritB4F],
+  ghost:     [buildGhostMap,     buildGhostB2F,     buildGhostB3F,     buildGhostB4F],
+  corporate: [buildCorporateMap, buildCorporateB2F, buildCorporateB3F, buildCorporateB4F],
+  disaster:  [buildDisasterMap,  buildDisasterB2F,  buildDisasterB3F,  buildDisasterB4F],
 };
 
-// 各エリアのボス広間設定（壁テーマ＋ボスNPC）
+// 各エリアのボス設定（B4Fマップに載せるボスNPC）
 const BOSS_FLOORS = {
-  machine: { wall: '#', npc: { id: 'boss_machine', monsterId: 222, name: '鋼ぬし', img: monImg(222), x: 14, y: 3, lines: [
+  machine: { npc: { id: 'boss_machine', monsterId: 222, name: '鋼ぬし', img: monImg(222), x: 14, y: 3, lines: [
     { text: 'ヴ……ヴゥゥン……\n侵入者を 検知。' },
     { text: 'ここは機械都市の中枢……\nわが管理領域である。' },
     { text: '生体ユニットの 立ち入りは\n許可されていない。' },
     { text: '排除を 実行する。\n——システム、全開。' },
   ] } },
-  spirit: { wall: '#', npc: { id: 'boss_spirit', monsterId: 322, name: '樹ぬし', img: monImg(322), x: 14, y: 3, lines: [
+  spirit: { npc: { id: 'boss_spirit', monsterId: 322, name: '樹ぬし', img: monImg(322), x: 14, y: 3, lines: [
     { text: 'よくぞ参った、幼き旅人よ。' },
     { text: 'ここは世界樹の根が眠る聖域……\nわしはその守り手じゃ。' },
     { text: 'そなたの魂、見せてもらおう。' },
     { text: 'いざ——精霊の試練を 受けよ！' },
   ] } },
-  ghost: { wall: '#', npc: { id: 'boss_ghost', monsterId: 422, name: '霊ぬし', img: monImg(422), x: 14, y: 3, lines: [
+  ghost: { npc: { id: 'boss_ghost', monsterId: 422, name: '霊ぬし', img: monImg(422), x: 14, y: 3, lines: [
     { text: 'ヒュ……ヒュルル……\nよくぞ墓所の奥まで来たな。' },
     { text: 'ここは死者の眠る黄昏の地……\n生者の来る場所ではない。' },
     { text: 'その温かい魂……\nいただくとしよう。' },
     { text: '逃さぬぞ——闇に 堕ちろ！' },
   ] } },
-  corporate: { wall: '#', npc: { id: 'boss_corporate', monsterId: 522, name: '社ぬし', img: monImg(522), x: 14, y: 3, lines: [
+  corporate: { npc: { id: 'boss_corporate', monsterId: 522, name: '社ぬし', img: monImg(522), x: 14, y: 3, lines: [
     { text: 'ようこそ、我が摩天楼の頂へ。' },
     { text: 'ここは富と権力が支配する世界……\n貴様のような部外者は招かれざる客だ。' },
     { text: 'だが——実力があれば話は別。' },
     { text: '見せてみろ、その価値を！' },
   ] } },
-  disaster: { wall: '#', npc: { id: 'boss_disaster', monsterId: 622, name: '災ぬし', img: monImg(622), x: 14, y: 3, lines: [
+  disaster: { npc: { id: 'boss_disaster', monsterId: 622, name: '災ぬし', img: monImg(622), x: 14, y: 3, lines: [
     { text: 'グォォォ……\n世界の終わりに よくぞ来た。' },
     { text: 'ここは終焉火山の火口……\nすべてが灰に還る場所。' },
     { text: '貴様の覚悟、その身で示せ。' },
@@ -2444,26 +2500,6 @@ function buildWetlandB4F() {
 }
 
 // 汎用ボス広間（32×28）：テーマ壁文字＋ボスNPCを配置
-function buildBossRoom(wallCh, bossCfg) {
-  const W = 32, H = 28, F = ',';   // 床は草（道中エンカウントあり）
-  const grid = makeGrid(wallCh, wallCh, W, H);
-  fillRect(grid, 8, 22, 23, H - 2, F);   // スタート広場
-  fillRect(grid, 8, 10, 10, 22, F);      // 左廊下
-  fillRect(grid, 21, 10, 23, 22, F);     // 右廊下
-  fillRect(grid, 8, 10, 23, 12, F);      // つなぎ
-  fillRect(grid, 7, 2, 24, 9, F);        // ボス広間
-  fillRect(grid, 14, 9, 17, 12, F);      // 入口廊下
-  fillRect(grid, 8, 3, 9, 4, wallCh);    // 柱
-  fillRect(grid, 22, 3, 23, 4, wallCh);
-  fillRect(grid, 8, 7, 9, 8, wallCh);
-  fillRect(grid, 22, 7, 23, 8, wallCh);
-  grid[3][8] = 'C'; grid[3][23] = 'C';
-  const result = placeStartExitLarge(grid, W, H);
-  result.addBoardAt = { x: 18, y: 25 };
-  result.npcs = [makeBossNpc(bossCfg)];
-  return result;
-}
-
 // 汎用ボスNPC生成（会話 → ボス戦突入 → 撃破後セリフ）
 function makeBossNpc(cfg) {
   return {
@@ -2629,330 +2665,419 @@ function buildDeepseaB4F() {
   return result;
 }
 
-// 機械都市：道（舗装）が碁盤目状。壁（建物）が多くブロック状、草むらは隙間に
+// ============================================================
+// 機械都市  machine
+// ============================================================
+
+// B1F「搬入ゲート」：Z字の大通りに沿って搬入ヤードが並ぶ。
+// 道が広く迷いにくい導入フロア。草はヤード（隙間に生えた藻）だけ。
 function buildMachineMap() {
-  const grid = makeGrid('#', '.');   // 外周=壁、内側=道（舗装）
-  // 建物ブロック（壁）を碁盤目に配置
-  fillRect(grid, 2, 2, 5, 5, '#');
-  fillRect(grid, 9, 2, 11, 4, '#');
-  fillRect(grid, 15, 2, 18, 5, '#');
-  fillRect(grid, 2, 8, 4, 11, '#');
-  fillRect(grid, 19, 8, 21, 11, '#');
-  fillRect(grid, 7, 8, 9, 10, '#');
-  fillRect(grid, 14, 8, 16, 10, '#');
-  fillRect(grid, 2, 14, 5, 17, '#');
-  fillRect(grid, 15, 14, 18, 17, '#');
-  fillRect(grid, 9, 15, 11, 17, '#');
-  // 縦横の大通りを確保（道は基本なので穴を開ける形）
-  fillRect(grid, 11, 1, 12, 18, '.');
-  fillRect(grid, 1, 6, 22, 7, '.');
-  fillRect(grid, 1, 12, 22, 13, '.');
-  // 草むら（機械の隙間に生えた藻＝遭遇ポイント）を点在
-  fillRect(grid, 6, 3, 8, 5, ',');
-  fillRect(grid, 13, 3, 14, 5, ',');
-  fillRect(grid, 5, 9, 6, 11, ',');
-  fillRect(grid, 17, 9, 18, 11, ',');
-  fillRect(grid, 6, 14, 8, 17, ',');
-  fillRect(grid, 13, 14, 14, 17, ',');
-  fillRect(grid, 19, 14, 21, 17, ',');
-  grid[3][7] = 'C'; grid[4][13] = 'C'; grid[10][5] = 'C'; grid[16][7] = 'C'; grid[15][20] = 'C';
-  return placeStartExit(grid);
+  const g = makeGrid('#', '#');
+  carve(g, [[11, 17], [11, 13], [19, 13], [19, 8], [4, 8], [4, 3], [11, 3], [11, 1]], '.', 2);
+  fillRectIf(g,  2, 14, 10, 17, ',', '#');   // 南西ヤード
+  fillRectIf(g, 13, 15, 21, 17, ',', '#');   // 南東ヤード
+  fillRectIf(g, 14,  9, 21, 11, ',', '#');   // 東ヤード
+  fillRectIf(g,  2,  9,  3, 12, ',', '#');   // 西の隙間
+  fillRectIf(g,  6,  4,  9,  6, ',', '#');   // 北ヤード
+  fillRectIf(g, 13,  2, 20,  4, ',', '#');   // 北東ヤード
+  g[16][3] = 'C'; g[16][20] = 'C'; g[11][21] = 'C'; g[3][19] = 'C'; g[5][7] = 'C';
+  return placeStartExit(g);
 }
 
-// 世界樹の神域：木が密集した森。草むら多め、曲がりくねった小道
-function buildSpiritMap() {
-  const grid = makeGrid('#', ',');   // 外周=木、内側=草むら（森）
-  // 曲がりくねった小道
-  fillRect(grid, 11, 1, 12, 6, '.');
-  fillRect(grid, 5, 6, 12, 7, '.');
-  fillRect(grid, 5, 7, 6, 13, '.');
-  fillRect(grid, 6, 12, 18, 13, '.');
-  fillRect(grid, 17, 7, 18, 13, '.');
-  fillRect(grid, 11, 13, 12, 18, '.');
-  // 木立ちを密集配置（森らしさ）
-  fillRect(grid, 2, 2, 4, 4, '#');
-  fillRect(grid, 8, 2, 10, 4, '#');
-  fillRect(grid, 15, 2, 17, 4, '#');
-  fillRect(grid, 19, 3, 21, 6, '#');
-  fillRect(grid, 2, 9, 3, 12, '#');
-  fillRect(grid, 8, 9, 10, 11, '#');
-  fillRect(grid, 14, 9, 15, 10, '#');
-  fillRect(grid, 20, 9, 21, 12, '#');
-  fillRect(grid, 2, 15, 4, 17, '#');
-  fillRect(grid, 14, 15, 16, 17, '#');
-  fillRect(grid, 19, 15, 21, 17, '#');
-  grid[3][6] = 'C'; grid[8][20] = 'C'; grid[15][7] = 'C'; grid[16][13] = 'C'; grid[2][13] = 'C';
-  return placeStartExit(grid);
-}
-
-// 黄昏墓地：墓石（壁）が整然と並ぶ。霧の草むら、十字の通路
-function buildGhostMap() {
-  const grid = makeGrid('#', ',');
-  // 十字の通路
-  fillRect(grid, 11, 1, 12, 18, '.');
-  fillRect(grid, 1, 9, 22, 10, '.');
-  // 墓石（壁）を規則正しく並べる
-  for (let by = 3; by <= 16; by += 4) {
-    for (let bx = 3; bx <= 20; bx += 4) {
-      if (bx >= 10 && bx <= 13) continue; // 縦通路を避ける
-      if (by >= 8 && by <= 11) continue;  // 横通路を避ける
-      grid[by][bx] = '#';
-      if (grid[by+1]) grid[by+1][bx] = '#';
-    }
-  }
-  grid[4][6] = 'C'; grid[5][18] = 'C'; grid[14][4] = 'C'; grid[15][19] = 'C'; grid[2][15] = 'C';
-  return placeStartExit(grid);
-}
-
-// 超巨大企業都市：高層ビル（巨大な壁ブロック）と広い大通り
-function buildCorporateMap() {
-  const grid = makeGrid('#', '.');   // 外周=壁、内側=道（舗装）
-  // 巨大ビル群（大きな壁ブロック）
-  fillRect(grid, 2, 2, 6, 6, '#');
-  fillRect(grid, 9, 2, 14, 5, '#');
-  fillRect(grid, 17, 2, 21, 7, '#');
-  fillRect(grid, 2, 9, 5, 14, '#');
-  fillRect(grid, 8, 9, 10, 13, '#');
-  fillRect(grid, 13, 8, 16, 12, '#');
-  fillRect(grid, 19, 10, 21, 16, '#');
-  fillRect(grid, 2, 16, 7, 17, '#');
-  fillRect(grid, 14, 15, 17, 17, '#');
-  // 大通り
-  fillRect(grid, 11, 1, 12, 18, '.');
-  fillRect(grid, 1, 7, 22, 8, '.');
-  fillRect(grid, 1, 14, 22, 15, '.');
-  // 街路樹（草むら＝遭遇）
-  fillRect(grid, 7, 3, 8, 5, ',');
-  fillRect(grid, 15, 3, 16, 5, ',');
-  fillRect(grid, 6, 10, 7, 13, ',');
-  fillRect(grid, 17, 10, 18, 13, ',');
-  fillRect(grid, 8, 16, 13, 17, ',');
-  grid[3][8] = 'C'; grid[5][16] = 'C'; grid[11][6] = 'C'; grid[13][18] = 'C'; grid[16][10] = 'C';
-  return placeStartExit(grid);
-}
-
-// 終焉火山：溶岩（水文字を溶岩として使う）と岩場。狭い足場を進む
-function buildDisasterMap() {
-  const grid = makeGrid('~', ',');   // 外周=溶岩、内側=草むら（焦土）
-  // 岩の足場（道）
-  fillRect(grid, 11, 1, 12, 18, '.');
-  fillRect(grid, 4, 8, 19, 9, '.');
-  fillRect(grid, 4, 4, 5, 9, '.');
-  fillRect(grid, 18, 9, 19, 15, '.');
-  // 溶岩溜まり（通れない）
-  fillRect(grid, 2, 2, 5, 3, '~');
-  fillRect(grid, 15, 4, 18, 6, '~');
-  fillRect(grid, 6, 12, 9, 15, '~');
-  fillRect(grid, 14, 13, 16, 16, '~');
-  fillRect(grid, 19, 2, 21, 5, '~');
-  // 岩（壁）
-  fillRect(grid, 8, 4, 9, 6, '#');
-  fillRect(grid, 2, 11, 3, 13, '#');
-  fillRect(grid, 12, 10, 13, 11, '#');
-  grid[3][7] = 'C'; grid[5][20] = 'C'; grid[11][5] = 'C'; grid[16][11] = 'C'; grid[2][16] = 'C';
-  return placeStartExit(grid);
-}
-
-// ---- 機械都市 B2F / B3F ----
+// B2F「配線回路」：基板のプリント配線のような 1マス幅の細い通路。
+// 直角に折れ、行き止まりの支線（＝宝箱）が伸びる。パッド状の草地つき。
 function buildMachineB2F() {
-  const grid = makeGrid('#', '.');
-  // ジグザグに建物ブロック
-  fillRect(grid, 3, 2, 6, 4, '#');
-  fillRect(grid, 16, 3, 19, 6, '#');
-  fillRect(grid, 5, 8, 8, 10, '#');
-  fillRect(grid, 14, 9, 17, 12, '#');
-  fillRect(grid, 3, 14, 6, 16, '#');
-  fillRect(grid, 16, 14, 19, 17, '#');
-  // 通路（中央縦＋斜め接続）
-  fillRect(grid, 11, 1, 12, 18, '.');
-  fillRect(grid, 1, 6, 22, 7, '.');
-  fillRect(grid, 1, 12, 22, 13, '.');
-  // 草むら
-  fillRect(grid, 8, 3, 10, 5, ',');
-  fillRect(grid, 13, 4, 15, 6, ',');
-  fillRect(grid, 3, 10, 4, 12, ',');
-  fillRect(grid, 19, 9, 20, 12, ',');
-  fillRect(grid, 8, 14, 10, 16, ',');
-  grid[3][9] = 'C'; grid[5][14] = 'C'; grid[11][4] = 'C'; grid[15][9] = 'C';
-  return placeStartExit(grid);
+  const g = makeGrid('#', '#');
+  // 主配線
+  carve(g, [[11, 17], [11, 14], [3, 14], [3, 10], [8, 10], [8, 6], [15, 6], [15, 3], [12, 3], [12, 1]], '.', 1);
+  // 支線（行き止まり）
+  carve(g, [[3, 14], [3, 17]], '.', 1);
+  carve(g, [[8, 10], [19, 10], [19, 16]], '.', 1);
+  carve(g, [[15, 6], [20, 6], [20, 2]], '.', 1);
+  carve(g, [[11, 14], [17, 14], [17, 17]], '.', 1);
+  carve(g, [[3, 10], [3, 4], [6, 4]], '.', 1);
+  // はんだパッド（草＝遭遇）
+  fillRectIf(g,  9, 15, 13, 17, ',', '#');
+  fillRectIf(g,  4, 12,  7, 13, ',', '#');
+  fillRectIf(g,  9,  7, 13,  9, ',', '#');
+  fillRectIf(g, 16,  7, 20,  9, ',', '#');
+  fillRectIf(g, 16, 11, 20, 13, ',', '#');
+  fillRectIf(g,  4,  2,  7,  3, ',', '#');
+  g[17][3] = 'C'; g[16][19] = 'C'; g[2][20] = 'C'; g[17][17] = 'C'; g[4][6] = 'C';
+  return placeStartExit(g);
 }
+
+// B3F「炉心リング」：中央の冷却プール（溶けた藻）を囲む環状通路。
+// 四隅の制御室（草）へ短い連絡路。リングの四隅も草なので周回中に遭遇する。
 function buildMachineB3F() {
-  const grid = makeGrid('#', '.');
-  // 中央プラザ＋四隅の建物
-  fillRect(grid, 2, 2, 4, 5, '#');
-  fillRect(grid, 19, 2, 21, 5, '#');
-  fillRect(grid, 2, 14, 4, 17, '#');
-  fillRect(grid, 19, 14, 21, 17, '#');
-  fillRect(grid, 9, 8, 14, 11, '#');   // 中央の巨大設備
-  // 通路（外周回廊＋中央十字の縦）
-  fillRect(grid, 11, 1, 12, 7, '.');
-  fillRect(grid, 11, 12, 12, 18, '.');
-  fillRect(grid, 6, 6, 17, 7, '.');
-  fillRect(grid, 6, 12, 17, 13, '.');
-  fillRect(grid, 6, 7, 7, 12, '.');
-  fillRect(grid, 16, 7, 17, 12, '.');
-  // 草むら
-  fillRect(grid, 6, 2, 8, 5, ',');
-  fillRect(grid, 15, 2, 17, 5, ',');
-  fillRect(grid, 6, 14, 8, 17, ',');
-  fillRect(grid, 15, 14, 17, 17, ',');
-  grid[3][6] = 'C'; grid[3][17] = 'C'; grid[16][6] = 'C'; grid[16][17] = 'C';
-  return placeStartExit(grid);
+  const g = makeGrid('#', '#');
+  fillRect(g, 7, 5, 16, 14, '.');    // 環状通路の床
+  fillRect(g, 9, 7, 14, 12, '~');    // 中央の冷却プール
+  carve(g, [[11, 17], [11, 15]], '.', 2);   // 南の進入路
+  carve(g, [[11, 4], [11, 1]], '.', 2);     // 北の退出路
+  // リングの四隅に藻が繁茂（遭遇ポイント）
+  fillRect(g,  7,  5,  8,  6, ',');
+  fillRect(g, 15,  5, 16,  6, ',');
+  fillRect(g,  7, 13,  8, 14, ',');
+  fillRect(g, 15, 13, 16, 14, ',');
+  // 四隅の制御室
+  fillRect(g,  2,  2,  5,  6, ','); fillRect(g,  6,  5,  6,  6, '.');
+  fillRect(g, 18,  2, 21,  6, ','); fillRect(g, 17,  5, 17,  6, '.');
+  fillRect(g,  2, 13,  5, 17, ','); fillRect(g,  6, 13,  6, 14, '.');
+  fillRect(g, 18, 13, 21, 17, ','); fillRect(g, 17, 13, 17, 14, '.');
+  g[3][3] = 'C'; g[3][20] = 'C'; g[16][3] = 'C'; g[16][20] = 'C';
+  return placeStartExit(g);
 }
 
-// ---- 世界樹の神域 B2F / B3F ----
+// ============================================================
+// 世界樹の神域  spirit
+// ============================================================
+
+// B1F「木漏れ日の径」：蛇行する一本道。周囲は一面の下草（遭遇）で、
+// 道を外れるほど危ないが宝箱は草の奥にある。木立ちは不揃いに配置。
+function buildSpiritMap() {
+  const g = makeGrid('#', ',');
+  fillRect(g,  2,  2,  5,  5, '#'); fillRect(g,  3,  6,  4,  7, '#');
+  fillRect(g,  8,  2, 10,  3, '#');
+  fillRect(g, 14,  2, 17,  5, '#'); fillRect(g, 18,  4, 20,  6, '#');
+  fillRect(g,  2, 10,  4, 13, '#');
+  fillRect(g,  9,  8, 12, 10, '#'); fillRect(g, 13,  9, 14,  9, '#');
+  fillRect(g, 17, 10, 20, 13, '#');
+  fillRect(g,  2, 16,  5, 17, '#');
+  fillRect(g, 15, 16, 18, 17, '#');
+  fillRect(g,  7, 13,  9, 15, '#');
+  carve(g, [[11, 17], [11, 14], [6, 14], [6, 11], [15, 11], [15, 7], [7, 7], [7, 4], [12, 4], [12, 1]], '.', 2);
+  g[2][20] = 'C'; g[15][3] = 'C'; g[16][21] = 'C'; g[13][12] = 'C'; g[9][5] = 'C';
+  return placeStartExit(g);
+}
+
+// B2F「根の迷い路」：世界樹の根が枝分かれする構造。太い幹から
+// 枝（草の回廊）が分岐し、細い小枝は行き止まり。分岐点だけ安全な土（道）。
 function buildSpiritB2F() {
-  const grid = makeGrid('#', ',');   // 全面が森（草）
-  // くねった小道
-  fillRect(grid, 11, 1, 12, 4, '.');
-  fillRect(grid, 6, 4, 12, 5, '.');
-  fillRect(grid, 6, 5, 7, 14, '.');
-  fillRect(grid, 7, 13, 17, 14, '.');
-  fillRect(grid, 16, 5, 17, 14, '.');
-  fillRect(grid, 11, 14, 12, 18, '.');
-  // 木立ち
-  fillRect(grid, 2, 2, 4, 4, '#');
-  fillRect(grid, 14, 2, 16, 4, '#');
-  fillRect(grid, 9, 8, 11, 10, '#');
-  fillRect(grid, 19, 7, 21, 10, '#');
-  fillRect(grid, 2, 13, 4, 16, '#');
-  fillRect(grid, 19, 14, 21, 16, '#');
-  grid[3][7] = 'C'; grid[8][14] = 'C'; grid[15][9] = 'C'; grid[2][12] = 'C';
-  return placeStartExit(grid);
+  const g = makeGrid('#', '#');
+  carve(g, [[10, 17], [10, 9]], ',', 3);                       // 幹
+  carve(g, [[10, 12], [4, 12], [4, 6]], ',', 2);               // 左の枝
+  carve(g, [[11, 10], [18, 10], [18, 5]], ',', 2);             // 右の枝
+  carve(g, [[10, 9], [7, 9], [7, 3], [12, 3], [12, 1]], ',', 2); // 上へ抜ける枝
+  carve(g, [[4, 6], [4, 2]], ',', 1);                          // 小枝（行き止まり）
+  carve(g, [[18, 5], [21, 5]], ',', 1);
+  carve(g, [[10, 15], [16, 15]], ',', 1);
+  // 分岐点の安全地帯
+  fillRect(g, 10, 11, 11, 12, '.');
+  fillRect(g,  7,  9,  8, 10, '.');
+  fillRect(g,  4, 11,  5, 12, '.');
+  g[2][4] = 'C'; g[5][21] = 'C'; g[15][16] = 'C'; g[4][12] = 'C';
+  return placeStartExit(g);
 }
+
+// B3F「聖域の三重円」：木の環が三重に閉じ、切れ目の位置が層ごとにずれる。
+// 外周は密林で塞がれ、環をくぐって中央の祭壇へ向かう構造。
 function buildSpiritB3F() {
-  const grid = makeGrid('#', ',');
-  // 3つの広間を縦に結ぶ道
-  fillRect(grid, 11, 1, 12, 18, '.');
-  fillRect(grid, 5, 4, 8, 5, '.');
-  fillRect(grid, 16, 9, 19, 10, '.');
-  fillRect(grid, 5, 14, 8, 15, '.');
-  // 木立ちで広間を仕切る
-  fillRect(grid, 4, 2, 6, 3, '#');
-  fillRect(grid, 8, 7, 10, 9, '#');
-  fillRect(grid, 14, 6, 16, 8, '#');
-  fillRect(grid, 4, 11, 6, 13, '#');
-  fillRect(grid, 16, 13, 18, 16, '#');
-  fillRect(grid, 8, 15, 10, 17, '#');
-  grid[4][5] = 'C'; grid[9][17] = 'C'; grid[14][6] = 'C'; grid[2][12] = 'C';
-  return placeStartExit(grid);
+  const g = makeGrid('#', ',');
+  // 環の左右は深い密林で塞ぎ、南北の細い巡回路だけを残す
+  fillRect(g,  1,  1,  4, 18, '#'); fillRect(g, 19,  1, 22, 18, '#');
+  // 三重の環（切れ目の向きをずらす）
+  rectOutline(g,  3,  3, 20, 16, '#');
+  fillRect(g, 11, 16, 12, 16, ',');                                       // 外環：南の切れ目（進入）
+  fillRect(g, 11,  3, 12,  3, ',');                                       // 外環：北の切れ目（出口へ）
+  rectOutline(g,  6,  6, 17, 13, '#'); fillRect(g,  6,  9,  6, 10, ',');  // 中環：切れ目は西
+  rectOutline(g,  9,  8, 14, 11, '#'); fillRect(g, 11,  8, 12,  8, ',');  // 内環：切れ目は北
+  // 中央の祭壇
+  fillRect(g, 10,  9, 13, 10, '.');
+  // 外環の外の巡回路（S から E へ抜ける正規ルート）
+  fillRect(g, 11, 17, 12, 18, ','); fillRect(g, 11,  1, 12,  2, ',');
+  g[9][11] = 'C'; g[7][7] = 'C'; g[12][16] = 'C'; g[2][10] = 'C'; g[17][17] = 'C';
+  return placeStartExit(g);
 }
 
-// ---- 黄昏墓地 B2F / B3F ----
+// ============================================================
+// 黄昏墓地  ghost
+// ============================================================
+
+// B1F「共同墓地」：区画ごとに列がずれた墓石群。参道は十字ではなく
+// 縦一本＋横二本の変則。南東に礼拝堂（扉から入る小部屋）。
+function buildGhostMap() {
+  const g = makeGrid('#', ',');
+  // 参道
+  fillRect(g, 11,  1, 12, 18, '.');
+  fillRect(g,  1,  6, 22,  7, '.');
+  fillRect(g,  1, 13, 22, 14, '.');
+  // 墓石（列ごとに横位置をずらす／1×2の縦長）
+  for (let by = 2, r = 0; by <= 16; by += 3, r++) {
+    for (let bx = 2 + (r % 2) * 2; bx <= 21; bx += 4) {
+      if (bx >= 10 && bx <= 13) continue;
+      if (by >= 5 && by <= 7) continue;
+      if (by >= 12 && by <= 14) continue;
+      fillRect(g, bx, by, bx, by + 1, '#');
+    }
+  }
+  // 礼拝堂
+  rectOutline(g, 16, 15, 21, 18, '#');
+  fillRect(g, 17, 16, 20, 18, '.');
+  fillRect(g, 18, 15, 18, 15, '.');
+  g[17][19] = 'C'; g[3][4] = 'C'; g[10][3] = 'C'; g[10][20] = 'C';
+  return placeStartExit(g);
+}
+
+// B2F「霧の沼地」：一面の沼。細い藻の土手（遭遇あり）だけが渡れる。
+// 分岐点には石畳の安全地帯、支線の先に宝箱。
 function buildGhostB2F() {
-  const grid = makeGrid('#', ',');
-  // L字の通路
-  fillRect(grid, 11, 1, 12, 12, '.');
-  fillRect(grid, 4, 12, 19, 13, '.');
-  fillRect(grid, 4, 13, 5, 18, '.');
-  fillRect(grid, 18, 13, 19, 18, '.');
-  fillRect(grid, 11, 12, 12, 18, '.');
-  // 墓石を密に
-  for (let by = 3; by <= 9; by += 3) {
-    for (let bx = 3; bx <= 20; bx += 3) {
-      if (bx >= 10 && bx <= 13) continue;
-      grid[by][bx] = '#';
-    }
-  }
-  grid[4][5] = 'C'; grid[4][18] = 'C'; grid[15][7] = 'C'; grid[15][16] = 'C';
-  return placeStartExit(grid);
+  const g = makeGrid('~', '~');
+  carve(g, [[11, 17], [11, 13], [4, 13], [4, 8], [10, 8], [10, 5], [16, 5], [16, 2], [12, 2], [12, 1]], ',', 2);
+  carve(g, [[11, 13], [19, 13], [19, 16]], ',', 2);   // 東の支線
+  carve(g, [[4, 8], [4, 3]], ',', 2);                 // 北西の支線
+  carve(g, [[10, 8], [7, 8]], ',', 1);
+  // 石畳（安全な足場）
+  fillRect(g,  4,  8,  5,  9, '.');
+  fillRect(g, 10,  5, 11,  6, '.');
+  fillRect(g, 16,  2, 17,  3, '.');
+  fillRect(g, 11, 13, 12, 14, '.');
+  // 沼に沈む墓石
+  g[11][2] = '#'; g[6][14] = '#'; g[15][8] = '#'; g[3][20] = '#'; g[17][6] = '#';
+  g[16][19] = 'C'; g[3][4] = 'C'; g[8][7] = 'C'; g[6][17] = 'C';
+  return placeStartExit(g);
 }
+
+// B3F「棺の回廊」：大聖堂型。南北に長い身廊と東西の翼廊が十字に交わり、
+// 身廊には柱（墓石）が等間隔に並ぶ。四隅の側室に宝箱。
 function buildGhostB3F() {
-  const grid = makeGrid('#', ',');
-  // 円環状の通路
-  fillRect(grid, 11, 1, 12, 5, '.');
-  fillRect(grid, 5, 5, 18, 6, '.');
-  fillRect(grid, 5, 6, 6, 14, '.');
-  fillRect(grid, 17, 6, 18, 14, '.');
-  fillRect(grid, 5, 14, 18, 15, '.');
-  fillRect(grid, 11, 15, 12, 18, '.');
-  fillRect(grid, 11, 6, 12, 14, '.');   // 中央縦道
-  // 中央と隅に墓石
-  fillRect(grid, 8, 9, 9, 11, '#');
-  fillRect(grid, 14, 9, 15, 11, '#');
-  fillRect(grid, 2, 2, 3, 3, '#');
-  fillRect(grid, 20, 2, 21, 3, '#');
-  grid[5][8] = 'C'; grid[5][15] = 'C'; grid[14][8] = 'C'; grid[14][15] = 'C';
-  return placeStartExit(grid);
-}
-
-// ---- 超巨大企業都市 B2F / B3F ----
-function buildCorporateB2F() {
-  const grid = makeGrid('#', '.');
-  // 2棟の超高層ビル＋広い大通り
-  fillRect(grid, 3, 3, 9, 8, '#');
-  fillRect(grid, 14, 3, 20, 8, '#');
-  fillRect(grid, 3, 12, 9, 16, '#');
-  fillRect(grid, 14, 12, 20, 16, '#');
-  // 大通り（十字）
-  fillRect(grid, 11, 1, 12, 18, '.');
-  fillRect(grid, 1, 9, 22, 11, '.');
-  // 街路樹
-  fillRect(grid, 10, 4, 10, 7, ',');
-  fillRect(grid, 13, 4, 13, 7, ',');
-  fillRect(grid, 10, 13, 10, 16, ',');
-  fillRect(grid, 13, 13, 13, 16, ',');
-  grid[3][10] = 'C'; grid[3][13] = 'C'; grid[16][10] = 'C'; grid[16][13] = 'C';
-  return placeStartExit(grid);
-}
-function buildCorporateB3F() {
-  const grid = makeGrid('#', '.');
-  // 碁盤目の中小ビル群
-  for (let by = 3; by <= 15; by += 4) {
-    for (let bx = 3; bx <= 18; bx += 5) {
-      if (bx >= 10 && bx <= 13) continue;
-      fillRect(grid, bx, by, bx + 2, by + 1, '#');
-    }
+  const g = makeGrid('#', '#');
+  fillRect(g,  9,  2, 14, 18, '.');   // 身廊
+  fillRect(g,  3,  8, 20, 11, '.');   // 翼廊
+  // 身廊の柱列
+  for (let y = 4; y <= 16; y += 4) {
+    if (y >= 8 && y <= 11) continue;
+    g[y][10] = '#'; g[y][13] = '#';
   }
-  fillRect(grid, 11, 1, 12, 18, '.');
-  fillRect(grid, 1, 8, 22, 9, '.');
-  fillRect(grid, 1, 15, 22, 16, '.');
-  // 街路樹
-  fillRect(grid, 7, 5, 8, 7, ',');
-  fillRect(grid, 15, 5, 16, 7, ',');
-  fillRect(grid, 7, 11, 8, 13, ',');
-  fillRect(grid, 15, 11, 16, 13, ',');
-  grid[4][7] = 'C'; grid[4][16] = 'C'; grid[12][7] = 'C'; grid[12][16] = 'C';
-  return placeStartExit(grid);
+  // 翼廊の両端は荒れた床（遭遇）
+  fillRectIf(g,  3,  8,  5, 11, ',', '.');
+  fillRectIf(g, 18,  8, 20, 11, ',', '.');
+  // 内陣（出口手前の草＝最後の関門）
+  fillRect(g,  9,  2, 14,  3, ',');
+  // 四隅の側室
+  fillRect(g,  3,  3,  6,  6, ','); g[7][5]  = '.';
+  fillRect(g, 17,  3, 20,  6, ','); g[7][18] = '.';
+  fillRect(g,  3, 13,  6, 16, ','); g[12][5]  = '.';
+  fillRect(g, 17, 13, 20, 16, ','); g[12][18] = '.';
+  g[4][4] = 'C'; g[4][19] = 'C'; g[15][4] = 'C'; g[15][19] = 'C';
+  return placeStartExit(g);
 }
 
-// ---- 終焉火山 B2F / B3F ----
-function buildDisasterB2F() {
-  const grid = makeGrid('~', ',');   // 外周＝溶岩、内側＝焦土
-  // 細い足場（道）
-  fillRect(grid, 11, 1, 12, 18, '.');
-  fillRect(grid, 5, 5, 18, 6, '.');
-  fillRect(grid, 5, 12, 18, 13, '.');
-  // 溶岩溜まり
-  fillRect(grid, 3, 2, 6, 4, '~');
-  fillRect(grid, 16, 2, 19, 4, '~');
-  fillRect(grid, 3, 8, 7, 11, '~');
-  fillRect(grid, 15, 8, 19, 11, '~');
-  fillRect(grid, 3, 15, 6, 17, '~');
-  fillRect(grid, 16, 15, 19, 17, '~');
-  // 岩
-  fillRect(grid, 9, 9, 10, 10, '#');
-  fillRect(grid, 13, 9, 14, 10, '#');
-  grid[5][8] = 'C'; grid[5][15] = 'C'; grid[12][8] = 'C'; grid[12][15] = 'C';
-  return placeStartExit(grid);
+// ============================================================
+// 超巨大企業都市  corporate
+// ============================================================
+
+// B1F「オフィス街」：碁盤目の街路とビル区画。区画のいくつかが
+// 公開空地（草）になっていて、そこが遭遇ポイント兼宝箱置き場。
+function buildCorporateMap() {
+  const g = makeGrid('#', '#');
+  fillRect(g,  4,  1,  5, 18, '.'); fillRect(g, 11,  1, 12, 18, '.'); fillRect(g, 18,  1, 19, 18, '.');
+  fillRect(g,  1,  4, 22,  5, '.'); fillRect(g,  1, 10, 22, 11, '.'); fillRect(g,  1, 16, 22, 17, '.');
+  fillRect(g,  6,  6, 10,  9, ',');   // 中央公園
+  fillRect(g, 13, 12, 17, 15, ',');   // 南東の広場
+  fillRect(g, 20,  6, 22,  9, ',');   // 東の植栽
+  fillRect(g,  1, 12,  3, 15, ',');   // 西の植栽
+  fillRect(g, 13,  6, 17,  9, ','); fillRect(g, 6, 12, 10, 15, ',');
+  g[7][8] = 'C'; g[14][15] = 'C'; g[7][21] = 'C'; g[14][2] = 'C'; g[8][15] = 'C';
+  return placeStartExit(g);
 }
+
+// B2F「立体交差」：環状道路の内側を2本の斜めの大通りがXに横切る。
+// 直交グリッドしかなかった他フロアと明確に違う見た目になる。
+function buildCorporateB2F() {
+  const g = makeGrid('#', '#');
+  fillRect(g, 2, 2, 21, 17, '.');    // 環状道路の外形
+  fillRect(g, 5, 5, 18, 14, '#');    // 内側の街区で埋め戻す（＝幅3のリング）
+  carveDiag(g,  4,  4, 18, 14, '.', 2);
+  carveDiag(g, 18,  4,  4, 14, '.', 2);
+  fillRect(g, 10,  8, 13, 11, ',');  // 交差点の中央広場
+  // 街区に食い込む行き止まりの路地（奥に宝箱）
+  fillRect(g,  5,  6,  7,  7, ','); fillRect(g, 16,  6, 18,  7, ',');
+  fillRect(g,  5, 12,  7, 13, ','); fillRect(g, 16, 12, 18, 13, ',');
+  g[6][6] = 'C'; g[6][17] = 'C'; g[13][6] = 'C'; g[13][17] = 'C'; g[9][11] = 'C';
+  return placeStartExit(g);
+}
+
+// B3F「本社ロビー」：左右対称の大企業本社。中央の大通路とアトリウム、
+// 両翼のタワー内部に中庭（宝箱）。対称構図はここだけの意匠。
+function buildCorporateB3F() {
+  const g = makeGrid('#', '#');
+  fillRect(g, 10,  2, 13, 18, '.');   // 中央通路
+  fillRect(g,  7, 15, 16, 17, '.');   // エントランスロビー
+  fillRect(g,  7, 15,  8, 17, ','); fillRect(g, 15, 15, 16, 17, ',');
+  fillRect(g,  8,  7, 15, 12, ',');   // アトリウム
+  fillRect(g, 10,  9, 13, 10, '#');   // 中央のプランター
+  // 左翼タワーの中庭
+  fillRect(g,  3,  5,  5,  8, ','); fillRect(g,  6,  6,  9,  6, '.');
+  fillRect(g,  3, 11,  5, 14, ','); fillRect(g,  6, 13,  9, 13, '.');
+  // 右翼タワーの中庭
+  fillRect(g, 18,  5, 20,  8, ','); fillRect(g, 14,  6, 17,  6, '.');
+  fillRect(g, 18, 11, 20, 14, ','); fillRect(g, 14, 13, 17, 13, '.');
+  g[6][4] = 'C'; g[12][4] = 'C'; g[6][19] = 'C'; g[12][19] = 'C';
+  return placeStartExit(g);
+}
+
+// ============================================================
+// 終焉火山  disaster
+// ============================================================
+
+// B1F「溶岩河」：Z字に蛇行する溶岩の川。渡れるのは3本の岩橋だけで、
+// どこを渡るかで通る焦土（遭遇）の量が変わる。
+function buildDisasterMap() {
+  const g = makeGrid('~', ',');
+  carve(g, [[2, 4], [16, 4]], '~', 3);      // 北の流れ
+  carve(g, [[16, 4], [16, 12]], '~', 3);    // 東へ落ちる流れ
+  carve(g, [[4, 12], [18, 12]], '~', 3);    // 南の流れ
+  fillRect(g,  7, 12,  8, 14, '.');   // 南の橋
+  fillRect(g, 11,  4, 12,  6, '.');   // 北の橋
+  fillRect(g, 16,  9, 18, 10, '.');   // 東の橋（行き止まりの宝物庫へ）
+  fillRect(g,  3,  8,  5,  9, '#'); fillRect(g, 19, 14, 21, 16, '#');
+  fillRect(g,  8,  2, 10,  3, '#'); fillRect(g, 12, 15, 14, 17, '#');
+  g[10][21] = 'C'; g[17][3] = 'C'; g[8][7] = 'C'; g[2][19] = 'C'; g[16][17] = 'C';
+  return placeStartExit(g);
+}
+
+// B2F「崩れた回廊」：足場が完全に島状に分断され、1マス幅の岩橋だけで繋がる。
+// 落ちる恐さを演出する飛び石フロア。島のいくつかは行き止まりの宝物庫。
+function buildDisasterB2F() {
+  const g = makeGrid('~', '~');
+  fillRect(g,  8, 15, 15, 18, ',');   // 出発の島
+  fillRect(g,  2, 12,  6, 16, ',');
+  fillRect(g, 17, 11, 21, 16, ',');
+  fillRect(g,  9,  8, 14, 12, ',');   // 中央の島
+  fillRect(g,  3,  4,  7,  8, ',');
+  fillRect(g, 16,  3, 21,  7, ',');
+  fillRect(g,  9,  1, 14,  4, ',');   // 出口の島
+  // 岩橋
+  fillRect(g,  7, 15,  7, 15, '.');
+  fillRect(g, 11, 13, 11, 14, '.');
+  fillRect(g, 16, 16, 16, 16, '.');
+  fillRect(g,  4,  9,  4, 11, '.');
+  fillRect(g,  8,  8,  8,  8, '.');
+  fillRect(g, 19,  8, 19, 10, '.');
+  fillRect(g, 12,  5, 12,  7, '.');
+  fillRect(g, 15,  3, 15,  3, '.');
+  // 島の上の岩
+  g[16][4] = '#'; g[13][19] = '#'; g[5][6] = '#'; g[10][13] = '#';
+  g[13][3] = 'C'; g[15][20] = 'C'; g[6][5] = 'C'; g[5][19] = 'C'; g[11][12] = 'C';
+  return placeStartExit(g);
+}
+
+// B3F「火口壁」：巨大な火口を二重の環状棚が取り巻く。外周棚は左右が
+// 崩落していて通れず、内側の棚へ降りて回り込むしかない。中央の島に宝箱。
 function buildDisasterB3F() {
-  const grid = makeGrid('~', ',');
-  // 中央の大溶岩湖を囲む道
-  fillRect(grid, 11, 1, 12, 5, '.');
-  fillRect(grid, 4, 5, 19, 6, '.');
-  fillRect(grid, 4, 6, 5, 14, '.');
-  fillRect(grid, 18, 6, 19, 14, '.');
-  fillRect(grid, 4, 14, 19, 15, '.');
-  fillRect(grid, 11, 15, 12, 18, '.');
-  // 中央の溶岩湖
-  fillRect(grid, 8, 8, 15, 12, '~');
-  // 岩
-  fillRect(grid, 2, 2, 3, 3, '#');
-  fillRect(grid, 20, 2, 21, 3, '#');
-  fillRect(grid, 2, 16, 3, 17, '#');
-  grid[5][7] = 'C'; grid[5][16] = 'C'; grid[14][7] = 'C'; grid[14][16] = 'C';
-  return placeStartExit(grid);
+  const g = makeGrid('~', '~');
+  fillRect(g,  2,  2, 21, 17, ',');   // 外周の棚
+  fillRect(g,  5,  5, 18, 14, '~');   // 火口
+  fillRect(g,  6,  6, 17, 13, ',');   // 内側の棚
+  fillRect(g,  8,  8, 15, 11, '~');   // 中心の溶岩溜まり
+  fillRect(g, 11,  9, 12, 10, ',');   // 中央の島
+  // 外周棚の崩落（左右を分断）
+  fillRect(g,  2,  9,  4, 10, '#');
+  fillRect(g, 19,  9, 21, 10, '#');
+  // 棚をつなぐ岩橋
+  fillRect(g, 11, 14, 12, 14, '.');   // 外周（南）→ 内側
+  fillRect(g, 11,  5, 12,  5, '.');   // 内側 → 外周（北）
+  fillRect(g, 11,  8, 12,  8, '.');   // 内側 → 中央の島
+  g[9][11] = 'C'; g[16][3] = 'C'; g[3][20] = 'C'; g[12][6] = 'C'; g[7][16] = 'C';
+  return placeStartExit(g);
+}
+
+// ============================================================
+// B4F ボス広間（32×28）
+// 現状は5エリアすべて buildBossRoom() の使い回しで、壁の文字しか
+// 違わない。ここではエリアごとに別の間取りを与える。
+// ボスは 3×3 マスを占有して通行を塞ぐので、脇を通って出口へ行ける
+// ことと、隣接して話しかけられることを検証済み。
+// ============================================================
+
+// 機械都市 B4F「中枢制御室」：搬入デッキ → 昇降路 → 冷却プールに挟まれた炉心ホール。
+// 左右の機械室が寄り道になっていて、ホール手前は藻が繁茂した遭遇帯。
+function buildMachineB4F() {
+  const g = makeGrid('#', '#', 32, 28);
+  fillRect(g, 10, 22, 21, 26, '.');        // 搬入デッキ（スタート）
+  fillRect(g, 14, 12, 17, 22, '.');        // 中央昇降路
+  fillRect(g,  4, 14, 11, 20, ',');        // 西の機械室
+  fillRect(g, 11, 16, 14, 18, '.');
+  fillRect(g, 20, 14, 27, 20, ',');        // 東の機械室
+  fillRect(g, 17, 16, 20, 18, '.');
+  fillRect(g,  5,  2, 26, 12, '.');        // 炉心ホール
+  fillRect(g,  7,  4, 11,  9, '~');        // 冷却プール（西）
+  fillRect(g, 20,  4, 24,  9, '~');        // 冷却プール（東）
+  fillRectIf(g, 5, 10, 26, 12, ',', '.');  // ホール手前だけ藻が繁茂
+  g[3][6] = 'C'; g[3][25] = 'C'; g[19][5] = 'C'; g[19][26] = 'C';
+  const r = placeStartExitLarge(g, 32, 28);
+  r.addBoardAt = { x: 18, y: 25 };
+  return r;
+}
+
+// 世界樹の神域 B4F「世界樹の根元」：森を大きく迂回する一本道の先に、
+// 木々が円く開けた聖域。角を落とした円形の広間はここだけの形。
+function buildSpiritB4F() {
+  const g = makeGrid('#', '#', 32, 28);
+  fillRect(g, 11, 22, 20, 26, ',');        // 木漏れ日の広場（スタート）
+  carve(g, [[15, 22], [15, 19], [6, 19], [6, 13], [25, 13], [25, 9]], '.', 2);
+  carve(g, [[23, 9], [25, 9]], '.', 2);    // 聖域への入口
+  fillRect(g,  8,  2, 23, 11, ',');        // 円形の聖域
+  fillRect(g,  8,  2, 10,  3, '#'); fillRect(g, 21,  2, 23,  3, '#');
+  fillRect(g,  8, 10, 10, 11, '#'); fillRect(g, 21, 10, 23, 11, '#');
+  fillRect(g, 12,  7, 13,  8, '#'); fillRect(g, 18,  7, 19,  8, '#');  // 根の隆起
+  g[4][11] = 'C'; g[4][20] = 'C'; g[19][8] = 'C'; g[10][26] = 'C'; g[24][12] = 'C';
+  const r = placeStartExitLarge(g, 32, 28);
+  r.addBoardAt = { x: 18, y: 25 };
+  return r;
+}
+
+// 黄昏墓地 B4F「霊廟」：2マス幅の細い地下道を延々と進んだ先に、
+// 柱列の並ぶ広大な霊廟ホール。狭→広の落差で最深部感を出す。
+function buildGhostB4F() {
+  const g = makeGrid('#', '#', 32, 28);
+  fillRect(g, 12, 22, 19, 26, '.');        // 入口（スタート）
+  fillRect(g, 15, 13, 16, 22, '.');        // 狭い地下道
+  fillRect(g, 10, 15, 14, 17, ',');        // 西の納骨室
+  fillRect(g, 17, 18, 21, 20, ',');        // 東の納骨室
+  fillRect(g,  6,  2, 25, 12, '.');        // 霊廟ホール
+  for (const cx of [9, 13, 18, 22]) fillRect(g, cx, 5, cx + 1, 8, '#');  // 柱列
+  fillRectIf(g, 6, 10, 25, 12, ',', '.');  // ホール手前の荒れた床
+  g[3][7] = 'C'; g[3][24] = 'C'; g[16][11] = 'C'; g[19][20] = 'C';
+  const r = placeStartExitLarge(g, 32, 28);
+  r.addBoardAt = { x: 18, y: 25 };
+  return r;
+}
+
+// 超巨大企業都市 B4F「最上階の役員室」：エレベーターホールから
+// 左右対称の大通路を上がる。両脇のアトリウムが遭遇帯。
+function buildCorporateB4F() {
+  const g = makeGrid('#', '#', 32, 28);
+  fillRect(g, 11, 22, 20, 26, '.');        // エレベーターホール（スタート）
+  fillRect(g, 14, 11, 17, 22, '.');        // 中央通路
+  fillRect(g,  5, 12, 13, 20, ',');        // 西のアトリウム
+  fillRect(g, 18, 12, 26, 20, ',');        // 東のアトリウム
+  fillRect(g,  4,  2, 27, 11, '.');        // 役員フロア
+  fillRect(g,  7,  5, 10,  8, '#'); fillRect(g, 21,  5, 24,  8, '#');  // 植栽
+  fillRectIf(g, 4, 9, 27, 11, ',', '.');
+  g[3][5] = 'C'; g[3][26] = 'C'; g[15][6] = 'C'; g[15][25] = 'C';
+  const r = placeStartExitLarge(g, 32, 28);
+  r.addBoardAt = { x: 18, y: 25 };
+  return r;
+}
+
+// 終焉火山 B4F「火口の底」：火口縁から岩棚へ、岩棚から火口底へと
+// 2段階で降りる。底では噴出口の岩に阻まれ、溶岩溜まりを大きく
+// 迂回してからボスの正面に出る。
+function buildDisasterB4F() {
+  const g = makeGrid('~', '~', 32, 28);
+  fillRect(g, 11, 22, 20, 26, ',');        // 火口縁（スタート）
+  carve(g, [[15, 18], [15, 22]], '.', 2);  // 一段目の降下路
+  fillRect(g,  8, 14, 23, 18, ',');        // 中段の岩棚
+  carve(g, [[15, 10], [15, 14]], '.', 2);  // 二段目の降下路
+  fillRect(g,  6,  2, 25, 10, ',');        // 火口底
+  fillRect(g,  9,  5, 12,  8, '~'); fillRect(g, 19, 5, 22, 8, '~');  // 溶岩溜まり
+  fillRect(g, 13,  8, 18,  9, '#');        // 噴出口の岩（正面突破を塞ぐ）
+  g[3][7] = 'C'; g[3][24] = 'C'; g[16][9] = 'C'; g[16][22] = 'C'; g[24][12] = 'C';
+  const r = placeStartExitLarge(g, 32, 28);
+  r.addBoardAt = { x: 18, y: 25 };
+  return r;
 }
 
 // マップ探索中のパーティHP表示

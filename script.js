@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.24.1';
+const CURRENT_VERSION = '2.25.0';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,18 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v2.25.0',
+    date: '2026/08/11',
+    title: '🗺️ 藻クエスト：全7エリア解放！ダンジョンも全面リニューアル',
+    items: [
+      '🎉 準備中だった「奈落海溝」「機械都市」「世界樹の神域」「黄昏墓地」「超巨大企業都市」「終焉火山」を解放しました。前のエリアを踏破すると進めます',
+      '🏗️ 機械都市〜終焉火山の全20フロアを作り直しました。基板のような配線通路、世界樹の根が枝分かれする迷路、大聖堂型の墓所、斜めに走る大通り、溶岩の川を渡る岩橋など、フロアごとに違う構造にしています',
+      '👹 ボス広間も5エリアそれぞれ専用の間取りになりました（これまでは全エリア同じ形でした）',
+      '📊 エリア選択に「敵Lv ○〜○」を表示しました。どのくらいの強さかひと目で分かります',
+      '⚠️ 機械系より先のモンスターは、まだ画像が用意できていないため頭文字表示になります。順次追加していきます！',
+    ],
+  },
   {
     id: 'v2.24.1',
     date: '2026/08/11',
@@ -6104,7 +6116,7 @@ import {
   claimPendingRewards,
 } from './firebase.js';
 
-import { initMokumon } from './minigame-mokumon.js?v=2.24.1';
+import { initMokumon } from './minigame-mokumon.js?v=2.25.0';
 
 let _authMode = 'login'; // 'login' | 'register'
 

@@ -467,6 +467,13 @@
 .mkm-area-info { flex: 1; }
 .mkm-area-name { font-size: 15px; font-weight: bold; }
 .mkm-area-desc { font-size: 11px; color: var(--mkm-muted); margin-top: 3px; }
+/* エリア選択：敵のレベル帯（強さの目安） */
+.mkm-area-lv {
+  display: inline-block; margin-top: 5px;
+  font-size: 10px; font-weight: bold; color: #8fd3ff;
+  background: #0d2231; border: 1px solid #1d3d55;
+  padding: 1px 7px; border-radius: 100px;
+}
 .mkm-area-locked { opacity: 0.55; cursor: not-allowed; }
 .mkm-area-clear { font-size: 10px; color: var(--mkm-accent); background: #2a3a1a; padding: 1px 6px; border-radius: 100px; margin-left: 4px; }
 .mkm-area-wip   { font-size: 10px; color: #ff9800; background: #2a1f00; padding: 1px 6px; border-radius: 100px; margin-left: 4px; }
