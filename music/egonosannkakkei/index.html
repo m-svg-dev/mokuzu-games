@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>エゴの三角形 | MOKUZU MUSIC</title>
-  <meta name="description" content="MOKUZU MUSIC オリジナルソング「エゴの三角形」を歌詞付きで公開中。">
+  <meta name="description" content="MOKUZU MUSIC オリジナルソング「エゴの三角形」を歌詞付きで公開中。Jazz／女声ROCK の2バージョン。">
 
   <!-- OGP -->
   <meta property="og:title" content="エゴの三角形 | MOKUZU MUSIC">
-  <meta property="og:description" content="各々が持つ正義、反発し合って砕けゆく。三つのエゴが交わる深夜のドラマ。">
+  <meta property="og:description" content="各々が持つ正義、反発し合って砕けゆく。三つのエゴが交わる深夜のドラマ。Jazz／女声ROCK の2バージョン。">
   <meta property="og:type" content="music.song">
   <meta property="og:url" content="https://m-svg-dev.github.io/mokuzu-games/music/egonosannkakkei/">
   <meta property="og:image" content="https://m-svg-dev.github.io/mokuzu-games/assets/icon/icon.png">
@@ -82,6 +82,23 @@
       line-height: 1.7;
     }
 
+    /* ===== バージョン見出し ===== */
+    .version-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #3dff7a;
+      letter-spacing: 0.05em;
+      margin: 26px 0 12px;
+      text-align: center;
+    }
+    .version-title:first-of-type { margin-top: 0; }
+    .version-note {
+      font-size: 0.72rem;
+      color: #6f9683;
+      text-align: center;
+      margin: -6px 0 12px;
+    }
+
     /* ===== プレイヤー ===== */
     .player-card {
       background: #0c1e34;
@@ -96,35 +113,53 @@
       display: block;
     }
 
-    /* ===== 歌詞 ===== */
-    .lyrics {
-      margin-top: 44px;
+    /* ===== 折りたたみ歌詞 ===== */
+    .lyrics-toggle {
+      margin-top: 40px;
+      background: #0a1a2c;
+      border: 1px solid #1a4a30;
+      border-radius: 12px;
+      overflow: hidden;
     }
-
-    .lyrics-heading {
-      font-size: 0.72rem;
-      letter-spacing: 0.35em;
+    .lyrics-toggle > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 14px 18px;
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
       color: #78bb99;
-      text-align: center;
-      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      transition: color 0.2s;
+    }
+    .lyrics-toggle > summary::-webkit-details-marker { display: none; }
+    .lyrics-toggle > summary:hover { color: #3dff7a; }
+    .lyrics-toggle > summary::after {
+      content: "▼";
+      font-size: 0.7rem;
+      transition: transform 0.2s;
+    }
+    .lyrics-toggle[open] > summary::after {
+      transform: rotate(180deg);
     }
 
-    .lyrics section {
-      margin-bottom: 34px;
+    .lyrics-body {
+      padding: 6px 18px 22px;
     }
-
-    .lyrics p {
+    .lyrics-body section {
+      margin-bottom: 28px;
+    }
+    .lyrics-body section:last-child { margin-bottom: 0; }
+    .lyrics-body p {
       font-size: 0.95rem;
       line-height: 2.35;
       color: #c9e4d2;
       margin-bottom: 1.1em;
     }
-    .lyrics p:last-child { margin-bottom: 0; }
-
-    .lyrics rt {
-      font-size: 0.6em;
-      color: #78bb99;
-    }
+    .lyrics-body p:last-child { margin-bottom: 0; }
+    .lyrics-body rt { font-size: 0.6em; color: #78bb99; }
 
     /* ===== フッター ===== */
     .song-footer {
@@ -156,45 +191,56 @@
       <p class="song-credit">Music &amp; Lyrics — MOKUZU MUSIC</p>
     </header>
 
+    <div class="version-title">🎷 Jazzバージョン</div>
+    <div class="version-note">※アシッドジャズ／ダンス　3:29</div>
     <div class="player-card">
       <audio controls preload="metadata" src="エゴの三角形.mp3"></audio>
     </div>
 
-    <main class="lyrics">
-      <div class="lyrics-heading">LYRICS</div>
+    <div class="version-title">🎸 女声ROCKバージョン</div>
+    <div class="version-note">※ポップロック　3:42</div>
+    <div class="player-card">
+      <audio controls preload="metadata" src="エゴの三角形-女ver.mp3"></audio>
+    </div>
 
-      <section>
-        <p><ruby>七福神<rt>しちふくじん</rt></ruby>が　見守る<ruby>界隈<rt>かいわい</rt></ruby>に<br>渦巻く感情が　<ruby>綴<rt>つづ</rt></ruby>る深夜のドラマ<br>メビウスの<ruby>帯<rt>おび</rt></ruby>　二つの顔は優しく<br>でもそれが弱点　揺れる心は antinomy</p>
-      </section>
+    <details class="lyrics-toggle" open>
+      <summary>LYRICS</summary>
+      <div class="lyrics-body">
 
-      <section>
-        <p>嘘に<ruby>塗<rt>まみ</rt></ruby>れた violet magician<br><ruby>心中<rt>しんじゅう</rt></ruby>を図る light green priest<br><ruby>虚<rt>うつ</rt></ruby>ろな<ruby>愉悦<rt>ゆえつ</rt></ruby>は常に　<ruby>己<rt>おの</rt></ruby>れの悪評が<br>喉の<ruby>小骨<rt>こぼね</rt></ruby>のように　不安を<ruby>煽<rt>あお</rt></ruby>るんだ</p>
-      </section>
+        <section>
+          <p><ruby>七福神<rt>しちふくじん</rt></ruby>が　見守る<ruby>界隈<rt>かいわい</rt></ruby>に<br>渦巻く感情が　<ruby>綴<rt>つづ</rt></ruby>る深夜のドラマ<br>メビウスの<ruby>帯<rt>おび</rt></ruby>　二つの顔は優しく<br>でもそれが弱点　揺れる心は antinomy</p>
+        </section>
 
-      <section>
-        <p>さあ今 retire　破滅する triangle<br>星は滅んでも　光は消えない<br>誰もが誰かの key person<br>正義を語る　負のスパイラル<br>居づらい世界で生き続ける<ruby>苦行<rt>くぎょう</rt></ruby><br>でもそれこそが許される更生</p>
-      </section>
+        <section>
+          <p>嘘に<ruby>塗<rt>まみ</rt></ruby>れた violet magician<br><ruby>心中<rt>しんじゅう</rt></ruby>を図る light green priest<br><ruby>虚<rt>うつ</rt></ruby>ろな<ruby>愉悦<rt>ゆえつ</rt></ruby>は常に　<ruby>己<rt>おの</rt></ruby>れの悪評が<br>喉の<ruby>小骨<rt>こぼね</rt></ruby>のように　不安を<ruby>煽<rt>あお</rt></ruby>るんだ</p>
+        </section>
 
-      <section>
-        <p>存在が罪か？　生きるは迷惑か？<br>死んで消え去って精算される罪？<br><ruby>只<rt>ただ</rt></ruby>の「自己満足」「利己主義」<br>安価な<ruby>懺悔<rt>ざんげ</rt></ruby>で残された<ruby>民<rt>たみ</rt></ruby>に<br>虚無をばら<ruby>蒔<rt>ま</rt></ruby>いて<ruby>逝<rt>ゆ</rt></ruby>く</p>
-      </section>
+        <section>
+          <p>さあ今 retire　破滅する triangle<br>星は滅んでも　光は消えない<br>誰もが誰かの key person<br>正義を語る　負のスパイラル<br>居づらい世界で生き続ける<ruby>苦行<rt>くぎょう</rt></ruby><br>でもそれこそが許される更生</p>
+        </section>
 
-      <section>
-        <p>二つの顔が<ruby>育<rt>はぐく</rt></ruby>む Jealousy<br>膨大して燃える grudge<br>手元から<ruby>失<rt>う</rt></ruby>せる<ruby>私有物<rt>しゆうぶつ</rt></ruby>など<br>消えて無くなればいい　<ruby>引導<rt>いんどう</rt></ruby>を渡そう</p>
-      </section>
+        <section>
+          <p>存在が罪か？　生きるは迷惑か？<br>死んで消え去って精算される罪？<br><ruby>只<rt>ただ</rt></ruby>の「自己満足」「利己主義」<br>安価な<ruby>懺悔<rt>ざんげ</rt></ruby>で残された<ruby>民<rt>たみ</rt></ruby>に<br>虚無をばら<ruby>蒔<rt>ま</rt></ruby>いて<ruby>逝<rt>ゆ</rt></ruby>く</p>
+        </section>
 
-      <section>
-        <p>さあ今 retire　傾き漏らす Libra<br>割れた<ruby>星々<rt>ほしぼし</rt></ruby>の　<ruby>欠片<rt>かけら</rt></ruby>が降り注ぐ<br>血の雨を浴びて　<ruby>汚<rt>けが</rt></ruby>れる<ruby>民<rt>たみ</rt></ruby><br>癒しきれない　目に見えない pain<br>居づらい世界で生き続ける<ruby>苦行<rt>くぎょう</rt></ruby><br>でもそれこそが許される更生</p>
-      </section>
+        <section>
+          <p>二つの顔が<ruby>育<rt>はぐく</rt></ruby>む Jealousy<br>膨大して燃える grudge<br>手元から<ruby>失<rt>う</rt></ruby>せる<ruby>私有物<rt>しゆうぶつ</rt></ruby>など<br>消えて無くなればいい　<ruby>引導<rt>いんどう</rt></ruby>を渡そう</p>
+        </section>
 
-      <section>
-        <p><ruby>各々<rt>おのおの</rt></ruby>が持つ正義<br>反発し合って砕けゆく<br>The Disappearance of the Egoists</p>
-      </section>
+        <section>
+          <p>さあ今 retire　傾き漏らす Libra<br>割れた<ruby>星々<rt>ほしぼし</rt></ruby>の　<ruby>欠片<rt>かけら</rt></ruby>が降り注ぐ<br>血の雨を浴びて　<ruby>汚<rt>けが</rt></ruby>れる<ruby>民<rt>たみ</rt></ruby><br>癒しきれない　目に見えない pain<br>居づらい世界で生き続ける<ruby>苦行<rt>くぎょう</rt></ruby><br>でもそれこそが許される更生</p>
+        </section>
 
-      <section>
-        <p>さあ今 retire　破滅する triangle<br>星は滅んでも　光は消えない<br>誰もが誰かの key person<br>正義を語る　負のスパイラル<br>居づらい世界で生き続ける<ruby>苦行<rt>くぎょう</rt></ruby><br>でもそれこそが許される更生</p>
-      </section>
-    </main>
+        <section>
+          <p><ruby>各々<rt>おのおの</rt></ruby>が持つ正義<br>反発し合って砕けゆく<br>The Disappearance of the Egoists</p>
+        </section>
+
+        <section>
+          <p>さあ今 retire　破滅する triangle<br>星は滅んでも　光は消えない<br>誰もが誰かの key person<br>正義を語る　負のスパイラル<br>居づらい世界で生き続ける<ruby>苦行<rt>くぎょう</rt></ruby><br>でもそれこそが許される更生</p>
+        </section>
+
+      </div>
+    </details>
 
     <footer class="song-footer">
       <p>© MOKUZU MUSIC — オリジナル楽曲</p>
