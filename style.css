@@ -4785,3 +4785,149 @@ button,
   border: 1px solid #b455cc;
 }
 #fx-btn:active { opacity: 0.7; }
+
+/* ========== 見た目リニューアル（深海テーマの奥行き・色の役割分け） ========== */
+:root {
+  --ui-card-top: #13324c;
+  --ui-card-bottom: #0a1b2e;
+  --ui-card-border: #25516b;
+  --ui-text-sub: #8fa9bb;
+  --ui-info: #8fd3ff;
+  --ui-gold: #ffd24a;
+  --ui-card-shadow: 0 2px 0 #02070d, 0 6px 14px #00000066, inset 0 1px 0 #ffffff17;
+}
+
+body {
+  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', system-ui, sans-serif;
+  background: #050d18;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(90% 45% at 50% 0%, #17506199 0%, transparent 70%),
+    radial-gradient(60% 30% at 15% 100%, #0d3a2a66 0%, transparent 70%),
+    linear-gradient(180deg, #0b2438 0%, #071624 45%, #030912 100%);
+}
+
+/* ヘッダー：藻と毎秒を2段に分けて詰まりを解消 */
+#header {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  background: linear-gradient(180deg, #12304a 0%, #0a1a2c 100%);
+  border-bottom: 1px solid #2f7a5f;
+  box-shadow: 0 4px 14px #000000aa;
+}
+#moku-display {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px #3dff7a66;
+}
+#mps-display {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: #9fd8b8;
+  font-variant-numeric: tabular-nums;
+}
+#mps-display::before { content: '▲ '; font-size: 0.6rem; color: #3dff7a; }
+#coin-display  { grid-column: 2; grid-row: 1 / span 2; }
+#header-btns   { grid-column: 3; grid-row: 1 / span 2; margin-left: 0; }
+
+/* カード共通：上のハイライトと落ち影で浮かせる */
+.stat-block,
+#goal-panel,
+.item-btn,
+.sub-card,
+#subsidiary-profit,
+#event-area {
+  background: linear-gradient(180deg, var(--ui-card-top) 0%, var(--ui-card-bottom) 100%);
+  border-color: var(--ui-card-border);
+  box-shadow: var(--ui-card-shadow);
+}
+.item-btn:active { background: linear-gradient(180deg, #1a4264 0%, #0f2740 100%); }
+
+/* 色の役割：緑＝藻・収益 ／ 金＝買える・コスト ／ 水色＝情報 */
+.item-btn.can-buy {
+  border-color: var(--ui-gold);
+  box-shadow: var(--ui-card-shadow), 0 0 12px #ffd24a40;
+}
+.item-btn.can-buy::before { background: linear-gradient(135deg, #ffd24a14, transparent 60%); }
+.sub-btn.can-buy {
+  border-color: var(--ui-gold);
+  color: var(--ui-gold);
+  background: linear-gradient(180deg, #3a2f0c 0%, #201a06 100%);
+  box-shadow: 0 0 12px #ffd24a40;
+}
+.sub-lv { color: var(--ui-info); }
+.stat-label { color: var(--ui-text-sub); }
+.stat-value { text-shadow: 0 0 10px #3dff7a40; font-variant-numeric: tabular-nums; }
+
+/* 見出しと補足文字を読みやすく */
+.panel-title {
+  font-size: 1.02rem;
+  color: #eaf7f0;
+  padding: 2px 0 8px 10px;
+  border-bottom: 1px solid #25516b;
+  border-left: 0;
+  background: linear-gradient(90deg, #3dff7a 0 3px, transparent 3px) no-repeat left 2px / 3px 1.1em;
+}
+.section-note,
+.item-count-label,
+.sub-next-slot { color: var(--ui-text-sub); }
+.item-desc, .sub-effect { color: #9fd8b8; }
+#xp-text { color: #a9b8b0; }
+#tap-hint { color: #9fd8b8; }
+#awaken-btn:not(.ready) { color: #7d94a6; border-color: #2a4a5a; background: #0d2233; }
+#awaken-gauge-wrap, #xp-bar-bg { background: #06121e; border-color: #25516b; box-shadow: inset 0 1px 3px #000a; }
+
+/* キャラクターの足元に光だまり */
+#tap-area::before {
+  content: '';
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  width: 340px;
+  height: 340px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, #3dff7a22 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+#tap-area > * { position: relative; z-index: 1; }
+#tap-area > #combo-display { position: absolute; z-index: 5; }
+
+/* タブ：選んでいないタブも見分けられる明るさに。幅を詰めて次のタブをのぞかせる */
+#tab-nav {
+  background: linear-gradient(180deg, #10283f 0%, #071320 100%);
+  border-top: 1px solid #2f7a5f;
+  box-shadow: 0 -4px 14px #000000aa;
+}
+.tab-btn { width: 68px; padding: 4px 3px 6px; }
+.tab-btn img { width: 60px; height: 60px; filter: brightness(0.72) saturate(0.55); }
+.tab-emoji { width: 60px; height: 60px; }
+.tab-btn.active { background: radial-gradient(80% 90% at 50% 100%, #3dff7a30 0%, transparent 75%); }
+.tab-btn.active img { transform: translateY(-2px) scale(1.06); }
+
+/* ほかのタブのカードにも同じ落ち影を付けて質感を揃える */
+.ach-card,
+.pet-egg-card,
+.mg-card,
+.ranking-row,
+#gacha-area,
+#prestige-tab-header,
+#coin-section {
+  box-shadow: var(--ui-card-shadow);
+}
