@@ -4,10 +4,10 @@ const MAX_LV = 30;
 const LV_COST_MULT = 1.3;
 
 export const SUBSIDIARIES = [
-  { id: 'suisan',  name: '藻屑水産',         icon: '🐟', reqPrestige: 3,  foundCost: 10_000_000,     effect: 'mps',        perLv: 0.05, profitPerLv: 2, baseCost: 30  },
-  { id: 'entame',  name: '藻屑エンタメ',     icon: '🎤', reqPrestige: 5,  foundCost: 100_000_000,    effect: 'tap',        perLv: 0.05, profitPerLv: 3, baseCost: 60  },
-  { id: 'fudosan', name: '藻屑不動産',       icon: '🏠', reqPrestige: 10, foundCost: 1_000_000_000,  effect: 'offlineSec', perLv: 600,  profitPerLv: 5, baseCost: 120 },
-  { id: 'finance', name: '藻屑ファイナンス', icon: '🏦', reqPrestige: 20, foundCost: 10_000_000_000, effect: 'stoneCap',   perLv: 0.01, profitPerLv: 8, baseCost: 240 },
+  { id: 'suisan',  name: '藻屑水産',         reqPrestige: 3,  foundCost: 10_000_000,     effect: 'mps',        perLv: 0.05, profitPerLv: 2, baseCost: 30  },
+  { id: 'entame',  name: '藻屑エンタメ',     reqPrestige: 5,  foundCost: 100_000_000,    effect: 'tap',        perLv: 0.05, profitPerLv: 3, baseCost: 60  },
+  { id: 'fudosan', name: '藻屑不動産',       reqPrestige: 10, foundCost: 1_000_000_000,  effect: 'offlineSec', perLv: 600,  profitPerLv: 5, baseCost: 120 },
+  { id: 'finance', name: '藻屑ファイナンス', reqPrestige: 20, foundCost: 10_000_000_000, effect: 'stoneCap',   perLv: 0.01, profitPerLv: 8, baseCost: 240 },
 ];
 
 const DISPATCH_BONUS = { algae: 0.1, jellyfish: 0.2, crab: 0.3, coral: 0.4, shark: 0.5 };
@@ -131,7 +131,7 @@ function cardHtml(state, def) {
     return `
       <div class="sub-card sub-locked">
         <div class="sub-head">
-          <span class="sub-icon">${def.icon}</span>
+          <span class="sub-icon" role="img" aria-label="${def.name}" style="background:url('assets/subsidiary/${def.id}.png') center/cover"></span>
           <div class="sub-title"><div class="sub-name">${def.name}</div>
           <div class="sub-effect">Lvごとに ${effectText(def, 1)}</div></div>
           <span class="sub-lv">🔒</span>
@@ -179,7 +179,7 @@ function cardHtml(state, def) {
   return `
     <div class="sub-card">
       <div class="sub-head">
-        <span class="sub-icon">${def.icon}</span>
+        <span class="sub-icon" role="img" aria-label="${def.name}" style="background:url('assets/subsidiary/${def.id}.png') center/cover"></span>
         <div class="sub-title"><div class="sub-name">${def.name}</div>
         <div class="sub-effect">${effectText(def, lv)}　💴 +${deps.fmt(profitPerMin(state, def))}/分</div></div>
         <span class="sub-lv">Lv.${lv}</span>

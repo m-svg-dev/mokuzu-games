@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '3.0.0';
+const CURRENT_VERSION = '3.0.1';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,15 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v3.0.1',
+    date: '2026/11/11',
+    title: '🎨 子会社のアイコンを追加',
+    items: [
+      '🏢 子会社タブのアイコンを、ほかのタブと同じイラストに変更しました',
+      '🐟 藻屑水産・藻屑エンタメ・藻屑不動産・藻屑ファイナンスにそれぞれ専用のアイコンが付きました',
+    ],
+  },
   {
     id: 'v3.0.0',
     date: '2026/11/10',
@@ -6288,7 +6297,7 @@ import {
 } from './firebase.js';
 
 import { initMokumon } from './minigame-mokumon.js?v=2.25.0';
-import { initSubsidiary, renderSubsidiary, tickSubsidiary, getSubsidiaryBonus, isDispatchActive } from './subsidiary.js?v=3.0.0';
+import { initSubsidiary, renderSubsidiary, tickSubsidiary, getSubsidiaryBonus, isDispatchActive } from './subsidiary.js?v=3.0.1';
 
 let _authMode = 'login'; // 'login' | 'register'
 
