@@ -38,7 +38,7 @@
   <meta name="apple-mobile-web-app-title" content="藻屑社長">
   <link rel="apple-touch-icon" href="assets/icon/icon.png">
   <link rel="icon" href="assets/icon/icon.png" type="image/png">
-  <link rel="stylesheet" href="style.css?v=2.6.2">
+  <link rel="stylesheet" href="style.css?v=3.0.0">
   <link rel="stylesheet" href="mokumon.css?v=2.25.0">
 </head>
 <body>
@@ -109,6 +109,7 @@
       </div>
       <div id="settings-modal-body">
         <button id="sound-btn">🔊 サウンド ON</button>
+        <button id="fx-btn">✨ 演出: 派手</button>
         <button id="save-btn">💾 セーブ</button>
         <button id="reset-btn">🗑️ リセット</button>
         <div id="debug-section" class="hidden">
@@ -219,6 +220,7 @@
     <!-- キャラクター（タップエリア） -->
     <div id="tap-area">
       <p id="tap-hint">タップで増殖！</p>
+      <div id="combo-display" class="hidden"></div>
       <div id="character-img" class="suit-black">
         <img id="character-sprite" src="" alt="">
         <div id="item-overlays"></div>
@@ -322,6 +324,14 @@
     <h2 class="panel-title" style="margin-top:20px">✨ 消費アイテム</h2>
     <p class="section-note">藻コインで購入して使用できます（複数ストック可）</p>
     <div id="consumable-list"></div>
+  </div>
+
+  <!-- 子会社画面 -->
+  <div id="tab-subsidiary" class="tab-panel">
+    <h2 class="panel-title">🏢 子会社</h2>
+    <p class="section-note">子会社は時間で「利益」を生みます。利益でレベルを上げると本社が恒久的に強くなり、転生しても消えません</p>
+    <div id="subsidiary-profit"></div>
+    <div id="subsidiary-root"></div>
   </div>
 
   <!-- ④ イベント画面 -->
@@ -1216,6 +1226,7 @@
       <button class="tab-btn active" data-tab="main"><img src="assets/tabs/tab_main.png" alt="メイン"></button>
       <button class="tab-btn" data-tab="upgrade"><img src="assets/tabs/tab_upgrade.png" alt="強化"></button>
       <button class="tab-btn" data-tab="employee"><img src="assets/tabs/tab_item.png" alt="アイテム"></button>
+      <button class="tab-btn" data-tab="subsidiary" aria-label="子会社"><span class="tab-emoji">🏢</span></button>
       <button class="tab-btn" data-tab="event"><img src="assets/tabs/tab_event.png" alt="イベント"></button>
       <button class="tab-btn" data-tab="prestige"><img src="assets/tabs/tab_prestige.png" alt="転生"></button>
       <button class="tab-btn" data-tab="pet"><img src="assets/tabs/tab_pet.png" alt="ペット"></button>
@@ -1303,6 +1314,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=2.25.0"></script>
+  <script type="module" src="script.js?v=3.0.0"></script>
 </body>
 </html>

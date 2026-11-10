@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '2.25.0';
+const CURRENT_VERSION = '3.0.0';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,21 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v3.0.0',
+    date: '2026/11/10',
+    title: '🏢 大型アップデート！子会社システム＆タップ演出を大強化',
+    items: [
+      '🏢【新機能】子会社システムを追加しました！転生3回で新タブ「子会社」が解放されます',
+      '💴 子会社は時間で「利益」を生みます。利益でレベルを上げると本社が恒久的に強くなり、転生しても消えません',
+      '🐟 藻屑水産（MPSアップ）／🎤 藻屑エンタメ（タップアップ）／🏠 藻屑不動産（オフライン上限の延長）／🏦 藻屑ファイナンス（転生石上限アップ）の4社',
+      '👔 社員を10体以上そろえると子会社に「出向」させられます。子会社の利益が増える代わりに、その社員の本社MPSは半分になります',
+      '🔥【新機能】コンボを追加！連打するほど音階が上がり、10・25・50・100コンボで特別演出が出ます',
+      '✨ タップすると藻の粒が飛び散るようになりました。クリティカルは金色、覚醒中は虹色です',
+      '🔊 タップ・クリティカル・購入・覚醒の音を作り直しました',
+      '⚙️ 設定に「演出: 派手 / 控えめ」の切り替えを追加しました。揺れやフラッシュが苦手な方は控えめにできます',
+    ],
+  },
   {
     id: 'v2.25.0',
     date: '2026/08/11',
@@ -1117,6 +1132,8 @@ const DEFAULT_STATE = {
   usedCoupons:          [],
   shinStones:           0,
   highlowHighScore:     0,
+  subsidiary:           { profit: 0, companies: {} },
+  fxLevel:              null,   // 'high' | 'low'（null は端末設定に従う）
 };
 
 let gameState = structuredClone(DEFAULT_STATE);
@@ -1174,7 +1191,11 @@ window.isSoundEnabled = () => gameState.soundEnabled;
 // ミニゲームからクラウド保存を呼べるよう公開
 window.saveGameCloud = saveGameCloud;
 
-function playSound(type) {
+const TAP_SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+const MAX_TAP_VOICES = 12;
+let _tapVoices = 0;
+
+function playSound(type, opt = {}) {
   if (!gameState.soundEnabled) return;
   const ctx = getAudioCtx();
   const t = ctx.currentTime;
@@ -1222,15 +1243,36 @@ function playSound(type) {
   };
 
   switch (type) {
-    case 'tap':      beep(380, 200, 0.07, 0.12); break;
-    case 'tapLarge': beep(600, 280, 0.11, 0.18); break;
-    case 'critical':
-      [600, 900, 1300].forEach((f, i) => setTimeout(() => beep(f, f * 1.2, 0.1, 0.18, 'sawtooth'), i * 80));
+    case 'tap': {
+      if (_tapVoices >= MAX_TAP_VOICES) break;
+      _tapVoices++;
+      setTimeout(() => { _tapVoices--; }, 180);
+      const step = ((opt.combo ?? 1) - 1) % TAP_SCALE.length;
+      const f = 523.25 * Math.pow(2, TAP_SCALE[step] / 12);
+      beepAt(t,        f,       null, 0.06, 0.07, 'triangle');
+      beepAt(t + 0.03, f * 1.5, null, 0.14, 0.06, 'sine');
       break;
-    case 'buy':      beep(800, 1200, 0.14, 0.18, 'sine'); break;
-    case 'awaken':   beep(180, 1600, 0.5, 0.25, 'sawtooth'); break;
+    }
+    case 'critical':
+      beep(130, 45, 0.2, 0.3, 'sine');
+      noise(0.08, 0.16);
+      [784, 988, 1175, 1568].forEach((f, i) => beepAt(t + 0.02 + i * 0.055, f, f * 1.03, 0.12, 0.11, 'triangle'));
+      break;
+    case 'combo': {
+      const notes = [523, 659, 784, 1047, 1319, 1568].slice(0, 3 + Math.min(opt.tier ?? 0, 3));
+      notes.forEach((f, i) => beepAt(t + i * 0.06, f, f, 0.13, 0.13, 'square'));
+      beepAt(t + notes.length * 0.06, notes.at(-1) * 2, null, 0.3, 0.08, 'sine');
+      break;
+    }
+    case 'buy':
+      [1047, 1319, 1568].forEach((f, i) => beepAt(t + i * 0.055, f, null, 0.12, 0.1, 'sine'));
+      break;
+    case 'awaken':
+      beep(180, 1600, 0.5, 0.22, 'sawtooth');
+      [1047, 1319, 1568, 2093].forEach(f => beepAt(t + 0.42, f, f * 1.01, 0.5, 0.07, 'sine'));
+      break;
     case 'levelup':
-      [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, f, 0.12, 0.16, 'triangle'), i * 90));
+      [523, 659, 784, 1047].forEach((f, i) => beepAt(t + i * 0.09, f, f, 0.12, 0.16, 'triangle'));
       break;
 
     // ========== よもぎ蒸し ==========
@@ -1392,7 +1434,7 @@ function recalcTapPower() {
     power += (f.tapBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
   }
   const skinOp = getSkinOp();
-  gameState.tapPower = power * getPrestigeBonus('tapMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinTapMult') * getPrestigeBonus('shinAllMult') * (skinOp.tap ?? 1);
+  gameState.tapPower = power * getPrestigeBonus('tapMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinTapMult') * getPrestigeBonus('shinAllMult') * (skinOp.tap ?? 1) * getSubsidiaryBonus(gameState, 'tap');
   if (!Number.isFinite(gameState.tapPower)) {
     console.error('[mokuzu] recalcTapPower: NaN/Infinityを検出。tapPower=1にフォールバック');
     gameState.tapPower = 1;
@@ -1402,7 +1444,7 @@ function recalcTapPower() {
 function recalcMPS() {
   let mps = 0;
   for (const emp of EMPLOYEES) {
-    mps += (emp.mpsBonus ?? 0) * (gameState.employees[emp.id] ?? 0);
+    mps += (emp.mpsBonus ?? 0) * (gameState.employees[emp.id] ?? 0) * (isDispatchActive(gameState, emp.id) ? 0.5 : 1);
   }
   for (const f of FACILITIES) {
     mps += (f.mpsBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
@@ -1412,7 +1454,7 @@ function recalcMPS() {
   }
   const skinOp = getSkinOp();
   const baseMps = skinOp.baseMps ?? 0;
-  gameState.mokuPerSecond = (mps + baseMps) * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinMpsMult') * getPrestigeBonus('shinAllMult') * (skinOp.mps ?? 1);
+  gameState.mokuPerSecond = (mps + baseMps) * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinMpsMult') * getPrestigeBonus('shinAllMult') * (skinOp.mps ?? 1) * getSubsidiaryBonus(gameState, 'mps');
   if (!Number.isFinite(gameState.mokuPerSecond)) {
     console.error('[mokuzu] recalcMPS: NaN/Infinityを検出。mokuPerSecond=0にフォールバック');
     gameState.mokuPerSecond = 0;
@@ -1530,7 +1572,8 @@ function getPrestigeThreshold() {
 }
 
 function getPrestigeStoneCap() {
-  return 1000 + (gameState.prestigeSkills?.pStoneCap ?? 0) * 500 + (gameState.prestigeSkills?.pStoneCap2 ?? 0) * 3000;
+  const base = 1000 + (gameState.prestigeSkills?.pStoneCap ?? 0) * 500 + (gameState.prestigeSkills?.pStoneCap2 ?? 0) * 3000;
+  return Math.floor(base * getSubsidiaryBonus(gameState, 'stoneCap'));
 }
 
 function updatePrestigeBar() {
@@ -1666,26 +1709,125 @@ function onTap(e) {
 
   gameState.awakenGauge = Math.min(100, (gameState.awakenGauge ?? 0) + 0.1 + (gameState.upgrades?.['awaken_gauge'] ?? 0) * 0.05);
 
-  playSound(isCritical ? 'critical' : gained >= TAP_EFFECT_THRESHOLDS.large ? 'tapLarge' : 'tap');
-  spawnFloatText(e, `+${fmt(gained)}`, isCritical);
+  const nowTap = performance.now();
+  _combo = nowTap - _lastTapAt < COMBO_WINDOW_MS ? _combo + 1 : 1;
+  _lastTapAt = nowTap;
+  const isMilestone = _combo === 10 || _combo === 25 || _combo === 50 || (_combo >= 100 && _combo % 100 === 0);
+  const fxHigh = getFxLevel() === 'high';
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+  playSound(isCritical ? 'critical' : 'tap', { combo: _combo });
+  if (isMilestone) playSound('combo', { tier: comboTier(_combo) });
+  spawnFloatText(e, `+${fmt(gained)}`, isCritical, _combo);
   spawnTapEffect(e, gained, isCritical);
+  spawnParticles(x, y, (isCritical ? 16 : 8) * (fxHigh ? 1 : 0.5), gameState.isAwakened ? 'rainbow' : isCritical ? 'gold' : '');
+  updateComboDisplay(isMilestone);
+
+  if (fxHigh && (isCritical || isMilestone)) {
+    shakeTapArea();
+    navigator.vibrate?.(isMilestone ? 30 : 15);
+  }
+  if (fxHigh && isMilestone) spawnFlash();
 
   const el = document.getElementById('character-img');
   el.classList.add('tapped');
   setTimeout(() => el.classList.remove('tapped'), 90);
+  document.getElementById('character-sprite').animate(
+    [{ transform: 'scale(1)' }, { transform: 'scale(1.06, 0.95)', offset: 0.45 }, { transform: 'scale(0.98, 1.04)', offset: 0.75 }, { transform: 'scale(1)' }],
+    { duration: 220, easing: 'ease-out' }
+  );
+  if (!_mokuPop || _mokuPop.playState === 'finished') {
+    _mokuPop = document.getElementById('moku-display').animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }],
+      { duration: 140 }
+    );
+  }
 
   updateDisplay();
 }
 
-function spawnFloatText(e, text, isCritical = false) {
+// ========== タップ演出（コンボ・パーティクル） ==========
+
+const COMBO_WINDOW_MS = 1500;
+const MAX_PARTICLES   = 40;
+let _combo = 0;
+let _lastTapAt = 0;
+let _comboHideTimer = null;
+let _particleCount = 0;
+let _mokuPop = null;
+
+function getFxLevel() {
+  return gameState.fxLevel ?? (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'low' : 'high');
+}
+
+function comboTier(combo) {
+  return combo >= 100 ? 3 : combo >= 50 ? 2 : combo >= 25 ? 1 : 0;
+}
+
+function updateComboDisplay(isMilestone) {
+  const el = document.getElementById('combo-display');
+  if (!el) return;
+  clearTimeout(_comboHideTimer);
+  _comboHideTimer = setTimeout(() => { _combo = 0; el.classList.add('hidden'); }, COMBO_WINDOW_MS);
+  if (_combo < 3) { el.classList.add('hidden'); return; }
+  el.className = `combo-tier-${_combo >= 10 ? comboTier(_combo) + 1 : 0}`;
+  el.innerHTML = `${_combo}<span>COMBO</span>`;
+  el.animate(
+    [{ transform: `scale(${isMilestone ? 1.9 : 1.25})` }, { transform: 'scale(1)' }],
+    { duration: isMilestone ? 320 : 110, easing: 'ease-out' }
+  );
+}
+
+function spawnParticles(x, y, count, variant = '') {
+  if (!document.getElementById('tab-main')?.classList.contains('active')) return;
+  for (let i = 0; i < count && _particleCount < MAX_PARTICLES; i++) {
+    const p = document.createElement('span');
+    p.className = `tap-particle ${variant}`;
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 50 + Math.random() * 70;
+    p.style.left = `${x}px`;
+    p.style.top  = `${y}px`;
+    p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+    p.style.setProperty('--dy', `${Math.sin(angle) * dist - 30}px`);
+    p.style.setProperty('--size', `${6 + Math.random() * 8}px`);
+    if (variant === 'rainbow') p.style.setProperty('--hue', `${Math.floor(Math.random() * 360)}`);
+    _particleCount++;
+    p.addEventListener('animationend', () => { p.remove(); _particleCount--; });
+    document.body.appendChild(p);
+  }
+}
+
+function shakeTapArea() {
+  document.getElementById('tap-area').animate(
+    [0, -6, 6, -4, 4, 0].map(dx => ({ transform: `translateX(${dx}px)` })),
+    { duration: 150 }
+  );
+}
+
+function spawnFlash() {
+  const flash = document.createElement('div');
+  flash.className = 'fx-flash';
+  flash.addEventListener('animationend', () => flash.remove());
+  document.body.appendChild(flash);
+}
+
+function updateFxBtn() {
+  const btn = document.getElementById('fx-btn');
+  if (btn) btn.textContent = getFxLevel() === 'high' ? '✨ 演出: 派手' : '🍃 演出: 控えめ';
+}
+
+function spawnFloatText(e, text, isCritical = false, combo = 0) {
   if (!document.getElementById('tab-main')?.classList.contains('active')) return;
   const el = document.createElement('span');
   el.className = isCritical ? 'float-text crit' : 'float-text';
   el.textContent = isCritical ? `${text} CRIT!` : text;
   const x = e.touches ? e.touches[0].clientX : e.clientX;
   const y = e.touches ? e.touches[0].clientY : e.clientY;
-  el.style.left = `${x - 16}px`;
+  el.style.left = `${x - 16 + (Math.random() - 0.5) * 50}px`;
   el.style.top  = `${y - 20}px`;
+  el.style.setProperty('--rot', `${(Math.random() - 0.5) * 24}deg`);
+  el.style.setProperty('--sc', `${1 + Math.min(combo, 100) / 100 * 0.6}`);
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 750);
 }
@@ -1753,6 +1895,7 @@ function gameLoop() {
 
   gameState.moku      += gained;
   gameState.totalMoku += gained;
+  tickSubsidiary(gameState, 1);
 
   // 覚醒タイマー
   if (gameState.isAwakened) {
@@ -1794,6 +1937,7 @@ function gameLoop() {
 
   updateDisplay();
   updateEventDisplay();
+  renderSubsidiary();
 }
 
 // ========== 覚醒モード ==========
@@ -2036,7 +2180,7 @@ function renderEmployeeList() {
       <div class="item-icon" style="${iconStyle}">${iconStyle ? '' : emp.icon}</div>
       <div class="item-info">
         <div class="item-name">${emp.name}</div>
-        <div class="item-desc">+${emp.mpsBonus} / 秒</div>
+        <div class="item-desc">+${emp.mpsBonus} / 秒${isDispatchActive(gameState, emp.id) ? '（出向中・半減）' : ''}</div>
       </div>
       <div class="item-right">
         <div class="item-cost">${fmt(cost)} 藻</div>
@@ -2135,6 +2279,7 @@ function startAutoClicker() {
     const fakeE = getCharacterCenter();
     spawnFloatText(fakeE, `+${fmt(gained)}`);
     spawnTapEffect(fakeE, gained, false);
+    spawnParticles(fakeE.clientX, fakeE.clientY, 3);
   }, 500); // 500ms = 2回/秒
 }
 
@@ -3259,6 +3404,8 @@ function doPrestige() {
     shinStones:               gameState.shinStones ?? 0,
     highlowHighScore:         gameState.highlowHighScore ?? 0,
     mokumon:                  gameState.mokumon,   // 藻クエスト（モンスターズ）のデータを転生で消さない
+    subsidiary:               gameState.subsidiary,
+    fxLevel:                  gameState.fxLevel,
   };
 
   gameState = structuredClone(DEFAULT_STATE);
@@ -3573,18 +3720,19 @@ function updateMenheraToggle() {
 
 function checkOfflineEarnings() {
   if (!gameState.lastSaved || gameState.lastSaved === 0) return;
-  if (gameState.mokuPerSecond <= 0) return;
 
   const now        = Date.now();
   const elapsedSec = Math.floor((now - gameState.lastSaved) / 1000);
   const MIN_SEC       = 60;
   const isMenhera     = gameState.menheraMode && (gameState.prestigeLevel ?? 0) >= 5;
   const MODAL_MIN_SEC = isMenhera ? 60 : 1800; // メンヘラは1分、通常は30分
-  const MAX_SEC       = 28800; // 8時間
+  const MAX_SEC       = 28800 + getSubsidiaryBonus(gameState, 'offlineSec'); // 8時間 + 藻屑不動産の延長
 
   if (elapsedSec < MIN_SEC) return;
 
   const cappedSec   = Math.min(elapsedSec, MAX_SEC);
+  const profitEarned = tickSubsidiary(gameState, cappedSec);
+  if (gameState.mokuPerSecond <= 0) return;
   const offlineRate = gameState.hasRegistered ? 0.8 : 0.5;
   const earned      = Math.floor(gameState.mokuPerSecond * cappedSec * offlineRate);
   if (earned <= 0) return;
@@ -3597,13 +3745,15 @@ function checkOfflineEarnings() {
   const hours   = Math.floor(elapsedSec / 3600);
   const minutes = Math.floor((elapsedSec % 3600) / 60);
   const timeStr = hours > 0 ? `${hours}時間${minutes}分` : `${minutes}分`;
-  const capped  = elapsedSec > MAX_SEC ? `（最大8時間で計算）` : '';
+  const maxMin  = MAX_SEC / 60;
+  const maxStr  = maxMin % 60 ? `${Math.floor(maxMin / 60)}時間${maxMin % 60}分` : `${maxMin / 60}時間`;
+  const capped  = elapsedSec > MAX_SEC ? `（最大${maxStr}で計算）` : '';
 
   const rateLabel = gameState.hasRegistered ? '80%' : '50%';
   const title = isMenhera ? getMenheraMessage(elapsedSec) : 'おかえり！🌿';
   document.getElementById('offline-title').textContent  = title;
   document.getElementById('offline-time').textContent   = `${timeStr}ぶりのお帰り！${capped}`;
-  document.getElementById('offline-earned').textContent = `+${fmt(earned)} 藻`;
+  document.getElementById('offline-earned').textContent = `+${fmt(earned)} 藻` + (profitEarned >= 1 ? ` ／ 💴 +${fmt(profitEarned)} 利益` : '');
   document.getElementById('offline-note').textContent   = `（MPS × ${rateLabel} × 離脱時間）`;
   document.getElementById('offline-modal').classList.remove('hidden');
 }
@@ -5689,6 +5839,7 @@ function initTabs() {
       if (tabId === 'ranking') loadRanking();
       if (tabId === 'pet') { renderPetSection(); renderPetEggShop(); }
       if (tabId === 'minigame') showMinigameLobby();
+      if (tabId === 'subsidiary') renderSubsidiary(true);
     });
   });
 
@@ -5704,6 +5855,19 @@ function initTabs() {
 // ========== 起動 ==========
 
 function init() {
+  initSubsidiary({
+    getState: () => gameState,
+    employees: EMPLOYEES,
+    fmt,
+    playSound,
+    onChange: () => {
+      recalcTapPower();
+      recalcMPS();
+      saveGame();
+      updateDisplay();
+      renderSubsidiary(true);
+    },
+  });
   loadGame();
   checkOfflineEarnings();
 
@@ -5859,6 +6023,13 @@ function init() {
     updateSoundBtn();
     if (gameState.soundEnabled) playSound('buy');
   });
+
+  document.getElementById('fx-btn').addEventListener('click', () => {
+    gameState.fxLevel = getFxLevel() === 'high' ? 'low' : 'high';
+    updateFxBtn();
+    saveGame();
+  });
+  updateFxBtn();
 
   initTabs();
 
@@ -6117,6 +6288,7 @@ import {
 } from './firebase.js';
 
 import { initMokumon } from './minigame-mokumon.js?v=2.25.0';
+import { initSubsidiary, renderSubsidiary, tickSubsidiary, getSubsidiaryBonus, isDispatchActive } from './subsidiary.js?v=3.0.0';
 
 let _authMode = 'login'; // 'login' | 'register'
 
