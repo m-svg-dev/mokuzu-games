@@ -38,7 +38,7 @@
   <meta name="apple-mobile-web-app-title" content="藻屑社長">
   <link rel="apple-touch-icon" href="assets/icon/icon.png">
   <link rel="icon" href="assets/icon/icon.png" type="image/png">
-  <link rel="stylesheet" href="style.css?v=3.1.0">
+  <link rel="stylesheet" href="style.css?v=3.2.0">
   <link rel="stylesheet" href="mokumon.css?v=2.25.0">
 </head>
 <body>
@@ -332,6 +332,30 @@
     <p class="section-note">子会社は時間で「利益」を生みます。利益でレベルを上げると本社が恒久的に強くなり、転生しても消えません</p>
     <div id="subsidiary-profit"></div>
     <div id="subsidiary-root"></div>
+  </div>
+
+  <!-- 社長室画面 -->
+  <div id="tab-office" class="tab-panel">
+    <h2 class="panel-title">🏢 社長室</h2>
+    <p class="section-note">家具をグレードアップして部屋を豪華にしよう。転生しても消えません</p>
+    <div id="office-room">
+      <svg viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs id="office-defs"></defs>
+        <polygon points="30,235 200,150 200,40 30,125" fill="url(#office-wall-l)"/>
+        <polygon points="200,150 370,235 370,125 200,40" fill="url(#office-wall-r)"/>
+        <polygon points="200,150 370,235 370,125 200,40" fill="#000" opacity=".22"/>
+        <polygon points="200,150 370,235 200,320 30,235" fill="url(#office-floor)"/>
+        <polyline points="30,125 200,40 370,125" fill="none" stroke="#ffffff55" stroke-width="2"/>
+        <line x1="200" y1="40" x2="200" y2="150" stroke="#00000066" stroke-width="2"/>
+        <polyline points="30,235 200,150 370,235" fill="none" stroke="#00000066" stroke-width="3"/>
+        <polygon points="200,150 370,235 200,320 30,235" fill="none" stroke="#0b1622" stroke-width="3"/>
+      </svg>
+      <div id="office-bubble"></div>
+      <div id="office-items"></div>
+      <div id="office-boss"><img id="office-boss-img" src="" alt="社長"></div>
+    </div>
+    <div id="office-rank"></div>
+    <div id="office-list"></div>
   </div>
 
   <!-- ④ イベント画面 -->
@@ -1227,6 +1251,7 @@
       <button class="tab-btn" data-tab="upgrade"><img src="assets/tabs/tab_upgrade.png" alt="強化"></button>
       <button class="tab-btn" data-tab="employee"><img src="assets/tabs/tab_item.png" alt="アイテム"></button>
       <button class="tab-btn" data-tab="subsidiary"><img src="assets/tabs/tab_subsidiary.png" alt="子会社"></button>
+      <button class="tab-btn" data-tab="office"><img src="assets/tabs/tab_office.png" alt="社長室"></button>
       <button class="tab-btn" data-tab="event"><img src="assets/tabs/tab_event.png" alt="イベント"></button>
       <button class="tab-btn" data-tab="prestige"><img src="assets/tabs/tab_prestige.png" alt="転生"></button>
       <button class="tab-btn" data-tab="pet"><img src="assets/tabs/tab_pet.png" alt="ペット"></button>
@@ -1314,6 +1339,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=3.1.0"></script>
+  <script type="module" src="script.js?v=3.2.0"></script>
 </body>
 </html>

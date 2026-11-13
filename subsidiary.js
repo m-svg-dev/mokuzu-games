@@ -1,3 +1,5 @@
+import { getOfficeBonus } from './office.js?v=3.2.0';
+
 export const SUBSIDIARY_UNLOCK_PRESTIGE = 3;
 export const DISPATCH_MIN_COUNT = 10;
 const MAX_LV = 30;
@@ -50,7 +52,7 @@ function profitPerMin(state, def) {
   for (const empId of company.dispatched ?? []) {
     if (isDispatchActive(state, empId)) bonus += DISPATCH_BONUS[empId] ?? 0;
   }
-  return def.profitPerLv * company.lv * (1 + bonus);
+  return def.profitPerLv * company.lv * (1 + bonus) * getOfficeBonus(state, 'profit');
 }
 
 function totalProfitPerMin(state) {

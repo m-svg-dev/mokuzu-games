@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '3.1.0';
+const CURRENT_VERSION = '3.2.0';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,29 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v3.2.0',
+    date: '2026/11/13',
+    title: '🏢 新機能！社長室カスタマイズ',
+    items: [
+      '🏢【新機能】「社長室」タブを追加しました。斜め上から見下ろした社長室を、自分好みに豪華にしていけます',
+      '🪑 壁紙・床・社長の椅子・社長の机・絵画・置物の6種類を、それぞれ5段階までグレードアップできます（みかん箱の机から、黒曜石の大デスクまで！）',
+      '💪 家具ごとにボーナスが付きます（椅子=MPS、机=タップ力、置物=子会社の利益、絵画=クリティカル倍率、壁紙=オフライン補填、床=オフライン上限時間）',
+      '⭐ さらにグレードの合計で部屋のランクが上がり、オフライン補填とMPSにボーナスが付きます',
+      '🎨 手に入れたグレードの中から、見た目を自由に選べます。前の見た目に戻してもボーナスは下がりません',
+      '👔 部屋には、いま装備しているスキンの社長が立ちます。タップするとしゃべります',
+      '🔒 社長室のデータは転生しても消えません。ログイン中はクラウドにも保存されます',
+    ],
+  },
+  {
+    id: 'v3.1.1',
+    date: '2026/11/13',
+    title: '🛟 おかえり補填が重複する不具合を修正＆転生まわりの安全対策',
+    items: [
+      '🛟 久しぶりに戻った直後にタブを切り替えると、おかえり補填（藻と子会社の利益）が重複して入ることがある不具合を修正しました',
+      '🔒 転生の処理を見直しました。今後どんな機能が増えても、転生でデータが消えない作りになっています（子会社のデータが転生後も残ることを改めて確認済みです）',
+    ],
+  },
   {
     id: 'v3.1.0',
     date: '2026/11/11',
@@ -1155,6 +1178,7 @@ const DEFAULT_STATE = {
   shinStones:           0,
   highlowHighScore:     0,
   subsidiary:           { profit: 0, companies: {} },
+  office:               { grades: {}, looks: {} },  // 社長室（grades: 所持グレード（未設定は1）、looks: 表示中の見た目（未設定は所持グレード））
   fxLevel:              null,   // 'high' | 'low'（null は端末設定に従う）
 };
 
@@ -1456,7 +1480,7 @@ function recalcTapPower() {
     power += (f.tapBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
   }
   const skinOp = getSkinOp();
-  gameState.tapPower = power * getPrestigeBonus('tapMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinTapMult') * getPrestigeBonus('shinAllMult') * (skinOp.tap ?? 1) * getSubsidiaryBonus(gameState, 'tap');
+  gameState.tapPower = power * getPrestigeBonus('tapMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinTapMult') * getPrestigeBonus('shinAllMult') * (skinOp.tap ?? 1) * getSubsidiaryBonus(gameState, 'tap') * getOfficeBonus(gameState, 'tap');
   if (!Number.isFinite(gameState.tapPower)) {
     console.error('[mokuzu] recalcTapPower: NaN/Infinityを検出。tapPower=1にフォールバック');
     gameState.tapPower = 1;
@@ -1476,7 +1500,7 @@ function recalcMPS() {
   }
   const skinOp = getSkinOp();
   const baseMps = skinOp.baseMps ?? 0;
-  gameState.mokuPerSecond = (mps + baseMps) * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinMpsMult') * getPrestigeBonus('shinAllMult') * (skinOp.mps ?? 1) * getSubsidiaryBonus(gameState, 'mps');
+  gameState.mokuPerSecond = (mps + baseMps) * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinMpsMult') * getPrestigeBonus('shinAllMult') * (skinOp.mps ?? 1) * getSubsidiaryBonus(gameState, 'mps') * getOfficeBonus(gameState, 'mps');
   if (!Number.isFinite(gameState.mokuPerSecond)) {
     console.error('[mokuzu] recalcMPS: NaN/Infinityを検出。mokuPerSecond=0にフォールバック');
     gameState.mokuPerSecond = 0;
@@ -1721,7 +1745,7 @@ function onTap(e) {
   const upgradeCritRate = UPGRADES.reduce((s, u) => s + (u.critRateBonus ?? 0) * (gameState.upgrades[u.id] ?? 0), 0);
   const upgradeCritMult = UPGRADES.reduce((s, u) => s + (u.critMultBonus ?? 0) * (gameState.upgrades[u.id] ?? 0), 0);
   const critRate     = 0.05 + getPrestigeBonus('critRate') + upgradeCritRate;
-  const critMult     = 3    + getPrestigeBonus('critMult') + upgradeCritMult;
+  const critMult     = (3 + getPrestigeBonus('critMult') + upgradeCritMult) * getOfficeBonus(gameState, 'critMult');
   const isCritical   = Math.random() < critRate;
   const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult * petTapMult * (isCritical ? critMult : 1);
 
@@ -1960,6 +1984,7 @@ function gameLoop() {
   updateDisplay();
   updateEventDisplay();
   renderSubsidiary();
+  renderOffice();
 }
 
 // ========== 覚醒モード ==========
@@ -3375,6 +3400,13 @@ function renderAchievementList() {
 
 // ========== 転生（プレステージ） ==========
 
+const RESET_ON_PRESTIGE = [
+  'moku', 'totalMoku', 'tapPower', 'mokuPerSecond', 'suit',
+  'awakenGauge', 'isAwakened', 'awakenTimer',
+  'upgrades', 'employees', 'facilities', 'critRate', 'critMult',
+  'unlockedEvents', 'nextEventId', 'eventCooldown', 'activeEvent', 'eventTapMult', 'eventMpsMult',
+];
+
 function doPrestige() {
   if ((gameState.totalMoku ?? 0) < getPrestigeThreshold()) return;
   const stonesEarned = Math.min(
@@ -3397,41 +3429,11 @@ function doPrestige() {
     stonesEarned,
   };
 
-  const keep = {
-    purchasedItems:  gameState.purchasedItems,
-    equippedItems:   gameState.equippedItems,
-    prestigeLevel:   (gameState.prestigeLevel ?? 0) + 1,
-    prestigeStones:  (gameState.prestigeStones ?? 0) + stonesEarned,
-    prestigeSkills:  gameState.prestigeSkills,
-    prestigeHistory: [...(gameState.prestigeHistory ?? []), entry],
-    ownedSkins:      gameState.ownedSkins,
-    equippedSkin:    gameState.equippedSkin,
-    gachaPity:       gameState.gachaPity,
-    mokuCoins:       gameState.mokuCoins,
-    lastDailyLogin:  gameState.lastDailyLogin,
-    consumables:     gameState.consumables,
-    activeEffects:   gameState.activeEffects,
-    hasRegistered:   gameState.hasRegistered,
-    tapCount:        gameState.tapCount,
-    achievements:    gameState.achievements,
-    ownedPets:                gameState.ownedPets,
-    activePetType:            gameState.activePetType,
-    activePetType2:           gameState.activePetType2,
-    petSlot2Unlocked:         gameState.petSlot2Unlocked,
-    menheraMode:              gameState.menheraMode,
-    soundEnabled:             gameState.soundEnabled,
-    registrationBonusClaimed: gameState.registrationBonusClaimed,
-    lastReadUpdateId:         gameState.lastReadUpdateId,
-    usedCoupons:              gameState.usedCoupons,
-    shinStones:               gameState.shinStones ?? 0,
-    highlowHighScore:         gameState.highlowHighScore ?? 0,
-    mokumon:                  gameState.mokumon,   // 藻クエスト（モンスターズ）のデータを転生で消さない
-    subsidiary:               gameState.subsidiary,
-    fxLevel:                  gameState.fxLevel,
-  };
-
-  gameState = structuredClone(DEFAULT_STATE);
-  Object.assign(gameState, keep);
+  // 消すものだけを列挙する。ここに無い項目（今後追加する機能のデータを含む）は転生で必ず残る
+  for (const key of RESET_ON_PRESTIGE) gameState[key] = structuredClone(DEFAULT_STATE[key]);
+  gameState.prestigeLevel   = (gameState.prestigeLevel ?? 0) + 1;
+  gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + stonesEarned;
+  gameState.prestigeHistory = [...(gameState.prestigeHistory ?? []), entry];
   _minCloudTotalMoku = 0; // 転生でtotalMokuがリセットされるのでクラウド保存ブロックを解除
   updateSuit('black');
   recalcTapPower();
@@ -3740,22 +3742,25 @@ function updateMenheraToggle() {
 
 // ========== オフライン収益 ==========
 
+let _offlineCreditedAt = 0;
+
 function checkOfflineEarnings() {
   if (!gameState.lastSaved || gameState.lastSaved === 0) return;
 
   const now        = Date.now();
-  const elapsedSec = Math.floor((now - gameState.lastSaved) / 1000);
+  const elapsedSec = Math.floor((now - Math.max(gameState.lastSaved, _offlineCreditedAt)) / 1000);
   const MIN_SEC       = 60;
   const isMenhera     = gameState.menheraMode && (gameState.prestigeLevel ?? 0) >= 5;
   const MODAL_MIN_SEC = isMenhera ? 60 : 1800; // メンヘラは1分、通常は30分
-  const MAX_SEC       = 28800 + getSubsidiaryBonus(gameState, 'offlineSec'); // 8時間 + 藻屑不動産の延長
+  const MAX_SEC       = 28800 + getSubsidiaryBonus(gameState, 'offlineSec') + getOfficeBonus(gameState, 'offlineSec'); // 8時間 + 藻屑不動産の延長
 
   if (elapsedSec < MIN_SEC) return;
+  _offlineCreditedAt = now; // 次のセーブまでに再度呼ばれても、同じ離席時間を二重に補填しない
 
   const cappedSec   = Math.min(elapsedSec, MAX_SEC);
   const profitEarned = tickSubsidiary(gameState, cappedSec);
   if (gameState.mokuPerSecond <= 0) return;
-  const offlineRate = gameState.hasRegistered ? 0.8 : 0.5;
+  const offlineRate = (gameState.hasRegistered ? 0.8 : 0.5) + getOfficeBonus(gameState, 'offlineRate');
   const earned      = Math.floor(gameState.mokuPerSecond * cappedSec * offlineRate);
   if (earned <= 0) return;
 
@@ -3771,7 +3776,7 @@ function checkOfflineEarnings() {
   const maxStr  = maxMin % 60 ? `${Math.floor(maxMin / 60)}時間${maxMin % 60}分` : `${maxMin / 60}時間`;
   const capped  = elapsedSec > MAX_SEC ? `（最大${maxStr}で計算）` : '';
 
-  const rateLabel = gameState.hasRegistered ? '80%' : '50%';
+  const rateLabel = `${Math.round(offlineRate * 1000) / 10}%`;
   const title = isMenhera ? getMenheraMessage(elapsedSec) : 'おかえり！🌿';
   document.getElementById('offline-title').textContent  = title;
   document.getElementById('offline-time').textContent   = `${timeStr}ぶりのお帰り！${capped}`;
@@ -5862,6 +5867,7 @@ function initTabs() {
       if (tabId === 'pet') { renderPetSection(); renderPetEggShop(); }
       if (tabId === 'minigame') showMinigameLobby();
       if (tabId === 'subsidiary') renderSubsidiary(true);
+      if (tabId === 'office') renderOffice(true);
     });
   });
 
@@ -5888,6 +5894,18 @@ function init() {
       saveGame();
       updateDisplay();
       renderSubsidiary(true);
+    },
+  });
+  initOffice({
+    getState: () => gameState,
+    fmt,
+    playSound,
+    getBossSrc: () => document.getElementById('character-sprite')?.getAttribute('src'),
+    onChange: () => {
+      recalcTapPower();
+      recalcMPS();
+      saveGame();
+      updateDisplay();
     },
   });
   loadGame();
@@ -6310,7 +6328,8 @@ import {
 } from './firebase.js';
 
 import { initMokumon } from './minigame-mokumon.js?v=2.25.0';
-import { initSubsidiary, renderSubsidiary, tickSubsidiary, getSubsidiaryBonus, isDispatchActive } from './subsidiary.js?v=3.0.1';
+import { initSubsidiary, renderSubsidiary, tickSubsidiary, getSubsidiaryBonus, isDispatchActive } from './subsidiary.js?v=3.2.0';
+import { initOffice, renderOffice, getOfficeBonus } from './office.js?v=3.2.0';
 
 let _authMode = 'login'; // 'login' | 'register'
 
