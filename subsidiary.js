@@ -1,4 +1,4 @@
-import { getOfficeBonus } from './office.js?v=3.2.0';
+import { getOfficeBonus } from './office.js?v=3.3.0';
 
 export const SUBSIDIARY_UNLOCK_PRESTIGE = 3;
 export const DISPATCH_MIN_COUNT = 10;

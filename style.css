@@ -4933,9 +4933,9 @@ body::before {
 }
 
 /* ========== 社長室 ========== */
-#office-room { position: relative; width: 100%; aspect-ratio: 400 / 340; margin-bottom: 4px; }
-#office-room svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 10px 14px #000a); }
-#office-items { position: absolute; inset: 0; pointer-events: none; }
+#office-room, .office-room { position: relative; width: 100%; aspect-ratio: 400 / 340; margin-bottom: 4px; }
+#office-room svg, .office-room svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 10px 14px #000a); }
+#office-items, .office-items { position: absolute; inset: 0; pointer-events: none; }
 .office-item { position: absolute; transform: translate(-50%, -100%); }
 .office-item img { width: 100%; height: auto; display: block; filter: drop-shadow(0 6px 5px #0008); }
 .office-item.pop { animation: office-pop 0.4s ease-out; }
@@ -4944,7 +4944,7 @@ body::before {
   60%  { transform: translate(-50%, -100%) scale(1.2); }
   100% { transform: translate(-50%, -100%) scale(1); }
 }
-#office-item-art { transform: translate(-50%, -50%) skewY(-26.57deg); }
+#office-item-art, .office-item-art { transform: translate(-50%, -50%) skewY(-26.57deg); }
 #office-item-art.pop { animation: none; }
 .office-ph {
   width: 100%;
@@ -4957,7 +4957,7 @@ body::before {
   border-radius: 10px;
   background: #0a1b2e99;
 }
-#office-boss {
+#office-boss, .office-boss {
   position: absolute;
   left: 24%;
   top: 82%;
@@ -4972,7 +4972,7 @@ body::before {
   background: #0a1b2e;
   cursor: pointer;
 }
-#office-boss img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; pointer-events: none; }
+#office-boss img, .office-boss img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; pointer-events: none; }
 #office-bubble {
   position: absolute;
   left: 50%;
@@ -5064,3 +5064,42 @@ body::before {
   cursor: pointer;
 }
 .office-up.max { border-color: #3dff7a; color: #3dff7a; }
+
+/* ========== 称号・共通モーダル ========== */
+.mz-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; padding: 12px; }
+.mz-modal-inner { width: 100%; max-width: 380px; max-height: 88vh; display: flex; flex-direction: column; background: #0c1e34; border: 2px solid #1a4a30; border-radius: 14px; overflow: hidden; }
+.mz-modal-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #112b1e; padding: 12px 16px; font-weight: bold; color: #3dff7a; }
+.mz-modal-header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mz-modal-close { background: none; border: none; color: #78bb99; font-size: 1.1rem; cursor: pointer; padding: 2px 6px; }
+.mz-modal-body { padding: 12px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #2a5a70 transparent; }
+
+.title-badge { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 0.62rem; font-weight: bold; line-height: 1.5; border: 1px solid; white-space: nowrap; }
+.title-common  { color: #b8c4cc; border-color: #5a6770; background: #1a2530; }
+.title-silver  { color: #e6f1f7; border-color: #a9bcc8; background: linear-gradient(180deg, #45525c, #2a343c); }
+.title-gold    { color: #ffe27a; border-color: #d4a52a; background: linear-gradient(180deg, #4a3a0c, #2a2006); box-shadow: 0 0 6px #ffd24a55; }
+.title-rainbow { color: #fff; border-color: #fff; background: linear-gradient(90deg, #ff4d6d, #ffb347, #3dff7a, #4db8ff, #c77dff, #ff4d6d); background-size: 300% 100%; animation: title-rainbow 4s linear infinite; text-shadow: 0 1px 2px #000c; box-shadow: 0 0 8px #ffffff66; }
+.title-crown   { color: #201a06; border-color: #ffe27a; background: linear-gradient(180deg, #ffe27a, #d4a52a); }
+.title-locked  { color: #4d6475; border-color: #25384a; background: #0a1b2e; }
+@keyframes title-rainbow { to { background-position: 300% 0; } }
+
+.title-open { background: #0c1e34; border: 1px solid #8a7330; border-radius: 8px; color: var(--ui-gold); font-size: 0.8rem; padding: 5px 12px; cursor: pointer; margin-bottom: 10px; }
+.office-title-btn { display: block; width: 100%; margin: 10px 0 0; padding: 8px; }
+.title-note { font-size: 0.7rem; color: var(--ui-text-sub); margin-bottom: 8px; line-height: 1.5; }
+.title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; text-align: left; background: #0a1b2e; border: 1px solid #1c3a4c; border-radius: 10px; padding: 8px 10px; margin-top: 6px; color: #7d94a6; }
+.title-row.owned { cursor: pointer; border-color: #2a5a70; }
+.title-row.on { border-color: var(--ui-gold); background: #201a06; }
+.title-row-main { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
+.title-row-main small { font-size: 0.64rem; color: #8aa3b5; }
+.title-row-state { flex-shrink: 0; font-size: 0.68rem; font-weight: bold; }
+.title-row.owned .title-row-state { color: #9fd8b8; }
+.title-row.on .title-row-state { color: var(--ui-gold); }
+.title-toast { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); z-index: 400; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 16px; background: #0c1e34f2; border: 2px solid var(--ui-gold); border-radius: 12px; box-shadow: 0 6px 18px #000c; cursor: pointer; animation: title-toast-in 0.35s ease-out; }
+.title-toast small { font-size: 0.68rem; color: #eaf7f0; }
+@keyframes title-toast-in { from { opacity: 0; transform: translate(-50%, -16px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+.ranking-tappable { cursor: pointer; }
+.ranking-tags { display: flex; gap: 4px; margin-bottom: 2px; overflow: hidden; }
+.office-view-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 0.74rem; color: var(--ui-text-sub); }
+.office-view-rank { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
+.office-view-note { font-size: 0.7rem; color: #ffb347; margin-top: 8px; line-height: 1.5; }
+.office-room .office-boss { cursor: default; }

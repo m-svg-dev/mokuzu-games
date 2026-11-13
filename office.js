@@ -1,3 +1,5 @@
+import { openModal } from './modal.js?v=3.3.0';
+
 const MAX_GRADE = 5;
 
 // scale: グレードごとの表示倍率（画像はどれも枠いっぱいに描かれているため、ここで大きさの差を付ける）
@@ -54,18 +56,20 @@ let lastListSignature = '';
 let bubbleTimer = null;
 
 function gradeOf(state, catId) {
-  const g = state.office?.grades?.[catId] ?? 1;
+  const g = Math.floor(Number(state.office?.grades?.[catId])) || 1;
   return Math.min(MAX_GRADE, Math.max(1, g));
 }
 
 function lookOf(state, catId) {
   const g = gradeOf(state, catId);
-  return Math.min(g, Math.max(1, state.office?.looks?.[catId] ?? g));
+  return Math.min(g, Math.max(1, Math.floor(Number(state.office?.looks?.[catId])) || g));
 }
 
 function totalGrade(state) {
   return OFFICE_CATS.reduce((sum, c) => sum + gradeOf(state, c.id), 0);
 }
+
+export const getOfficeTotal = totalGrade;
 
 function rankIndex(state) {
   return RANKS.findLastIndex(r => totalGrade(state) >= r.at);
@@ -98,15 +102,50 @@ function wallPattern(id, matrix, st) {
     <rect width="${st.gap}" height="${st.gap}" fill="${st.base}"/><rect x="0" y="0" width="2" height="${st.gap}" fill="${st.line}"/>${accent}</pattern>`;
 }
 
-function drawRoom(state, popId) {
+function patternDefs(state, sfx) {
   const w = WALL_STYLE[lookOf(state, 'wall') - 1];
   const f = FLOOR_STYLE[lookOf(state, 'floor') - 1];
   const s = f.size;
-  document.getElementById('office-defs').innerHTML =
-    wallPattern('office-wall-l', 'matrix(1 -0.5 0 1 30 235)', w) +
-    wallPattern('office-wall-r', 'matrix(1 0.5 0 1 200 150)', w) +
-    `<pattern id="office-floor" width="${s * 2}" height="${s * 2}" patternUnits="userSpaceOnUse" patternTransform="matrix(1 0.5 -1 0.5 200 150)">
+  return wallPattern(`office-wall-l${sfx}`, 'matrix(1 -0.5 0 1 30 235)', w) +
+    wallPattern(`office-wall-r${sfx}`, 'matrix(1 0.5 0 1 200 150)', w) +
+    `<pattern id="office-floor${sfx}" width="${s * 2}" height="${s * 2}" patternUnits="userSpaceOnUse" patternTransform="matrix(1 0.5 -1 0.5 200 150)">
        <rect width="${s * 2}" height="${s * 2}" fill="${f.a}"/><rect width="${s}" height="${s}" fill="${f.b}"/><rect x="${s}" y="${s}" width="${s}" height="${s}" fill="${f.b}"/></pattern>`;
+}
+
+function viewerRoomHTML(state, bossSrc) {
+  const items = OFFICE_CATS.filter(c => c.pos).map(c => {
+    const g = lookOf(state, c.id);
+    return `<div class="office-item office-item-${c.id}" style="left:${c.pos.left}%;top:${c.pos.top}%;z-index:${c.pos.z};width:${c.pos.width * c.scale[g - 1]}%"><img src="assets/office/${c.id}_${g}.png" alt="${c.grades[g - 1]}"></div>`;
+  }).join('');
+  return `<div class="office-room">
+    <svg viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>${patternDefs(state, '-view')}</defs>
+      <polygon points="30,235 200,150 200,40 30,125" fill="url(#office-wall-l-view)"/>
+      <polygon points="200,150 370,235 370,125 200,40" fill="url(#office-wall-r-view)"/>
+      <polygon points="200,150 370,235 370,125 200,40" fill="#000" opacity=".22"/>
+      <polygon points="200,150 370,235 200,320 30,235" fill="url(#office-floor-view)"/>
+      <polyline points="30,125 200,40 370,125" fill="none" stroke="#ffffff55" stroke-width="2"/>
+      <line x1="200" y1="40" x2="200" y2="150" stroke="#00000066" stroke-width="2"/>
+      <polyline points="30,235 200,150 370,235" fill="none" stroke="#00000066" stroke-width="3"/>
+      <polygon points="200,150 370,235 200,320 30,235" fill="none" stroke="#0b1622" stroke-width="3"/>
+    </svg>
+    <div class="office-items">${items}</div>
+    ${bossSrc ? `<div class="office-boss"><img src="${bossSrc}" alt="社長"></div>` : ''}
+  </div>`;
+}
+
+// office: 他プレイヤーのセーブデータから取り出した値（無い場合は未公開として初期状態を表示）
+export function openRoomViewer({ name, headHTML = '', office, bossSrc }) {
+  const state = { office };
+  const ri = rankIndex(state);
+  const note = office ? '' : '<p class="office-view-note">この社長はまだ社長室を公開していません（v3.2.0以降でクラウドセーブすると表示されます）</p>';
+  openModal(`${name} の社長室`, `${headHTML}${viewerRoomHTML(state, bossSrc)}
+    <div class="office-view-rank"><span class="office-rank-name">${RANKS[ri].name}</span><span class="office-stars">${'★'.repeat(ri)}${'☆'.repeat(RANKS.length - 1 - ri)}</span></div>
+    <div class="office-sub">グレード合計 ${totalGrade(state)} / ${OFFICE_CATS.length * MAX_GRADE}</div>${note}`);
+}
+
+function drawRoom(state, popId) {
+  document.getElementById('office-defs').innerHTML = patternDefs(state, '');
 
   for (const cat of OFFICE_CATS) {
     if (!cat.pos) continue;

@@ -38,7 +38,7 @@
   <meta name="apple-mobile-web-app-title" content="藻屑社長">
   <link rel="apple-touch-icon" href="assets/icon/icon.png">
   <link rel="icon" href="assets/icon/icon.png" type="image/png">
-  <link rel="stylesheet" href="style.css?v=3.2.0">
+  <link rel="stylesheet" href="style.css?v=3.3.0">
   <link rel="stylesheet" href="mokumon.css?v=2.25.0">
 </head>
 <body>
@@ -355,6 +355,7 @@
       <div id="office-boss"><img id="office-boss-img" src="" alt="社長"></div>
     </div>
     <div id="office-rank"></div>
+    <button class="title-open office-title-btn">🏷️ 称号を付け替える</button>
     <div id="office-list"></div>
   </div>
 
@@ -542,6 +543,8 @@
     <!-- ランキング表示（共通） -->
     <h2 class="panel-title" style="margin-top:16px">🏅 総獲得藻ランキング</h2>
     <button id="ranking-refresh-btn">🔄 更新</button>
+    <button class="title-open">🏷️ 称号</button>
+    <p class="section-note" style="margin-top:6px">名前をタップすると、その人の社長室が見られます</p>
     <p class="section-note" style="margin-top:6px">※ スコアの自動登録機能はDBの余裕がないため未実装です。実装してほしい方はお賽銭をお願いします🙏💸</p>
     <div id="ranking-list"><p class="section-note">読み込み中...</p></div>
 
@@ -1339,6 +1342,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js?v=3.2.0"></script>
+  <script type="module" src="script.js?v=3.3.0"></script>
 </body>
 </html>

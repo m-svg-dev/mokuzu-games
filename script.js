@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '3.2.0';
+const CURRENT_VERSION = '3.3.0';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,18 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v3.3.0',
+    date: '2026/11/13',
+    title: '🏷️ 称号と、社長室の公開',
+    items: [
+      '🏷️【新機能】「称号」を追加しました。転生回数・累計の藻・子会社・社長室・コンボ・収集など、全20種類。条件を満たすと自動で手に入ります',
+      '✨ 称号は並・銀・金・虹の4段階。ランキングの「🏷️ 称号」ボタンか社長室から、好きな称号に付け替えられます',
+      '🏅 ランキングの名前に称号が表示されます。上位3人には「藻屑王」「副王」「三傑」の印が付きます',
+      '🏢 ランキングの名前をタップすると、その人の社長室が見られるようになりました（v3.2.0以降でクラウドセーブした人の部屋が表示されます）',
+      '🛡️ ランキングの名前の表示を安全な方式に直しました',
+    ],
+  },
   {
     id: 'v3.2.0',
     date: '2026/11/13',
@@ -1179,6 +1191,8 @@ const DEFAULT_STATE = {
   highlowHighScore:     0,
   subsidiary:           { profit: 0, companies: {} },
   office:               { grades: {}, looks: {} },  // 社長室（grades: 所持グレード（未設定は1）、looks: 表示中の見た目（未設定は所持グレード））
+  titles:               { unlocked: [] },  // 称号（equipped: 付けている称号ID。キー無し=未選択で自動装備、null=外している）
+  maxCombo:             0,
   fxLevel:              null,   // 'high' | 'low'（null は端末設定に従う）
 };
 
@@ -1757,6 +1771,7 @@ function onTap(e) {
 
   const nowTap = performance.now();
   _combo = nowTap - _lastTapAt < COMBO_WINDOW_MS ? _combo + 1 : 1;
+  if (_combo > (gameState.maxCombo ?? 0)) gameState.maxCombo = _combo;
   _lastTapAt = nowTap;
   const isMilestone = _combo === 10 || _combo === 25 || _combo === 50 || (_combo >= 100 && _combo % 100 === 0);
   const fxHigh = getFxLevel() === 'high';
@@ -1942,6 +1957,7 @@ function gameLoop() {
   gameState.moku      += gained;
   gameState.totalMoku += gained;
   tickSubsidiary(gameState, 1);
+  checkTitles();
 
   // 覚醒タイマー
   if (gameState.isAwakened) {
@@ -5908,6 +5924,13 @@ function init() {
       updateDisplay();
     },
   });
+  initTitles({
+    getState: () => gameState,
+    playSound,
+    save: saveGame,
+    petTypeIds: PET_TYPES.map(p => p.id),
+    gachaSkinIds: GACHA_SKINS.filter(s => s.prob < 1).map(s => s.id),
+  });
   loadGame();
   checkOfflineEarnings();
 
@@ -6328,8 +6351,9 @@ import {
 } from './firebase.js';
 
 import { initMokumon } from './minigame-mokumon.js?v=2.25.0';
-import { initSubsidiary, renderSubsidiary, tickSubsidiary, getSubsidiaryBonus, isDispatchActive } from './subsidiary.js?v=3.2.0';
-import { initOffice, renderOffice, getOfficeBonus } from './office.js?v=3.2.0';
+import { initSubsidiary, renderSubsidiary, tickSubsidiary, getSubsidiaryBonus, isDispatchActive } from './subsidiary.js?v=3.3.0';
+import { initOffice, renderOffice, getOfficeBonus, openRoomViewer } from './office.js?v=3.3.0';
+import { initTitles, checkTitles, titleBadgeHTML } from './title.js?v=3.3.0';
 
 let _authMode = 'login'; // 'login' | 'register'
 
@@ -6610,6 +6634,29 @@ function initFirebase() {
   });
 }
 
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const RANKING_CROWNS = ['👑 藻屑王', '🥈 副王', '🥉 三傑'];
+let _rankingRows = [];
+
+function characterSrcOf(state) {
+  const skin = GACHA_SKINS.find(s => s.id === state.equippedSkin);
+  return IMAGE_CONFIG.character.suits[skin?.suit ?? state.suit] ?? IMAGE_CONFIG.character.suits.black;
+}
+
+function rankingTagsHTML(r) {
+  const crown = RANKING_CROWNS[r.rank - 1] ? `<span class="title-badge title-crown">${RANKING_CROWNS[r.rank - 1]}</span>` : '';
+  return crown + titleBadgeHTML(r.sd?.titles?.equipped);
+}
+
+function openRankingRoom(r) {
+  openRoomViewer({
+    name: r.name,
+    headHTML: `<div class="office-view-head">${rankingTagsHTML(r)}<span>${r.rank}位　転生 ${Number(r.prestigeLevel) || 0}回</span></div>`,
+    office: r.sd?.office,
+    bossSrc: r.sd ? characterSrcOf(r.sd) : null,
+  });
+}
+
 async function loadRanking() {
   const list = document.getElementById('ranking-list');
   const btn  = document.getElementById('ranking-refresh-btn');
@@ -6631,19 +6678,29 @@ async function loadRanking() {
         <span class="ranking-score">全転生累計獲得藻</span>
         <span class="ranking-prestige">転生回数</span>
       </div>`;
-    list.innerHTML = header + combined.map(r => {
+    _rankingRows = combined.map(r => {
+      const isMe = !!me && r.name === me.displayName;
+      let sd = null;
+      try { sd = typeof r.saveData === 'string' ? JSON.parse(r.saveData) : null; } catch { sd = null; }
+      return { rank: r.rank, name: String(r.name ?? '名無し'), totalMoku: Number(r.totalMoku) || 0, prestigeLevel: Number(r.prestigeLevel) || 0, isMe, sd: isMe ? gameState : sd };
+    });
+    list.innerHTML = header + _rankingRows.map((r, i) => {
       const medal     = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : `${r.rank}.`;
-      const isMe      = me && r.name === me.displayName;
-      const highlight = isMe ? ' ranking-me' : '';
+      const highlight = r.isMe ? ' ranking-me' : '';
+      const tags      = rankingTagsHTML(r);
       return `
-        <div class="ranking-row${highlight}">
+        <div class="ranking-row ranking-tappable${highlight}" data-i="${i}">
           <span class="ranking-rank">${medal}</span>
-          <span class="ranking-name">${r.name}</span>
+          <span class="ranking-name">${tags ? `<span class="ranking-tags">${tags}</span>` : ''}${escapeHtml(r.name)}</span>
           <span class="ranking-score">${fmt(r.totalMoku)} 藻</span>
-          <span class="ranking-prestige">${r.prestigeLevel ?? 0}回</span>
+          <span class="ranking-prestige">${r.prestigeLevel}回</span>
         </div>
       `;
     }).join('');
+    list.onclick = e => {
+      const row = e.target.closest('.ranking-row[data-i]');
+      if (row) openRankingRoom(_rankingRows[Number(row.dataset.i)]);
+    };
   } catch {
     list.innerHTML = '<p class="section-note">読み込みに失敗しました</p>';
   } finally {
