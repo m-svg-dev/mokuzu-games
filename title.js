@@ -1,6 +1,7 @@
-import { openModal } from './modal.js?v=3.3.0';
-import { getOfficeTotal } from './office.js?v=3.3.0';
-import { SUBSIDIARIES } from './subsidiary.js?v=3.3.0';
+import { openModal } from './modal.js?v=3.4.0';
+import { getOfficeTotal } from './office.js?v=3.4.0';
+import { SUBSIDIARIES } from './subsidiary.js?v=3.4.0';
+import { CHALLENGES, clearedCount } from './challenge.js?v=3.4.0';
 
 const RARITY_ORDER = ['common', 'silver', 'gold', 'rainbow'];
 const RARITY_LABEL = { common: '並', silver: '銀', gold: '金', rainbow: '虹' };
@@ -22,7 +23,10 @@ export const TITLES = [
   { id: 'office_15',    name: '模様替え好き',         desc: '部屋ランク「ちゃんとした社長室」', rarity: 'common',  check: c => c.office >= 15 },
   { id: 'office_25',    name: '摩天楼の主',           desc: '部屋ランク「深海の摩天楼」',  rarity: 'gold',    check: c => c.office >= 25 },
   { id: 'office_30',    name: '玉座の主',             desc: '社長室の家具をすべてG5',      rarity: 'rainbow', check: c => c.office >= 30 },
-  { id: 'combo_500',    name: '連打の鬼',             desc: '500コンボ',                   rarity: 'silver',  check: c => c.combo >= 500 },
+  { id: 'trial_1',      name: '試練の挑戦者',         desc: '社長の試練を1つクリア',       rarity: 'silver',  check: c => c.trials >= 1 },
+  { id: 'trial_5',      name: '試練の達人',           desc: '社長の試練を5つクリア',       rarity: 'gold',    check: c => c.trials >= 5 },
+  { id: 'trial_all',    name: '試練の覇者',           desc: '社長の試練をすべてクリア',    rarity: 'rainbow', check: c => c.trials >= CHALLENGES.length },
+  { id: 'combo_500',   name: '連打の鬼',             desc: '500コンボ',                   rarity: 'silver',  check: c => c.combo >= 500 },
   { id: 'combo_2000',   name: '腱鞘炎',               desc: '2,000コンボ',                 rarity: 'gold',    check: c => c.combo >= 2000 },
   { id: 'pet_all',      name: 'ペット博士',           desc: 'ペットを全種類そろえる',      rarity: 'gold',    check: c => c.petsAll },
   { id: 'skin_all',     name: '着道楽',               desc: 'ガチャのスキンを全種類そろえる', rarity: 'rainbow', check: c => c.skinsAll },
@@ -40,6 +44,7 @@ function context(state) {
     subAllMax: companies.length >= SUBSIDIARIES.length && companies.every(c => (c.lv ?? 0) >= 30),
     office:    getOfficeTotal(state),
     combo:     state.maxCombo ?? 0,
+    trials:    clearedCount(state),
     petsAll:   deps.petTypeIds.every(id => state.ownedPets?.[id]),
     skinsAll:  deps.gachaSkinIds.every(id => (state.ownedSkins ?? []).includes(id)),
   };

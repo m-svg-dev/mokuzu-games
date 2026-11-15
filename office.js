@@ -1,4 +1,4 @@
-import { openModal } from './modal.js?v=3.3.0';
+import { openModal } from './modal.js?v=3.4.0';
 
 const MAX_GRADE = 5;
 
@@ -48,6 +48,26 @@ const FLOOR_STYLE = [
   { a: '#a3202c', b: '#8c1823', size: 40 },
   { a: '#7a1220', b: '#d4a52a', size: 30 },
 ];
+// 試練の報酬で手に入る限定の見た目（trial: 対応する試練ID）。looks には文字列のキーで保存する
+export const OFFICE_SPECIALS = {
+  wall: {
+    sp_gold:   { name: '黄金の壁',       trial: 'hadaka',   style: { base: '#c9992a', line: '#f7dc7a', gap: 30, accent: '#8a6412' } },
+    sp_neon:   { name: 'サイバーネオン', trial: 'noTap',    style: { base: '#0a0420', line: '#ff3df2', gap: 34, accent: '#3df2ff' } },
+    sp_lava:   { name: '溶岩の壁',       trial: 'noUp',     style: { base: '#2a0a05', line: '#ff5a1f', gap: 26, accent: '#ffb347' } },
+    sp_sakura: { name: '夜桜',           trial: 'seal',     style: { base: '#2b1230', line: '#3a1a40', gap: 52, accent: null,
+      deco: '<circle cx="12" cy="10" r="4" fill="#ff9ecb"/><circle cx="36" cy="30" r="3" fill="#ffc4de"/><circle cx="22" cy="44" r="2.5" fill="#ff7fb8"/><circle cx="44" cy="8" r="2" fill="#ffd9ea"/>' } },
+    sp_star:   { name: '満天の星空',     trial: 'hell',     style: { base: '#070b24', line: '#0b1136', gap: 60, accent: null,
+      deco: '<circle cx="10" cy="12" r="1.6" fill="#fff"/><circle cx="34" cy="6" r="1" fill="#cfe3ff"/><circle cx="50" cy="26" r="2" fill="#fff6c9"/><circle cx="22" cy="38" r="1.2" fill="#fff"/><circle cx="44" cy="50" r="1.5" fill="#bcd4ff"/><circle cx="8" cy="52" r="1" fill="#fff"/>' } },
+  },
+  floor: {
+    sp_tatami: { name: '畳',             trial: 'noMps',    style: { a: '#9aa86a', b: '#8a9a5b', size: 44 } },
+    sp_ice:    { name: '氷の床',         trial: 'noFac',    style: { a: '#bfe9ff', b: '#e6f7ff', size: 36 } },
+    sp_grid:   { name: 'ネオングリッド', trial: 'baito',    style: { a: '#05060f', b: '#123a66', size: 16 } },
+    sp_magma:  { name: 'マグマの床',     trial: 'recess',   style: { a: '#3a0d06', b: '#c2330f', size: 22 } },
+    sp_goldfl: { name: '黄金タイル',     trial: 'speed',    style: { a: '#d4a52a', b: '#f2cf63', size: 26 } },
+  },
+};
+
 const BOSS_LINES = ['藻は裏切らない。', '今日も増殖だ。', 'この部屋、だいぶ良くなってきたな。', '子会社の報告はまだか？', '転生しても、この椅子は私のものだ。'];
 
 let deps = null;
@@ -63,6 +83,13 @@ function gradeOf(state, catId) {
 function lookOf(state, catId) {
   const g = gradeOf(state, catId);
   return Math.min(g, Math.max(1, Math.floor(Number(state.office?.looks?.[catId])) || g));
+}
+
+function specialOf(state, catId) {
+  const key = state.office?.looks?.[catId];
+  const table = OFFICE_SPECIALS[catId];
+  if (typeof key !== 'string' || !table || !Object.hasOwn(table, key)) return null;
+  return state.challenge?.cleared?.[table[key].trial] != null ? { key, ...table[key] } : null;
 }
 
 function totalGrade(state) {
@@ -99,12 +126,12 @@ function bonusText(rank) {
 function wallPattern(id, matrix, st) {
   const accent = st.accent ? `<rect x="0" y="${st.gap * 0.45}" width="${st.gap}" height="3" fill="${st.accent}" opacity=".7"/>` : '';
   return `<pattern id="${id}" width="${st.gap}" height="${st.gap}" patternUnits="userSpaceOnUse" patternTransform="${matrix}">
-    <rect width="${st.gap}" height="${st.gap}" fill="${st.base}"/><rect x="0" y="0" width="2" height="${st.gap}" fill="${st.line}"/>${accent}</pattern>`;
+    <rect width="${st.gap}" height="${st.gap}" fill="${st.base}"/><rect x="0" y="0" width="2" height="${st.gap}" fill="${st.line}"/>${accent}${st.deco ?? ''}</pattern>`;
 }
 
 function patternDefs(state, sfx) {
-  const w = WALL_STYLE[lookOf(state, 'wall') - 1];
-  const f = FLOOR_STYLE[lookOf(state, 'floor') - 1];
+  const w = specialOf(state, 'wall')?.style ?? WALL_STYLE[lookOf(state, 'wall') - 1];
+  const f = specialOf(state, 'floor')?.style ?? FLOOR_STYLE[lookOf(state, 'floor') - 1];
   const s = f.size;
   return wallPattern(`office-wall-l${sfx}`, 'matrix(1 -0.5 0 1 30 235)', w) +
     wallPattern(`office-wall-r${sfx}`, 'matrix(1 0.5 0 1 200 150)', w) +
@@ -135,8 +162,9 @@ function viewerRoomHTML(state, bossSrc) {
 }
 
 // office: 他プレイヤーのセーブデータから取り出した値（無い場合は未公開として初期状態を表示）
-export function openRoomViewer({ name, headHTML = '', office, bossSrc }) {
-  const state = { office };
+export function openRoomViewer({ name, headHTML = '', save, bossSrc }) {
+  const office = save?.office;
+  const state = { office, challenge: save?.challenge };
   const ri = rankIndex(state);
   const note = office ? '' : '<p class="office-view-note">この社長はまだ社長室を公開していません（v3.2.0以降でクラウドセーブすると表示されます）</p>';
   openModal(`${name} の社長室`, `${headHTML}${viewerRoomHTML(state, bossSrc)}
@@ -197,9 +225,15 @@ function upgrade(catId) {
 
 function setLook(catId, look) {
   const state = deps.getState();
-  if (look < 1 || look > gradeOf(state, catId) || look === lookOf(state, catId)) return;
   state.office ??= { grades: {} };
   state.office.looks ??= {};
+  if (typeof look === 'string') {
+    const sp = OFFICE_SPECIALS[catId]?.[look];
+    if (!sp || state.challenge?.cleared?.[sp.trial] == null) return;
+  } else if (!(look >= 1 && look <= gradeOf(state, catId))) {
+    return;
+  }
+  if (state.office.looks[catId] === look) return;
   state.office.looks[catId] = look;
   deps.onChange();
   renderOffice(true, catId);
@@ -209,7 +243,7 @@ export function renderOffice(force = false, popId = null) {
   if (!deps || !document.getElementById('tab-office')?.classList.contains('active')) return;
   const state = deps.getState();
 
-  const roomSignature = JSON.stringify([OFFICE_CATS.map(c => lookOf(state, c.id)), deps.getBossSrc()]);
+  const roomSignature = JSON.stringify([OFFICE_CATS.map(c => specialOf(state, c.id)?.key ?? lookOf(state, c.id)), deps.getBossSrc()]);
   if (force || roomSignature !== lastRoomSignature) {
     lastRoomSignature = roomSignature;
     drawRoom(state, popId);
@@ -218,7 +252,7 @@ export function renderOffice(force = false, popId = null) {
   const listSignature = JSON.stringify(OFFICE_CATS.map(c => {
     const g = gradeOf(state, c.id);
     const price = PRICES[g];
-    return [g, lookOf(state, c.id), price ? (state[price.cur] ?? 0) >= price.amount : null];
+    return [g, specialOf(state, c.id)?.key ?? lookOf(state, c.id), Object.keys(state.challenge?.cleared ?? {}).length, price ? (state[price.cur] ?? 0) >= price.amount : null];
   }));
   if (!force && listSignature === lastListSignature) return;
   lastListSignature = listSignature;
@@ -238,15 +272,19 @@ export function renderOffice(force = false, popId = null) {
     const price = PRICES[g];
     const can = price && (state[price.cur] ?? 0) >= price.amount;
     const look = lookOf(state, c.id);
+    const sp = specialOf(state, c.id);
     const dots = Array.from({ length: MAX_GRADE }, (_, i) =>
-      `<button class="office-look${i < g ? ' own' : ''}${i + 1 === look ? ' sel' : ''}" data-id="${c.id}" data-g="${i + 1}" title="${c.grades[i]}" ${i < g ? '' : 'disabled'}>${i < g ? i + 1 : '🔒'}</button>`).join('');
+      `<button class="office-look${i < g ? ' own' : ''}${!sp && i + 1 === look ? ' sel' : ''}" data-id="${c.id}" data-g="${i + 1}" title="${c.grades[i]}" ${i < g ? '' : 'disabled'}>${i < g ? i + 1 : '🔒'}</button>`).join('') +
+      Object.entries(OFFICE_SPECIALS[c.id] ?? {}).filter(([, v]) => state.challenge?.cleared?.[v.trial] != null).map(([key, v]) =>
+        `<button class="office-look own special${sp?.key === key ? ' sel' : ''}" data-id="${c.id}" data-sp="${key}" title="${v.name}">★</button>`).join('');
+    const showing = sp ? `${sp.name}（試練の報酬）` : look !== g ? c.grades[look - 1] : '';
     const btn = price
       ? `<button class="office-up${can ? ' can-buy' : ''}" data-id="${c.id}" ${can ? '' : 'disabled'}>グレードアップ<small>${CUR_LABEL[price.cur]} ${deps.fmt(price.amount)}</small></button>`
       : `<button class="office-up max" disabled>最高グレード</button>`;
     return `<div class="office-row"><div class="office-ico">${c.icon}</div><div class="office-info"><div class="office-nm">${c.name}</div>
       <div class="office-gr">G${g}　${c.grades[g - 1]}${price ? ` → ${c.grades[g]}` : ''}</div>
       <div class="office-fx">${c.bonus.label} ${itemBonusText(c, g)}${price ? ` → ${itemBonusText(c, g + 1)}` : ''}</div>
-      <div class="office-dots"><span>見た目</span>${dots}</div>${look !== g ? `<div class="office-look-nm">${c.grades[look - 1]} を表示中</div>` : ''}</div>${btn}</div>`;
+      <div class="office-dots"><span>見た目</span>${dots}</div>${showing ? `<div class="office-look-nm">${showing} を表示中</div>` : ''}</div>${btn}</div>`;
   }).join('');
 }
 
@@ -260,7 +298,7 @@ export function initOffice(d) {
     const btn = e.target.closest('.office-up');
     if (btn && !btn.disabled) upgrade(btn.dataset.id);
     const look = e.target.closest('.office-look');
-    if (look && !look.disabled) setLook(look.dataset.id, Number(look.dataset.g));
+    if (look && !look.disabled) setLook(look.dataset.id, look.dataset.sp ?? Number(look.dataset.g));
   });
   document.getElementById('office-boss').addEventListener('click', () => say(BOSS_LINES[Math.floor(Math.random() * BOSS_LINES.length)]));
 }

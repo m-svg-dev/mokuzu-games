@@ -1,6 +1,6 @@
 ﻿// ========== 定数定義 ==========
 
-const CURRENT_VERSION = '3.3.0';
+const CURRENT_VERSION = '3.4.0';
 const SAVE_VERSION   = 1;
 const MAX_MOKU_COINS = 9999;
 const SAVE_KEY       = 'mozuku_president_v1';
@@ -20,6 +20,19 @@ function computeChecksum(str) {
 // ========== 更新履歴 ==========
 
 const UPDATE_LOG = [
+  {
+    id: 'v3.4.0',
+    date: '2026/11/15',
+    title: '🔥 新コンテンツ！社長の試練',
+    items: [
+      '🔥【新コンテンツ】「社長の試練」を追加しました（転生10回で解放、転生タブから）。転生スキル・スキン・ペット・子会社・社長室の力をすべて封じて、ゼロから1000万藻を目指します',
+      '🧩 試練は全10種類。「タップ禁止」「MPSゼロ」「強化なし」「20分以内」など、いつもと違う攻略が必要です。放置で進められる試練もあります',
+      '🎁 初クリアごとに、転生石+300・社長室の限定の壁紙や床・「試練の加護」（タップとMPSが永久に+2%、最大+20%）がもらえます',
+      '⏱ クリアタイムの自己ベストが記録されます。ランキングから見られる社長室に、試練のクリア数が表示されます',
+      '🏷️ 試練の称号を3種類追加しました',
+      '🔒 試練は予約制で、次の転生から始まります。達成・失敗・あきらめのどれでも元の強さに戻り、データは消えません',
+    ],
+  },
   {
     id: 'v3.3.0',
     date: '2026/11/13',
@@ -1000,6 +1013,7 @@ function getPetSpriteStyle(typeId, stageIndex) {
 }
 
 function getPetMultiplier() {
+  if (activeChallenge(gameState)) return { tap: 1, mps: 1, coin: 1 };
   const slots = [gameState.activePetType];
   if (gameState.petSlot2Unlocked && gameState.activePetType2) slots.push(gameState.activePetType2);
   let tap = 1, mps = 1, coin = 1;
@@ -1191,6 +1205,7 @@ const DEFAULT_STATE = {
   highlowHighScore:     0,
   subsidiary:           { profit: 0, companies: {} },
   office:               { grades: {}, looks: {} },  // 社長室（grades: 所持グレード（未設定は1）、looks: 表示中の見た目（未設定は所持グレード））
+  challenge:            { active: null, pending: null, cleared: {} },  // 社長の試練（cleared: { 試練ID: 最短クリア秒 }）
   titles:               { unlocked: [] },  // 称号（equipped: 付けている称号ID。キー無し=未選択で自動装備、null=外している）
   maxCombo:             0,
   fxLevel:              null,   // 'high' | 'low'（null は端末設定に従う）
@@ -1459,6 +1474,7 @@ function getFacilityIconStyle(facId) {
 function getPrestigeBonus(type) {
   const isMult = ['tapMult', 'mpsMult', 'awakenMult', 'stoneMult', 'allMult', 'shinTapMult', 'shinMpsMult', 'shinAllMult'].includes(type);
   let bonus = isMult ? 1 : 0;
+  if (activeChallenge(gameState)) return bonus;
   for (const s of PRESTIGE_SKILLS) {
     if (s.type !== type) continue;
     const lv = gameState.prestigeSkills?.[s.id] ?? 0;
@@ -1469,6 +1485,7 @@ function getPrestigeBonus(type) {
 }
 
 function getSkinOp() {
+  if (activeChallenge(gameState)) return {};
   const skin = gameState.equippedSkin ? GACHA_SKINS.find(s => s.id === gameState.equippedSkin) : null;
   return skin?.op ?? {};
 }
@@ -1494,7 +1511,9 @@ function recalcTapPower() {
     power += (f.tapBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
   }
   const skinOp = getSkinOp();
-  gameState.tapPower = power * getPrestigeBonus('tapMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinTapMult') * getPrestigeBonus('shinAllMult') * (skinOp.tap ?? 1) * getSubsidiaryBonus(gameState, 'tap') * getOfficeBonus(gameState, 'tap');
+  const trial = activeChallenge(gameState);
+  const outside = trial ? (trial.flags.incomeMult ?? 1) : getSubsidiaryBonus(gameState, 'tap') * getOfficeBonus(gameState, 'tap') * getChallengeBlessing(gameState);
+  gameState.tapPower = power * getPrestigeBonus('tapMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinTapMult') * getPrestigeBonus('shinAllMult') * (skinOp.tap ?? 1) * outside;
   if (!Number.isFinite(gameState.tapPower)) {
     console.error('[mokuzu] recalcTapPower: NaN/Infinityを検出。tapPower=1にフォールバック');
     gameState.tapPower = 1;
@@ -1502,9 +1521,10 @@ function recalcTapPower() {
 }
 
 function recalcMPS() {
+  const trial = activeChallenge(gameState);
   let mps = 0;
   for (const emp of EMPLOYEES) {
-    mps += (emp.mpsBonus ?? 0) * (gameState.employees[emp.id] ?? 0) * (isDispatchActive(gameState, emp.id) ? 0.5 : 1);
+    mps += (emp.mpsBonus ?? 0) * (gameState.employees[emp.id] ?? 0) * (!trial && isDispatchActive(gameState, emp.id) ? 0.5 : 1);
   }
   for (const f of FACILITIES) {
     mps += (f.mpsBonus ?? 0) * (gameState.facilities[f.id] ?? 0);
@@ -1514,7 +1534,8 @@ function recalcMPS() {
   }
   const skinOp = getSkinOp();
   const baseMps = skinOp.baseMps ?? 0;
-  gameState.mokuPerSecond = (mps + baseMps) * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinMpsMult') * getPrestigeBonus('shinAllMult') * (skinOp.mps ?? 1) * getSubsidiaryBonus(gameState, 'mps') * getOfficeBonus(gameState, 'mps');
+  const outside = trial ? (trial.flags.noMps ? 0 : trial.flags.incomeMult ?? 1) : getSubsidiaryBonus(gameState, 'mps') * getOfficeBonus(gameState, 'mps') * getChallengeBlessing(gameState);
+  gameState.mokuPerSecond = (mps + baseMps) * getPrestigeBonus('mpsMult') * getPrestigeBonus('allMult') * getPrestigeBonus('shinMpsMult') * getPrestigeBonus('shinAllMult') * (skinOp.mps ?? 1) * outside;
   if (!Number.isFinite(gameState.mokuPerSecond)) {
     console.error('[mokuzu] recalcMPS: NaN/Infinityを検出。mokuPerSecond=0にフォールバック');
     gameState.mokuPerSecond = 0;
@@ -1759,9 +1780,9 @@ function onTap(e) {
   const upgradeCritRate = UPGRADES.reduce((s, u) => s + (u.critRateBonus ?? 0) * (gameState.upgrades[u.id] ?? 0), 0);
   const upgradeCritMult = UPGRADES.reduce((s, u) => s + (u.critMultBonus ?? 0) * (gameState.upgrades[u.id] ?? 0), 0);
   const critRate     = 0.05 + getPrestigeBonus('critRate') + upgradeCritRate;
-  const critMult     = (3 + getPrestigeBonus('critMult') + upgradeCritMult) * getOfficeBonus(gameState, 'critMult');
-  const isCritical   = Math.random() < critRate;
-  const gained       = gameState.tapPower * awakenMult * eventMult * tapBoostMult * petTapMult * (isCritical ? critMult : 1);
+  const critMult     = (3 + getPrestigeBonus('critMult') + upgradeCritMult) * (activeChallenge(gameState) ? 1 : getOfficeBonus(gameState, 'critMult'));
+  const isCritical   = !challengeFlag(gameState, 'noCrit') && Math.random() < critRate;
+  const gained       = challengeFlag(gameState, 'noTap') ? 0 : gameState.tapPower * awakenMult * eventMult * tapBoostMult * petTapMult * (isCritical ? critMult : 1);
 
   gameState.moku      += gained;
   gameState.totalMoku += gained;
@@ -1957,6 +1978,7 @@ function gameLoop() {
   gameState.moku      += gained;
   gameState.totalMoku += gained;
   tickSubsidiary(gameState, 1);
+  tickChallenge();
   checkTitles();
 
   // 覚醒タイマー
@@ -2006,7 +2028,7 @@ function gameLoop() {
 // ========== 覚醒モード ==========
 
 function activateAwaken() {
-  if (gameState.awakenGauge < 100 || gameState.isAwakened) return;
+  if (gameState.awakenGauge < 100 || gameState.isAwakened || challengeFlag(gameState, 'noAwaken')) return;
   gameState.isAwakened  = true;
   gameState.awakenTimer = 10 + (gameState.upgrades?.['awaken_time'] ?? 0) * 5;
   gameState.awakenGauge = 0;
@@ -2026,7 +2048,7 @@ function deactivateAwaken() {
 
 function buyUpgrade(upgradeId) {
   const u = UPGRADES.find(x => x.id === upgradeId);
-  if (!u) return;
+  if (!u || challengeFlag(gameState, 'noUpgrade')) return;
   const count = gameState.upgrades[u.id] ?? 0;
   if (count >= u.maxCount) return;
   const cost = getUpgradeCost(u);
@@ -2045,6 +2067,8 @@ function buyUpgrade(upgradeId) {
 function buyEmployee(empId) {
   const emp = EMPLOYEES.find(x => x.id === empId);
   if (!emp) return;
+  const onlyEmployee = challengeFlag(gameState, 'onlyEmployee');
+  if (onlyEmployee && emp.id !== onlyEmployee) return;
   const cost = getEmployeeCost(emp);
   if (gameState.moku < cost) return;
 
@@ -2059,7 +2083,7 @@ function buyEmployee(empId) {
 
 function buyFacility(facilityId) {
   const f = FACILITIES.find(x => x.id === facilityId);
-  if (!f) return;
+  if (!f || challengeFlag(gameState, 'noFacility')) return;
   const count = gameState.facilities[f.id] ?? 0;
   if (count >= f.maxCount) return;
   const cost = getFacilityCost(f);
@@ -2299,6 +2323,7 @@ function renderFacilityList() {
 // ========== 消費アイテム処理 ==========
 
 function isEffectActive(effectId) {
+  if (activeChallenge(gameState)) return false;
   const end = gameState.activeEffects?.[effectId];
   return end != null && Date.now() < end;
 }
@@ -3450,6 +3475,7 @@ function doPrestige() {
   gameState.prestigeLevel   = (gameState.prestigeLevel ?? 0) + 1;
   gameState.prestigeStones  = (gameState.prestigeStones ?? 0) + stonesEarned;
   gameState.prestigeHistory = [...(gameState.prestigeHistory ?? []), entry];
+  startPendingChallenge(gameState);
   _minCloudTotalMoku = 0; // 転生でtotalMokuがリセットされるのでクラウド保存ブロックを解除
   updateSuit('black');
   recalcTapPower();
@@ -5884,6 +5910,7 @@ function initTabs() {
       if (tabId === 'minigame') showMinigameLobby();
       if (tabId === 'subsidiary') renderSubsidiary(true);
       if (tabId === 'office') renderOffice(true);
+      if (tabId === 'prestige') renderChallenge(true);
     });
   });
 
@@ -5917,6 +5944,17 @@ function init() {
     fmt,
     playSound,
     getBossSrc: () => document.getElementById('character-sprite')?.getAttribute('src'),
+    onChange: () => {
+      recalcTapPower();
+      recalcMPS();
+      saveGame();
+      updateDisplay();
+    },
+  });
+  initChallenge({
+    getState: () => gameState,
+    fmt,
+    playSound,
     onChange: () => {
       recalcTapPower();
       recalcMPS();
@@ -6333,6 +6371,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // デバッグ用（コンソールからアクセス可能にする）
 window._gs = () => gameState;
 window._save = saveGame;
+window._recalc = () => { recalcTapPower(); recalcMPS(); };
 
 // インラインonclickから呼ばれる関数をグローバルに公開
 window.equipSkin = equipSkin;
@@ -6351,9 +6390,10 @@ import {
 } from './firebase.js';
 
 import { initMokumon } from './minigame-mokumon.js?v=2.25.0';
-import { initSubsidiary, renderSubsidiary, tickSubsidiary, getSubsidiaryBonus, isDispatchActive } from './subsidiary.js?v=3.3.0';
-import { initOffice, renderOffice, getOfficeBonus, openRoomViewer } from './office.js?v=3.3.0';
-import { initTitles, checkTitles, titleBadgeHTML } from './title.js?v=3.3.0';
+import { initSubsidiary, renderSubsidiary, tickSubsidiary, getSubsidiaryBonus, isDispatchActive } from './subsidiary.js?v=3.4.0';
+import { initOffice, renderOffice, getOfficeBonus, openRoomViewer } from './office.js?v=3.4.0';
+import { initTitles, checkTitles, titleBadgeHTML } from './title.js?v=3.4.0';
+import { CHALLENGES, initChallenge, tickChallenge, renderChallenge, activeChallenge, challengeFlag, clearedCount, getChallengeBlessing, startPendingChallenge } from './challenge.js?v=3.4.0';
 
 let _authMode = 'login'; // 'login' | 'register'
 
@@ -6651,8 +6691,8 @@ function rankingTagsHTML(r) {
 function openRankingRoom(r) {
   openRoomViewer({
     name: r.name,
-    headHTML: `<div class="office-view-head">${rankingTagsHTML(r)}<span>${r.rank}位　転生 ${Number(r.prestigeLevel) || 0}回</span></div>`,
-    office: r.sd?.office,
+    headHTML: `<div class="office-view-head">${rankingTagsHTML(r)}<span>${r.rank}位　転生 ${Number(r.prestigeLevel) || 0}回　試練 ${r.sd ? clearedCount(r.sd) : 0}/${CHALLENGES.length}</span></div>`,
+    save: r.sd,
     bossSrc: r.sd ? characterSrcOf(r.sd) : null,
   });
 }
